@@ -13,7 +13,7 @@ export function FormField({ field, value, error, formType, onChange }: FormField
   const id = `${formType}-${field.name}`
   const errorId = `${id}-error`
   const inputClass =
-    'w-full rounded-md border border-border bg-white px-3 py-3 text-base text-slate-900 outline-none transition focus:border-brand focus:ring-2 focus:ring-[#1E4D3A]/15'
+    'w-full rounded-md border border-border bg-white px-3 py-3 text-base text-graphite outline-none transition focus:border-brand focus:ring-2 focus:ring-brand/15'
   const describedBy = error ? errorId : undefined
 
   if (field.type === 'radio') {
@@ -34,7 +34,7 @@ export function FormField({ field, value, error, formType, onChange }: FormField
                 value={option}
                 checked={value === option}
                 onChange={(event) => onChange(field.name, event.target.value)}
-                className="h-4 w-4 accent-[#1E4D3A]"
+                className="h-4 w-4 accent-brand"
               />
               {option}
             </label>

@@ -31,7 +31,7 @@ export function Opportunities() {
   }
 
   return (
-    <section className="bg-surface-muted px-5 py-16 lg:px-8">
+    <section className="section-muted-depth bg-surface-muted px-5 py-16 lg:px-8">
       <div className="mx-auto max-w-7xl">
         <div className="max-w-4xl">
           <p className="text-sm font-semibold uppercase tracking-[0.22em] text-brand">Oportunidades</p>
@@ -43,7 +43,7 @@ export function Opportunities() {
           </p>
         </div>
 
-        <div className="mt-10 grid gap-4 rounded-lg border border-border bg-white p-4 shadow-sm md:grid-cols-3" role="tablist" aria-label="Tipo de oportunidad">
+        <div className="card-elevated mt-10 grid gap-4 rounded-lg border bg-white p-4 md:grid-cols-3" role="tablist" aria-label="Tipo de oportunidad">
           {opportunityForms.map((form) => {
             const Icon = form.icon
             const isActive = form.type === activeType
@@ -76,11 +76,11 @@ export function Opportunities() {
             <OpportunityForm config={activeForm} />
           </div>
           <div className="mx-auto mt-6 grid max-w-5xl gap-6 lg:grid-cols-[1fr_1.4fr]">
-            <div className="flex gap-3 rounded-lg border border-brand/20 bg-surface-muted p-5">
+            <div className="card-elevated flex gap-3 rounded-lg border bg-surface-muted p-5">
               <ShieldCheck className="mt-0.5 shrink-0 text-brand" size={22} aria-hidden="true" />
               <p className="text-sm leading-6 text-text-muted">Enviar estos antecedentes no garantiza aceptación. Arista puede solicitar información adicional y evalúa cada oportunidad según su alcance y condiciones.</p>
             </div>
-            <section className="rounded-lg border border-on-brand-border bg-brand-dark p-5 text-on-brand" aria-labelledby="opportunity-follow-up-title">
+            <section className="brand-feature-card rounded-lg border p-5 text-on-brand" aria-labelledby="opportunity-follow-up-title">
               <p id="opportunity-follow-up-title" className="text-sm font-semibold uppercase tracking-[0.18em] text-on-brand">Qué ocurre después</p>
               <ol className="mt-4 grid gap-3 sm:grid-cols-3">
                 {followUpSteps.map((step, index) => (

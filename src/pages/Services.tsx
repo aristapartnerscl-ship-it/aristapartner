@@ -23,36 +23,38 @@ function ResponsiveImage({ name, alt, width, height, sizes }: { name: string; al
 export function Services() {
   return (
     <>
-      <section className="border-b border-border bg-surface-muted px-5 py-16 lg:px-8 lg:py-20">
-        <div className="mx-auto max-w-7xl">
-          <p className="text-sm font-semibold uppercase tracking-[0.22em] text-brand">Servicios</p>
-          <h1 className="mt-5 max-w-4xl text-4xl font-semibold tracking-tight text-graphite md:text-6xl">Gestión comercial para conectar y avanzar</h1>
-          <p className="mt-6 max-w-2xl text-lg leading-8 text-text-muted">Arista puede participar desde la búsqueda inicial hasta la coordinación de conversaciones, según el alcance que corresponda a cada oportunidad.</p>
-          <Link to="/oportunidades" className="mt-8 inline-flex items-center gap-2 rounded-md bg-brand px-5 py-3 text-sm font-semibold text-white transition hover:bg-brand-dark">Presentar una oportunidad <ArrowRight size={18} aria-hidden="true" /></Link>
+      <section className="page-hero-dark px-5 py-12 sm:py-14 lg:px-8 lg:py-16">
+        <div className="relative z-10 mx-auto max-w-7xl">
+          <p className="text-sm font-semibold uppercase tracking-[0.22em] text-white/78">Servicios</p>
+          <h1 className="mt-4 max-w-4xl text-3xl font-semibold tracking-tight text-white sm:text-4xl md:text-5xl">Gestión comercial para conectar y avanzar</h1>
+          <p className="mt-5 max-w-2xl text-base leading-7 text-white/80 sm:text-lg sm:leading-8">Arista puede participar desde la búsqueda inicial hasta la coordinación de conversaciones, según el alcance que corresponda a cada oportunidad.</p>
+          <Link to="/oportunidades" className="mt-7 inline-flex items-center gap-2 rounded-md bg-brand px-5 py-3 text-sm font-semibold text-white transition hover:bg-brand-dark">Presentar una oportunidad <ArrowRight size={18} aria-hidden="true" /></Link>
         </div>
       </section>
 
-      <section className="bg-white px-5 py-16 lg:px-8">
+      <section className="section-soft-depth bg-white px-5 py-12 sm:py-16 lg:px-8">
         <div className="mx-auto grid max-w-7xl gap-8 lg:grid-cols-[0.82fr_1.18fr] lg:items-start">
-          <div className="rounded-lg bg-graphite p-7 text-on-brand">
+          <div className="card-dark-raised rounded-lg border p-6 text-on-brand sm:p-7">
             <SectionHeader tone="inverse" eyebrow="Cuatro líneas de trabajo" title="El alcance se define según la oportunidad" text="Cada servicio aborda una necesidad distinta, sin reemplazar las decisiones finales de las partes." />
           </div>
           <div className="grid gap-5 md:grid-cols-2">
             {serviceBlocks.map(({ icon: Icon, title, forWho, problem, role, action, href }) => (
-              <article key={title} className="flex h-full flex-col rounded-lg border border-border bg-white p-6 shadow-sm">
-                <Icon className="text-brand" size={28} aria-hidden="true" />
-                <h2 className="mt-5 text-2xl font-semibold text-graphite">{title}</h2>
-                <p className="mt-3 text-sm font-semibold text-brand">{forWho}</p>
-                <p className="mt-4 text-sm leading-6 text-text-muted">{problem}</p>
-                <p className="mt-3 flex-1 text-sm leading-6 text-text-muted">{role}</p>
-                <Link to={href} className="mt-6 inline-flex w-fit items-center gap-2 text-sm font-semibold text-brand hover:text-brand-dark">{action} <ArrowRight size={17} aria-hidden="true" /></Link>
+              <article key={title} className={`card-accent-top flex h-full flex-col rounded-lg border p-4 sm:p-6 ${title === 'Representación comercial' ? 'brand-feature-card text-on-brand' : 'card-elevated text-graphite'}`}>
+                <span className={title === 'Representación comercial' ? 'icon-chip-inverse' : 'icon-chip'}>
+                  <Icon size={22} aria-hidden="true" />
+                </span>
+                <h2 className={`mt-4 text-xl font-semibold sm:mt-5 sm:text-2xl ${title === 'Representación comercial' ? 'text-on-brand' : 'text-graphite'}`}>{title}</h2>
+                <p className={`mt-3 text-sm font-semibold ${title === 'Representación comercial' ? 'text-white/86' : 'text-brand'}`}>{forWho}</p>
+                <p className={`mt-3 text-sm leading-6 sm:mt-4 ${title === 'Representación comercial' ? 'text-white/80' : 'text-text-muted'}`}>{problem}</p>
+                <p className={`mt-3 flex-1 text-sm leading-6 ${title === 'Representación comercial' ? 'text-white/80' : 'text-text-muted'}`}>{role}</p>
+                <Link to={href} className={`mt-5 inline-flex w-fit items-center gap-2 text-sm font-semibold sm:mt-6 ${title === 'Representación comercial' ? 'text-on-brand hover:text-white' : 'text-brand hover:text-brand-dark'}`}>{action} <ArrowRight size={17} aria-hidden="true" /></Link>
               </article>
             ))}
           </div>
         </div>
       </section>
 
-      <section className="bg-brand-dark px-5 py-16 text-on-brand lg:px-8">
+      <section className="section-brand-depth bg-brand-dark px-5 py-12 text-on-brand sm:py-16 lg:px-8">
         <div className="mx-auto grid max-w-7xl gap-10 lg:grid-cols-2 lg:items-center">
           <div>
             <SectionHeader tone="inverse" eyebrow="Comparar alternativas" title="Buscar proveedores con mejor información" text="Partimos de una necesidad concreta para identificar, comparar y presentar opciones que puedan ser revisadas por el comprador." />
@@ -64,7 +66,7 @@ export function Services() {
         </div>
       </section>
 
-      <section className="bg-surface-muted px-5 py-16 lg:px-8">
+      <section className="section-muted-depth bg-surface-muted px-5 py-12 sm:py-16 lg:px-8">
         <div className="mx-auto grid max-w-7xl gap-10 lg:grid-cols-2 lg:items-center">
           <div>
             <SectionHeader eyebrow="De B2C a B2B" title="Explorar nuevos usos y canales empresariales" text="Algunas ofertas pueden encontrar aplicaciones en ventas por volumen, distribución, retail, regalos corporativos y canales empresariales. Evaluamos el encaje sin prometer resultados." />
@@ -76,7 +78,7 @@ export function Services() {
         </div>
       </section>
 
-      <section className="bg-white px-5 py-16 lg:px-8">
+      <section className="bg-white px-5 py-12 sm:py-16 lg:px-8">
         <div className="mx-auto grid max-w-7xl gap-8 lg:grid-cols-[0.8fr_1.2fr]">
           <SectionHeader eyebrow="Límites del servicio" title="Qué no está incluido automáticamente" />
           <ul className="grid gap-3 text-base leading-7 text-text-muted sm:grid-cols-2">

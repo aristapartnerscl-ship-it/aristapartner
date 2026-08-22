@@ -13,16 +13,16 @@ const principles = [
 export function About() {
   return (
     <>
-      <section className="border-b border-border bg-surface-muted px-5 py-16 lg:px-8 lg:py-20">
-        <div className="mx-auto max-w-7xl">
-          <p className="text-sm font-semibold uppercase tracking-[0.22em] text-brand">Arista Partners</p>
-          <h1 className="mt-5 max-w-4xl text-4xl font-semibold tracking-tight text-graphite md:text-6xl">
+      <section className="page-hero-dark px-5 py-12 sm:py-14 lg:px-8 lg:py-16">
+        <div className="relative z-10 mx-auto max-w-7xl">
+          <p className="text-sm font-semibold uppercase tracking-[0.22em] text-white/78">Arista Partners</p>
+          <h1 className="mt-4 max-w-4xl text-3xl font-semibold tracking-tight text-white sm:text-4xl md:text-5xl">
             Conectamos necesidades, ofertas y oportunidades comerciales
           </h1>
-          <p className="mt-6 max-w-2xl text-lg leading-8 text-text-muted">
+          <p className="mt-5 max-w-2xl text-base leading-7 text-white/80 sm:text-lg sm:leading-8">
             Arista Partners representa ofertas, busca proveedores y desarrolla oportunidades B2B con una operación directa, ordenada y cercana.
           </p>
-          <div className="mt-8 flex flex-col gap-3 sm:flex-row">
+          <div className="mt-7 flex flex-col gap-3 sm:flex-row">
             <Link to="/contacto" className="inline-flex items-center justify-center gap-2 rounded-md bg-brand px-5 py-3 text-sm font-semibold text-white transition hover:bg-brand-dark">
               Conversemos <ArrowRight size={18} aria-hidden="true" />
             </Link>
@@ -33,7 +33,7 @@ export function About() {
         </div>
       </section>
 
-      <section className="bg-surface-muted px-5 py-16 lg:px-8">
+      <section className="bg-white px-5 py-12 sm:py-16 lg:px-8">
         <div className="mx-auto grid max-w-7xl gap-10 lg:grid-cols-[0.8fr_1.2fr] lg:items-start">
           <SectionHeader eyebrow="Qué hacemos" title="Una gestión activa entre las partes" text="Arista participa en las etapas que ayudan a que una oportunidad avance con mejor información y coordinación." />
           <div className="grid gap-4 text-base leading-7 text-text-muted">
@@ -45,18 +45,22 @@ export function About() {
         </div>
       </section>
 
-      <section className="bg-white px-5 py-16 lg:px-8">
+      <section className="section-soft-depth bg-white px-5 py-12 sm:py-16 lg:px-8">
         <div className="mx-auto max-w-7xl">
           <SectionHeader eyebrow="Dos puntos de partida" title="La gestión puede comenzar desde ambos lados" text="El punto de partida define la información que necesitamos revisar y el tipo de gestión que corresponde." />
           <div className="mt-10 grid gap-5 md:grid-cols-2">
-            <article className="rounded-lg border border-border bg-surface-muted p-6 shadow-sm">
-              <SearchCheck className="text-brand" size={28} aria-hidden="true" />
+            <article className="card-elevated card-accent-top rounded-lg border p-6">
+              <span className="icon-chip">
+                <SearchCheck size={22} aria-hidden="true" />
+              </span>
               <h2 className="mt-5 text-2xl font-semibold text-graphite">Desde una necesidad de compra</h2>
               <p className="mt-3 text-base leading-7 text-text-muted">Levantamos requerimientos, identificamos alternativas y presentamos opciones para que el comprador pueda evaluarlas.</p>
               <Link to="/oportunidades?tipo=comprar" className="mt-6 inline-flex items-center gap-2 text-sm font-semibold text-brand hover:text-brand-dark">Presentar una necesidad <ArrowRight size={17} aria-hidden="true" /></Link>
             </article>
-            <article className="rounded-lg border border-border bg-white p-6 shadow-sm">
-              <Handshake className="text-brand" size={28} aria-hidden="true" />
+            <article className="card-elevated card-accent-top rounded-lg border p-6">
+              <span className="icon-chip">
+                <Handshake size={22} aria-hidden="true" />
+              </span>
               <h2 className="mt-5 text-2xl font-semibold text-graphite">Desde una oferta que busca mercado</h2>
               <p className="mt-3 text-base leading-7 text-text-muted">Revisamos la propuesta y exploramos compradores, distribuidores o canales empresariales donde pueda tener sentido.</p>
               <Link to="/oportunidades?tipo=vender" className="mt-6 inline-flex items-center gap-2 text-sm font-semibold text-brand hover:text-brand-dark">Presentar una oferta <ArrowRight size={17} aria-hidden="true" /></Link>
@@ -65,12 +69,12 @@ export function About() {
         </div>
       </section>
 
-      <section className="bg-brand-dark px-5 py-16 text-on-brand lg:px-8">
+      <section className="section-brand-depth bg-brand-dark px-5 py-12 text-on-brand sm:py-16 lg:px-8">
         <div className="mx-auto grid max-w-7xl gap-10 lg:grid-cols-[1fr_1fr] lg:items-center">
           <SectionHeader tone="inverse" eyebrow="Participación activa" title="No nos limitamos a entregar contactos" text="Centralizamos inicialmente la presentación, organizamos antecedentes, comparamos alternativas y coordinamos conversaciones para mantener continuidad." />
           <div className="grid gap-3 sm:grid-cols-2">
             {['Presentación ordenada', 'Comparación de alternativas', 'Coordinación de conversaciones', 'Seguimiento comercial'].map((item) => (
-              <div key={item} className="flex gap-3 rounded-lg border border-on-brand-border bg-on-brand-surface p-4 text-sm font-medium text-on-brand">
+              <div key={item} className="dark-card-solid flex gap-3 rounded-lg border p-4 text-sm font-medium text-on-brand">
                 <Check className="shrink-0 text-on-brand" size={20} aria-hidden="true" />
                 <span>{item}</span>
               </div>
@@ -79,13 +83,15 @@ export function About() {
         </div>
       </section>
 
-      <section className="bg-white px-5 py-16 lg:px-8">
+      <section className="bg-white px-5 py-12 sm:py-16 lg:px-8">
         <div className="mx-auto max-w-7xl">
           <SectionHeader eyebrow="Principios de trabajo" title="Una forma de trabajar clara y responsable" />
           <div className="mt-10 grid gap-5 md:grid-cols-2 lg:grid-cols-4">
             {principles.map(({ icon: Icon, title, text }) => (
               <article key={title} className="border-t-2 border-brand pt-5">
-                <Icon className="text-brand" size={26} aria-hidden="true" />
+                <span className="icon-chip">
+                  <Icon size={22} aria-hidden="true" />
+                </span>
                 <h2 className="mt-4 text-xl font-semibold text-graphite">{title}</h2>
                 <p className="mt-3 text-sm leading-6 text-text-muted">{text}</p>
               </article>
@@ -94,7 +100,7 @@ export function About() {
         </div>
       </section>
 
-      <section className="bg-surface-muted px-5 py-16 lg:px-8">
+      <section className="section-muted-depth bg-surface-muted px-5 py-12 sm:py-16 lg:px-8">
         <div className="mx-auto grid max-w-7xl gap-8 lg:grid-cols-[0.8fr_1.2fr]">
           <SectionHeader eyebrow="Alcance responsable" title="Cada operación requiere una evaluación" />
           <div className="grid gap-4 text-base leading-7 text-text-muted">

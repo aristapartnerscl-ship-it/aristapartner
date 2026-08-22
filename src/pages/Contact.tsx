@@ -238,7 +238,7 @@ export function Contact() {
 
   return (
     <>
-      <section className="border-b border-border bg-surface-muted px-5 py-16 lg:px-8 lg:py-20">
+      <section className="section-muted-depth border-b border-border bg-surface-muted px-5 py-16 lg:px-8 lg:py-20">
         <div className="mx-auto max-w-7xl">
           <p className="text-sm font-semibold uppercase tracking-[0.22em] text-brand">Contacto</p>
           <h1 className="mt-5 max-w-4xl text-4xl font-semibold tracking-tight text-graphite md:text-5xl">
@@ -252,7 +252,7 @@ export function Contact() {
         </div>
       </section>
 
-      <section className="bg-surface-muted px-5 py-14 lg:px-8">
+      <section className="section-muted-depth bg-surface-muted px-5 py-14 lg:px-8">
         <div className="mx-auto max-w-7xl">
           <SectionHeader eyebrow="Orientación" title="Elige el canal adecuado" text="Si quieres comprar, vender o ser proveedor, utiliza Oportunidades. Para una consulta general, continúa con este formulario." />
           <div className="mt-8 grid gap-4 md:grid-cols-2 lg:grid-cols-4">
@@ -263,8 +263,10 @@ export function Contact() {
                 'mt-5 inline-flex items-center gap-2 text-sm font-semibold text-brand hover:text-graphite'
 
               return (
-                <article key={card.title} className="rounded-lg border border-border bg-white p-5 shadow-sm">
-                  <Icon className="text-brand" size={28} />
+                <article key={card.title} className="card-elevated card-accent-top rounded-lg border p-5">
+                  <span className="icon-chip">
+                    <Icon size={22} />
+                  </span>
                   <h2 className="mt-4 text-xl font-semibold text-graphite">{card.title}</h2>
                   <p className="mt-3 text-sm leading-6 text-text-muted">{card.text}</p>
                   {isAnchor ? (
@@ -296,7 +298,7 @@ export function Contact() {
             title="Envíanos una consulta"
             text="Completa los siguientes datos. Los campos marcados con asterisco son obligatorios."
           />
-          <form className="rounded-lg border border-border bg-white p-5 shadow-sm sm:p-7" onSubmit={handleSubmit} noValidate>
+          <form className="card-elevated rounded-lg border bg-white p-5 sm:p-7" onSubmit={handleSubmit} noValidate>
             <div className="grid gap-5 md:grid-cols-2">
               <TextField label="Nombre completo" name="fullName" value={form.fullName} error={errors.fullName} required onChange={updateField} />
               <TextField label="Empresa, marca u organización" name="organization" value={form.organization} error={errors.organization} onChange={updateField} />
@@ -391,12 +393,12 @@ export function Contact() {
         </div>
       </section>
 
-      <section className="bg-surface-muted px-5 py-16 lg:px-8">
+      <section className="section-muted-depth bg-surface-muted px-5 py-16 lg:px-8">
         <div className="mx-auto max-w-7xl">
           <SectionHeader eyebrow="Después del contacto" title="¿Qué ocurre después de contactarnos?" />
           <div className="mt-10 grid gap-5 md:grid-cols-3">
             {responseSteps.map((step, index) => (
-            <article key={step.title} className="rounded-lg border border-border bg-white p-6 shadow-sm">
+            <article key={step.title} className="card-elevated card-accent-top rounded-lg border p-6">
                 <span className="text-2xl font-semibold text-brand">0{index + 1}</span>
                 <h2 className="mt-4 text-xl font-semibold text-graphite">{step.title}</h2>
                 <p className="mt-3 text-sm leading-6 text-text-muted">{step.text}</p>
@@ -410,7 +412,7 @@ export function Contact() {
       <section className="bg-white px-5 py-16 lg:px-8">
         <div className="mx-auto grid max-w-7xl gap-10 lg:grid-cols-[0.8fr_1.2fr]">
           <SectionHeader eyebrow="Canales directos" title="Canales oficiales" />
-          <div className="rounded-lg border border-border bg-surface-muted p-6">
+          <div className="card-elevated rounded-lg border bg-surface-muted p-6">
             <div className="grid gap-4 md:grid-cols-2">
               {visibleChannels.map((channel) => (
                 <div key={channel.label} className="rounded-md bg-white p-4">
@@ -430,10 +432,12 @@ export function Contact() {
       </section>
       )}
 
-      <section className="bg-brand-dark px-5 py-16 text-on-brand lg:px-8">
+      <section className="section-brand-depth bg-brand-dark px-5 py-16 text-on-brand lg:px-8">
         <div className="mx-auto grid max-w-7xl gap-10 lg:grid-cols-[0.85fr_1.15fr]">
-          <div className="rounded-lg border border-on-brand-border bg-on-brand-surface p-6">
-            <ShieldAlert className="text-on-brand" size={30} />
+          <div className="dark-card-solid rounded-lg border p-6">
+            <span className="icon-chip-inverse">
+              <ShieldAlert size={22} />
+            </span>
             <h2 className="mt-4 text-2xl font-semibold text-on-brand">Protege tu información</h2>
             <p className="mt-3 text-sm leading-6 text-on-brand-muted">
               No envíes contraseñas, datos bancarios, información financiera sensible ni documentos confidenciales mediante el formulario general. Si una gestión requiere antecedentes adicionales, Arista indicará posteriormente un canal apropiado para compartirlos.
@@ -442,8 +446,10 @@ export function Contact() {
           </div>
           <div className="grid gap-4">
             {faqs.map((faq) => (
-              <article key={faq.question} className="rounded-lg border border-on-brand-border bg-on-brand-surface p-5">
-                <HelpCircle className="text-on-brand" size={22} />
+              <article key={faq.question} className="dark-card-solid rounded-lg border p-5">
+                <span className="icon-chip-inverse">
+                  <HelpCircle size={20} />
+                </span>
                 <h2 className="mt-3 text-lg font-semibold text-on-brand">{faq.question}</h2>
                 <p className="mt-2 text-sm leading-6 text-on-brand-muted">{faq.answer}</p>
               </article>
@@ -452,7 +458,7 @@ export function Contact() {
         </div>
       </section>
 
-      <section className="bg-graphite px-5 py-12 text-white lg:px-8">
+      <section className="border-t-4 border-brand bg-graphite px-5 py-12 text-white lg:px-8">
         <div className="mx-auto flex max-w-7xl flex-col gap-5 sm:flex-row sm:items-center sm:justify-between">
           <div>
             <h2 className="text-2xl font-semibold tracking-tight">¿Buscas presentar una oportunidad?</h2>
@@ -490,7 +496,7 @@ function TextField({ label, name, value, error, required, type = 'text', onChang
         onChange={(event) => onChange(name, event.target.value)}
         aria-invalid={Boolean(error)}
         aria-describedby={error ? `${id}-error` : undefined}
-        className="mt-2 w-full rounded-md border border-border bg-white px-3 py-3 text-base text-slate-900 outline-none transition focus:border-brand focus:ring-2 focus:ring-brand/15"
+        className="mt-2 w-full rounded-md border border-border bg-white px-3 py-3 text-base text-graphite outline-none transition focus:border-brand focus:ring-2 focus:ring-brand/15"
       />
       <div className="mt-2">
         <FieldError id={`${id}-error`} message={error} />
@@ -517,7 +523,7 @@ function SelectField({ label, name, value, error, required, options, onChange }:
         onChange={(event) => onChange(name, event.target.value)}
         aria-invalid={Boolean(error)}
         aria-describedby={error ? `${id}-error` : undefined}
-        className="mt-2 w-full rounded-md border border-border bg-white px-3 py-3 text-base text-slate-900 outline-none transition focus:border-brand focus:ring-2 focus:ring-brand/15"
+        className="mt-2 w-full rounded-md border border-border bg-white px-3 py-3 text-base text-graphite outline-none transition focus:border-brand focus:ring-2 focus:ring-brand/15"
       >
         <option value="">Selecciona una opción</option>
         {options.map((option) => (
@@ -547,7 +553,7 @@ function TextAreaField({ label, name, value, error, required, onChange }: TextFi
         onChange={(event) => onChange(name, event.target.value)}
         aria-invalid={Boolean(error)}
         aria-describedby={error ? `${id}-error` : undefined}
-        className="mt-2 min-h-36 w-full resize-y rounded-md border border-border bg-white px-3 py-3 text-base text-slate-900 outline-none transition focus:border-brand focus:ring-2 focus:ring-brand/15"
+        className="mt-2 min-h-36 w-full resize-y rounded-md border border-border bg-white px-3 py-3 text-base text-graphite outline-none transition focus:border-brand focus:ring-2 focus:ring-brand/15"
       />
       <div className="mt-2">
         <FieldError id={`${id}-error`} message={error} />

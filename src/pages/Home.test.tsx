@@ -46,8 +46,10 @@ describe('public Home', () => {
     render(<MemoryRouter><Home /></MemoryRouter>)
 
     const images = [...document.querySelectorAll('img')]
+    const heroImages = [...document.querySelectorAll('[data-testid="hero-slide"] img')]
     expect(images).toHaveLength(7)
     expect(images[0]).toHaveAttribute('src', '/images/arista-hero-intermediacion-v3.png')
+    expect(images[0]).toHaveAccessibleName(/Mesa de trabajo/i)
     expect(images[0]).toHaveAttribute('loading', 'eager')
     expect(images[0]).toHaveAttribute('fetchpriority', 'high')
     expect(images[0]).toHaveAttribute('width', '1672')
@@ -66,6 +68,11 @@ describe('public Home', () => {
     expect(images[6]).toHaveAttribute('src', '/images/arista-proveedores-comparacion.png')
     expect(images[6]).toHaveAttribute('loading', 'lazy')
     images.forEach((image) => expect(image).toHaveAttribute('alt'))
+    heroImages.forEach((image) => {
+      expect(image.getAttribute('alt')).toBeTruthy()
+      expect(image).toHaveClass('h-full', 'w-full', 'object-cover')
+      expect(image).not.toHaveClass('w-screen')
+    })
   })
 
   test('uses AVIF, WebP and PNG fallback sources for every approved image', () => {
@@ -113,9 +120,42 @@ describe('public Home', () => {
     render(<MemoryRouter><Home /></MemoryRouter>)
 
     expect(screen.getAllByTestId('hero-slide')).toHaveLength(5)
-    expect(screen.queryByRole('button', { name: /imagen anterior|imagen siguiente|pausar|reanudar|diapositiva/i })).not.toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: /imagen anterior|imagen siguiente|pausar|reanudar|reproducir|play|pause|diapositiva/i })).not.toBeInTheDocument()
     expect(document.body.textContent).not.toMatch(/Comparación de proveedores/)
     expect(activeSlide().querySelector('img')).toHaveAttribute('src', '/images/arista-hero-intermediacion-v3.png')
+  })
+
+  test('uses compact mobile hero, CTA and carousel layout classes', () => {
+    render(<MemoryRouter><Home /></MemoryRouter>)
+
+    const hero = screen.getByTestId('home-hero')
+    const carousel = screen.getByTestId('hero-carousel')
+    const ctas = screen.getByTestId('home-hero-ctas')
+    const buyCta = screen.getAllByRole('link', { name: /Necesito comprar/i }).find((link) => link.getAttribute('href') === '/oportunidades?tipo=comprar')
+    const sellCta = screen.getAllByRole('link', { name: /Quiero vender/i }).find((link) => link.getAttribute('href') === '/oportunidades?tipo=vender')
+
+    expect(hero).toHaveClass('overflow-hidden', 'px-4', 'py-6', 'sm:py-14', 'lg:py-16')
+    expect(carousel).toHaveClass('h-[clamp(190px,31svh,240px)]', 'overflow-hidden', 'sm:aspect-video')
+    expect(carousel).not.toHaveClass('w-screen')
+    expect(ctas).toHaveClass('grid', 'grid-cols-2', 'gap-2')
+    expect(buyCta).toHaveClass('min-h-11')
+    expect(sellCta).toHaveClass('min-h-11')
+    expect(buyCta).toHaveAttribute('href', '/oportunidades?tipo=comprar')
+    expect(sellCta).toHaveAttribute('href', '/oportunidades?tipo=vender')
+  })
+
+  test('keeps public card groups compact on mobile without horizontal overflow classes', () => {
+    render(<MemoryRouter><Home /></MemoryRouter>)
+
+    const audienceGrid = screen.getByTestId('home-audience-grid')
+    const cards = [...audienceGrid.querySelectorAll('article')]
+
+    expect(audienceGrid).toHaveClass('grid', 'gap-3', 'sm:gap-5')
+    expect(audienceGrid).not.toHaveClass('w-screen')
+    cards.forEach((card) => {
+      expect(card).toHaveClass('p-3.5', 'sm:p-6')
+      expect(card).not.toHaveClass('rounded-3xl')
+    })
   })
 
   test('rotates automatically after the carousel interval', () => {
@@ -144,5 +184,11 @@ describe('public Home', () => {
 
     act(() => vi.advanceTimersByTime(12000))
     expect(activeSlide().querySelector('img')).toHaveAttribute('src', '/images/arista-hero-intermediacion-v3.png')
+  })
+
+  test('does not render mojibake or replacement characters', () => {
+    render(<MemoryRouter><Home /></MemoryRouter>)
+
+    expect(document.body.textContent).not.toMatch(/[\u00c3\u00c2\ufffd]/)
   })
 })

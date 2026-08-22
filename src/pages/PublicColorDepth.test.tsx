@@ -1,6 +1,7 @@
 import { cleanup, render, screen } from '@testing-library/react'
 import { MemoryRouter } from 'react-router-dom'
 import { afterEach, describe, expect, test } from 'vitest'
+import { Layout } from '../components/Layout'
 import { About } from './About'
 import { Contact } from './Contact'
 import { Home } from './Home'
@@ -11,6 +12,28 @@ import { Services } from './Services'
 afterEach(() => cleanup())
 
 describe('ritmo cromático público', () => {
+  test('usa clases semánticas de profundidad basadas en la paleta oficial', () => {
+    const { container } = render(<MemoryRouter><Home /></MemoryRouter>)
+
+    expect(container.querySelector('.card-elevated')).toBeInTheDocument()
+    expect(container.querySelector('.brand-feature-card')).toBeInTheDocument()
+    expect(container.querySelector('.dark-card-solid')).toBeInTheDocument()
+    expect(container.querySelector('.section-muted-depth')).toBeInTheDocument()
+    expect(container.querySelector('.section-soft-depth')).toBeInTheDocument()
+    expect(container.querySelector('.section-green-wash')).toBeInTheDocument()
+  })
+
+  test('no renderiza clases de colores azules ni hex directos en superficies públicas', () => {
+    const pages = [<Home key="home" />, <About key="about" />, <Services key="services" />, <HowItWorks key="how" />, <Opportunities key="opportunities" />, <Contact key="contact" />]
+
+    for (const page of pages) {
+      const { container, unmount } = render(<MemoryRouter>{page}</MemoryRouter>)
+      expect(container.innerHTML).not.toMatch(/\b(?:blue|slate|cyan|sky|indigo)\b/i)
+      expect(container.innerHTML).not.toMatch(/#[0-9a-f]{6}/i)
+      unmount()
+    }
+  })
+
   test('Inicio usa hero oscuro oficial, mantiene un h1 y conserva rutas CTA', () => {
     const { container } = render(<MemoryRouter><Home /></MemoryRouter>)
     const hero = container.querySelector('section.bg-dark-accent')
@@ -45,6 +68,62 @@ describe('ritmo cromático público', () => {
 
     const how = render(<MemoryRouter><HowItWorks /></MemoryRouter>)
     expect(how.container.querySelector('section.bg-graphite ol')).toBeInTheDocument()
+  })
+
+  test('Inicio alterna superficies y destaca la card central de Arista', () => {
+    const { container } = render(<MemoryRouter><Home /></MemoryRouter>)
+    const sections = [...container.querySelectorAll('section')]
+    const classNames = sections.map((section) => section.className)
+    const aristaCard = screen.getAllByRole('heading', { name: 'Arista Partners' }).find((heading) => heading.tagName.toLowerCase() === 'h2')?.closest('div')
+
+    expect(classNames.some((className) => className.includes('section-soft-depth'))).toBe(true)
+    expect(classNames.some((className) => className.includes('section-green-wash'))).toBe(true)
+    expect(classNames.some((className) => className.includes('bg-graphite'))).toBe(true)
+    expect(aristaCard).toHaveClass('brand-feature-card')
+    expect(aristaCard).toHaveClass('text-on-brand')
+  })
+
+  test('encabezados internos usan banda oscura compacta', () => {
+    const pages = [<About key="about" />, <Services key="services" />, <HowItWorks key="how" />]
+
+    for (const page of pages) {
+      const { unmount } = render(<MemoryRouter>{page}</MemoryRouter>)
+      const h1 = screen.getByRole('heading', { level: 1 })
+      const header = h1.closest('section')
+
+      expect(header).toHaveClass('page-hero-dark')
+      expect(header).toHaveClass('py-12')
+      expect(h1).toHaveClass('text-white')
+      unmount()
+    }
+  })
+
+  test('CTA final y footer usan superficies distintas', () => {
+    const { container } = render(
+      <MemoryRouter>
+        <>
+          <Home />
+          <Layout />
+        </>
+      </MemoryRouter>,
+    )
+    const cta = container.querySelector('section.section-brand-depth')
+    const footer = document.querySelector('footer')
+
+    expect(cta).toHaveClass('bg-brand-dark')
+    expect(footer).toHaveClass('bg-graphite')
+    expect(footer).toHaveClass('border-t-4')
+  })
+
+  test('cards oscuras usan superficie sólida y texto legible', () => {
+    const { container } = render(<MemoryRouter><Home /></MemoryRouter>)
+    const darkCards = [...container.querySelectorAll('.dark-card-solid')]
+
+    expect(darkCards.length).toBeGreaterThan(0)
+    darkCards.forEach((card) => {
+      expect(card).toHaveClass('dark-card-solid')
+      expect(card.textContent?.trim().length).toBeGreaterThan(0)
+    })
   })
 
   test('los formularios no están dentro de una sección verde y las imágenes no reciben filtros', () => {
@@ -83,7 +162,7 @@ describe('ritmo cromático público', () => {
     for (const page of pages) {
       const { container, unmount } = render(<MemoryRouter>{page}</MemoryRouter>)
       const text = container.textContent ?? ''
-      expect(text).not.toMatch(/[ÃƒÃ‚Ã¢�]/)
+      expect(text).not.toMatch(/[\u00c3\u0192\u00c2\u00e2\ufffd]/)
       expect(container.innerHTML).not.toMatch(/#235B3E|#17202D|#FAF8F2|#EEF5F1/i)
       expect(text).not.toMatch(/casos de éxito|testimonios|clientes líderes|\b\d+(?:[.,]\d+)?%/i)
       expect(text).not.toMatch(/(?:sí|se)\s+garantiza|garantizamos (?:cierres|resultados)/i)

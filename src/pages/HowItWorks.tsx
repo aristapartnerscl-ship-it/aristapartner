@@ -19,36 +19,40 @@ const paths = [
 export function HowItWorks() {
   return (
     <>
-      <section className="border-b border-border bg-surface-muted px-5 py-16 lg:px-8 lg:py-20">
-        <div className="mx-auto max-w-7xl">
-          <p className="text-sm font-semibold uppercase tracking-[0.22em] text-brand">Cómo funciona</p>
-          <h1 className="mt-5 max-w-4xl text-4xl font-semibold tracking-tight text-graphite md:text-6xl">Una ruta clara para evaluar y desarrollar oportunidades</h1>
-          <p className="mt-6 max-w-2xl text-lg leading-8 text-text-muted">El proceso se adapta al punto de partida, pero mantiene una secuencia simple: entender, evaluar, conectar y acompañar.</p>
+      <section className="page-hero-dark px-5 py-12 sm:py-14 lg:px-8 lg:py-16">
+        <div className="relative z-10 mx-auto max-w-7xl">
+          <p className="text-sm font-semibold uppercase tracking-[0.22em] text-white/78">Cómo funciona</p>
+          <h1 className="mt-4 max-w-4xl text-3xl font-semibold tracking-tight text-white sm:text-4xl md:text-5xl">Una ruta clara para evaluar y desarrollar oportunidades</h1>
+          <p className="mt-5 max-w-2xl text-base leading-7 text-white/80 sm:text-lg sm:leading-8">El proceso se adapta al punto de partida, pero mantiene una secuencia simple: entender, evaluar, conectar y acompañar.</p>
         </div>
       </section>
 
-      <section className="bg-graphite px-5 py-16 text-on-brand lg:px-8">
+      <section className="bg-graphite px-5 py-12 text-on-brand sm:py-16 lg:px-8">
         <div className="mx-auto max-w-7xl">
           <SectionHeader tone="inverse" eyebrow="Proceso principal" title="Cuatro pasos para avanzar con criterio" />
-          <ol className="relative mt-10 grid gap-0 overflow-hidden rounded-lg border border-dark-border md:grid-cols-2 lg:grid-cols-4">
+          <ol className="relative mt-7 grid gap-2 overflow-hidden rounded-lg border border-dark-border sm:mt-10 sm:gap-0 md:grid-cols-2 lg:grid-cols-4">
             {steps.map(({ icon: Icon, title, text }, index) => (
-              <li key={title} className="relative border-b border-dark-border bg-dark-card p-6 last:border-b-0 md:border-r md:last:border-r-0 lg:border-b-0">
-                <span className="text-sm font-semibold uppercase tracking-[0.18em] text-on-brand">0{index + 1}</span>
-                <Icon className="mt-5 text-on-brand" size={27} aria-hidden="true" />
-                <h2 className="mt-5 text-xl font-semibold text-on-brand">{title}</h2>
-                <p className="mt-3 text-sm leading-6 text-on-brand-muted">{text}</p>
+              <li key={title} className="dark-card-solid relative flex gap-4 border-b border-dark-border p-4 last:border-b-0 sm:block sm:p-6 md:border-r md:last:border-r-0 lg:border-b-0">
+                <span className="shrink-0 text-2xl font-semibold text-on-brand sm:text-sm sm:uppercase sm:tracking-[0.18em]">0{index + 1}</span>
+                <span className="icon-chip-inverse hidden sm:mt-5 sm:inline-grid">
+                  <Icon size={22} aria-hidden="true" />
+                </span>
+                <span>
+                  <h2 className="text-lg font-semibold text-on-brand sm:mt-5 sm:text-xl">{title}</h2>
+                  <p className="mt-2 text-sm leading-6 text-white/82 sm:mt-3">{text}</p>
+                </span>
               </li>
             ))}
           </ol>
         </div>
       </section>
 
-      <section className="bg-white px-5 py-16 lg:px-8">
+      <section className="section-soft-depth bg-white px-5 py-12 sm:py-16 lg:px-8">
         <div className="mx-auto max-w-7xl">
           <SectionHeader eyebrow="Tres rutas" title="El proceso parte desde tu situación" text="Selecciona el camino que describe mejor lo que necesitas presentar." />
           <div className="mt-10 grid gap-5 lg:grid-cols-3">
             {paths.map((path) => (
-              <article key={path.title} className="flex h-full flex-col border-t-2 border-brand pt-5">
+              <article key={path.title} className="card-elevated card-accent-top flex h-full flex-col rounded-lg border p-5">
                 <h2 className="text-2xl font-semibold text-graphite">{path.title}</h2>
                 <p className="mt-3 flex-1 text-sm leading-6 text-text-muted">{path.text}</p>
                 <Link to={path.href} className="mt-6 inline-flex w-fit items-center gap-2 text-sm font-semibold text-brand hover:text-brand-dark">{path.label} <ArrowRight size={17} aria-hidden="true" /></Link>
@@ -58,12 +62,12 @@ export function HowItWorks() {
         </div>
       </section>
 
-      <section className="bg-surface-muted px-5 py-16 lg:px-8">
+      <section className="section-muted-depth bg-surface-muted px-5 py-12 sm:py-16 lg:px-8">
         <div className="mx-auto grid max-w-7xl gap-10 lg:grid-cols-[0.85fr_1.15fr]">
           <SectionHeader eyebrow="Después de enviar" title="La recepción no implica avance automático" text="Cada antecedente se revisa antes de definir los próximos pasos." />
           <ol className="grid gap-4">
             {['Recepción de antecedentes.', 'Revisión y posible solicitud de información adicional.', 'Decisión de avanzar, ajustar o no aceptar la gestión.', 'Coordinación de próximos pasos según el caso.'].map((item, index) => (
-              <li key={item} className="flex gap-4 rounded-lg border border-border bg-white p-4 shadow-sm">
+              <li key={item} className="card-elevated flex gap-4 rounded-lg border p-4">
                 <span className="grid h-8 w-8 shrink-0 place-items-center rounded-full border border-brand text-sm font-semibold text-brand">{index + 1}</span>
                 <span className="self-center text-sm leading-6 text-text-muted">{item}</span>
               </li>
@@ -72,7 +76,7 @@ export function HowItWorks() {
         </div>
       </section>
 
-      <section className="bg-white px-5 py-16 lg:px-8">
+      <section className="bg-white px-5 py-12 sm:py-16 lg:px-8">
         <div className="mx-auto grid max-w-7xl gap-8 lg:grid-cols-[0.8fr_1.2fr]">
           <SectionHeader eyebrow="Durante la oportunidad" title="Arista mantiene una participación definida" />
           <div className="grid gap-3 sm:grid-cols-2">
@@ -86,7 +90,7 @@ export function HowItWorks() {
         </div>
       </section>
 
-      <section className="bg-surface-muted px-5 py-16 lg:px-8">
+      <section className="bg-surface-muted px-5 py-12 sm:py-16 lg:px-8">
         <div className="mx-auto grid max-w-7xl gap-8 lg:grid-cols-[0.8fr_1.2fr]">
           <SectionHeader eyebrow="Acuerdos y condiciones" title="El alcance se conversa antes de gestionar" />
           <p className="text-base leading-7 text-text-muted">Antes de desarrollar ciertas operaciones pueden definirse el alcance, las responsabilidades, la compensación, el periodo de participación o atribución y otras condiciones particulares. Esta explicación no reemplaza los acuerdos ni documentos que correspondan a cada caso.</p>

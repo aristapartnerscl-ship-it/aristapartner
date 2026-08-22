@@ -11,6 +11,13 @@ describe('public Layout', () => {
     const user = userEvent.setup()
     render(<MemoryRouter><Layout /></MemoryRouter>)
 
+    const header = screen.getByRole('banner')
+    const headerLogo = within(header).getByAltText(/Arista Partners - Representación/i)
+    expect(headerLogo).toHaveAttribute('src', '/brand/arista-logo-horizontal.png')
+    expect(headerLogo).toHaveClass('object-contain')
+    expect(headerLogo).not.toHaveClass('hidden')
+    expect(headerLogo.parentElement).toHaveClass('min-w-0')
+
     const menuButton = screen.getByRole('button', { name: /Abrir men/i })
     expect(menuButton).toHaveAttribute('aria-expanded', 'false')
     expect(screen.getByRole('navigation', { name: /Navegaci/i })).toBeInTheDocument()

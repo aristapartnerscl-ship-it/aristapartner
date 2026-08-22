@@ -156,7 +156,7 @@ export function OpportunityForm({ config }: OpportunityFormProps) {
         />
       ))}
 
-      <section className="rounded-lg border border-border bg-white p-5 shadow-sm">
+      <section className="card-elevated rounded-lg border bg-white p-5">
         <div className="grid gap-4">
           <label className="flex items-start gap-3 text-sm leading-6 text-text-muted">
             <input
@@ -170,7 +170,7 @@ export function OpportunityForm({ config }: OpportunityFormProps) {
                   return next
                 })
               }}
-              className="mt-1 h-4 w-4 shrink-0 accent-[#1E4D3A]"
+              className="mt-1 h-4 w-4 shrink-0 accent-brand"
               aria-invalid={Boolean(errors.accuracy)}
               aria-describedby={errors.accuracy ? `${config.type}-accuracy-error` : undefined}
             />
@@ -190,7 +190,7 @@ export function OpportunityForm({ config }: OpportunityFormProps) {
               type="checkbox"
               checked={consent.marketing}
               onChange={(event) => setConsent((current) => ({ ...current, marketing: event.target.checked }))}
-              className="mt-1 h-4 w-4 shrink-0 accent-[#1E4D3A]"
+              className="mt-1 h-4 w-4 shrink-0 accent-brand"
             />
             <span>Acepto recibir información relacionada con oportunidades y servicios de Arista Partners.</span>
           </label>
@@ -221,7 +221,7 @@ export function OpportunityForm({ config }: OpportunityFormProps) {
       )}
 
       {publicFormsEnabled && (
-        <section className="rounded-lg border border-border bg-white p-5 shadow-sm">
+        <section className="card-elevated rounded-lg border bg-white p-5">
           {turnstileSiteKey ? (
             <TurnstileWidget siteKey={turnstileSiteKey} enabled onToken={handleTurnstileToken} onError={handleTurnstileError} resetSignal={turnstileReset} />
           ) : (

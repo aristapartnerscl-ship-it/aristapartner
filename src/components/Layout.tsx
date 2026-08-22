@@ -39,8 +39,8 @@ export function Layout() {
         Saltar al contenido
       </a>
       <header className="sticky top-0 z-50 border-b border-graphite/10 bg-white/95 backdrop-blur">
-        <div className="mx-auto flex max-w-7xl items-center justify-between gap-4 px-5 py-2.5 lg:px-8">
-          <Link to="/" className="flex items-center" onClick={() => setIsOpen(false)}>
+        <div className="mx-auto flex max-w-7xl items-center justify-between gap-3 px-4 py-2 lg:gap-4 lg:px-8 lg:py-2.5">
+          <Link to="/" className="flex min-w-0 items-center" onClick={() => setIsOpen(false)}>
             <span className="sr-only">Arista Partners - Representación & Desarrollo Comercial</span>
             <BrandLockup />
           </Link>
@@ -111,8 +111,8 @@ export function Layout() {
         <Outlet />
       </main>
 
-      <footer className="border-t border-graphite/10 bg-graphite text-white">
-        <div className="mx-auto grid max-w-7xl grid-cols-1 gap-8 px-5 py-10 sm:grid-cols-2 lg:grid-cols-[1.25fr_0.7fr_0.8fr_0.8fr] lg:px-8">
+      <footer className="border-t-4 border-brand bg-graphite text-white">
+        <div className="mx-auto grid max-w-7xl grid-cols-1 gap-6 px-5 py-8 sm:grid-cols-2 sm:gap-8 lg:grid-cols-[1.25fr_0.7fr_0.8fr_0.8fr] lg:px-8 lg:py-10">
           <div className="sm:col-span-2 lg:col-span-1">
             <div className="flex items-start gap-3">
               <span className="inline-flex shrink-0 rounded-md bg-white p-2.5" aria-hidden="true">

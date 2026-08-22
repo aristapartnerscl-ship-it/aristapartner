@@ -11,7 +11,7 @@ type FormSectionProps = {
 
 export function FormSection({ section, values, errors, formType, onChange }: FormSectionProps) {
   return (
-    <section className="rounded-lg border border-border bg-white p-5 shadow-sm">
+    <section className="card-elevated rounded-lg border bg-white p-5">
       <h2 className="text-xl font-semibold text-graphite">{section.title}</h2>
       <div className="mt-6 grid gap-5 md:grid-cols-2">
         {section.fields.map((field) => (
