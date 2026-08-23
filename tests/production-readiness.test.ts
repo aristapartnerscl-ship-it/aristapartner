@@ -259,6 +259,84 @@ describe('production readiness hardening', () => {
     expect(sql).not.toMatch(/\b(email|phone|message|payload|notes)\s+(text|jsonb)\s*,?\s*\n\s*already_converted/i)
   })
 
+  test('adds admin notifications with owner-only RLS and no delete or privileged bypass', () => {
+    const migration = findMigration('add_admin_notifications')
+    const sql = migration.sql.toLowerCase()
+    const frontendSource = [
+      'src/components/admin/AdminNotificationsCenter.tsx',
+      'src/repositories/admin-repository.ts',
+      'src/repositories/supabase-admin-repository.ts',
+      'src/types/admin.ts',
+      'src/types/database.ts',
+    ].map((file) => readProjectFile(file).toLowerCase()).join('\n')
+
+    expect(sql).toContain('create table public.admin_notifications')
+    expect(sql).toContain('recipient_id uuid not null references public.admin_profiles(id) on delete restrict')
+    expect(sql).toContain("notification_type in ('form_submission_received')")
+    expect(sql).toContain("entity_type is null or entity_type in ('form_submission')")
+    expect(sql).toContain('(entity_type is null and entity_id is null)')
+    expect(sql).toContain('(entity_type is not null and entity_id is not null)')
+    expect(sql).toContain('char_length(title) between 1 and 120')
+    expect(sql).toContain('char_length(message) <= 500')
+    expect(sql).toContain("action_path like '/admin/%'")
+    expect(sql).toContain("action_path not like '/admin//%'")
+    expect(sql).toContain("action_path not like '%://%'")
+    expect(sql).toContain("action_path !~ '[[:cntrl:][:space:]]'")
+    expect(sql).toContain('create index admin_notifications_recipient_id_idx')
+    expect(sql).toContain('create index admin_notifications_read_at_idx')
+    expect(sql).toContain('create index admin_notifications_created_at_idx')
+    expect(sql).toContain('create index admin_notifications_unread_idx')
+    expect(sql).toContain('where read_at is null')
+    expect(sql).toContain('alter table public.admin_notifications enable row level security')
+    expect(sql).toContain('revoke all on public.admin_notifications from anon, authenticated')
+    expect(sql).toContain('grant select on public.admin_notifications to authenticated')
+    expect(sql).toContain('grant update (read_at) on public.admin_notifications to authenticated')
+    expect(sql).not.toMatch(/grant\s+select\s*,\s*update\s+on\s+public\.admin_notifications\s+to\s+authenticated/i)
+    expect(sql).not.toMatch(/grant\s+update\s+on\s+public\.admin_notifications\s+to\s+authenticated/i)
+    expect(sql).not.toMatch(/grant\s+insert\b[\s\S]{0,80}public\.admin_notifications/i)
+    expect(sql).toContain('for select')
+    expect(sql).toContain('for update')
+    expect(sql).toContain('to authenticated')
+    expect(sql).toContain('recipient_id = (select auth.uid())')
+    expect(sql).toContain("ap.is_active = true")
+    expect(sql).toContain("ap.role = 'owner'")
+    expect(sql).toContain('no insert policy is added in this phase')
+    expect(sql).not.toMatch(/\bfor\s+delete\b/i)
+    expect(sql).not.toMatch(/\bgrant\s+delete\b/i)
+    expect(sql).not.toMatch(/\bsecurity\s+definer\b/i)
+    expect(sql).not.toMatch(/auth\.role\(/i)
+    expect(sql).not.toMatch(/user_metadata/i)
+    expect(sql).not.toMatch(/service_role/i)
+
+    expect(frontendSource).toContain('admin_notifications')
+    expect(frontendSource).toContain('startswith(\'/admin/\')')
+    expect(frontendSource).not.toMatch(/\.delete\s*\(/)
+    expect(frontendSource).not.toMatch(/service_role|supabase_service|secret|resend|localstorage/i)
+
+    const repository = readProjectFile('src/repositories/supabase-admin-repository.ts')
+    const notificationRepository = repository.slice(
+      repository.indexOf('async listAdminNotifications'),
+      repository.indexOf('async getOrganizationSettings'),
+    )
+    const singleUpdate = repository.slice(
+      repository.indexOf('async markAdminNotificationRead'),
+      repository.indexOf('async markAllAdminNotificationsRead'),
+    )
+    const bulkUpdate = repository.slice(
+      repository.indexOf('async markAllAdminNotificationsRead'),
+      repository.indexOf('async getOrganizationSettings'),
+    )
+
+    expect(notificationRepository).not.toMatch(/\.insert\s*\(/)
+    expect(notificationRepository).not.toMatch(/\.delete\s*\(/)
+    expect(singleUpdate).toContain(".update({ read_at: new Date().toISOString() })")
+    expect(bulkUpdate).toContain(".update({ read_at: new Date().toISOString() })")
+    expect(singleUpdate).toContain(".eq('recipient_id', admin.userId)")
+    expect(bulkUpdate).toContain(".eq('recipient_id', admin.userId)")
+    expect(singleUpdate).not.toMatch(/\.update\s*\(\s*\{[^}]*\b(recipient_id|notification_type|entity_type|entity_id|title|message|action_path|created_at)\b/)
+    expect(bulkUpdate).not.toMatch(/\.update\s*\(\s*\{[^}]*\b(recipient_id|notification_type|entity_type|entity_id|title|message|action_path|created_at)\b/)
+  })
+
   test('requires an unambiguous contact strategy for public submission conversions', () => {
     const { sql } = findMigration('add_transactional_conversions')
 

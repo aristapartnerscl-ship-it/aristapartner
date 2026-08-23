@@ -20,6 +20,18 @@ export const emptyAdminRepository: AdminRepository = {
   async getCurrentAdminProfile() {
     return { data: null, error: null }
   },
+  async listAdminNotifications() {
+    return { data: [], error: null }
+  },
+  async getUnreadAdminNotificationCount() {
+    return { data: 0, error: null }
+  },
+  async markAdminNotificationRead() {
+    return { data: null, error: 'La conexion del panel administrativo aun no esta disponible.', errorKind: 'auth' }
+  },
+  async markAllAdminNotificationsRead() {
+    return { data: 0, error: 'La conexion del panel administrativo aun no esta disponible.', errorKind: 'auth' }
+  },
   async getOrganizationSettings() {
     return { data: null, error: null }
   },

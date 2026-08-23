@@ -48,6 +48,8 @@ export type AgreementPayerType = 'buyer' | 'seller' | 'supplier' | 'both' | 'oth
 export type SubmissionType = 'buy' | 'sell' | 'supplier' | 'contact'
 export type SubmissionStatus = 'received' | 'under_review' | 'converted' | 'rejected' | 'spam' | 'archived'
 export type OrganizationSettingsKey = 'arista_partners'
+export type AdminNotificationType = 'form_submission_received'
+export type AdminNotificationEntityType = 'form_submission'
 
 export type AdminProfileRow = Override<TableRow<'admin_profiles'>, { role: AdminRole }>
 
@@ -95,6 +97,28 @@ export type OrganizationSettingsRow = Override<
     singleton_key: OrganizationSettingsKey
     default_opportunity_priority: Priority
     default_commission_type: CommissionType | null
+  }
+>
+
+export type AdminNotificationRow = Override<
+  TableRow<'admin_notifications'>,
+  {
+    notification_type: AdminNotificationType
+    entity_type: AdminNotificationEntityType | null
+  }
+>
+export type AdminNotificationInsert = Override<
+  TableInsert<'admin_notifications'>,
+  {
+    notification_type: AdminNotificationType
+    entity_type?: AdminNotificationEntityType | null
+  }
+>
+export type AdminNotificationUpdate = Override<
+  TableUpdate<'admin_notifications'>,
+  {
+    notification_type?: AdminNotificationType
+    entity_type?: AdminNotificationEntityType | null
   }
 >
 

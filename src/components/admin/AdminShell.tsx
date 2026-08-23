@@ -3,6 +3,7 @@ import { useEffect, useState, type ReactNode } from 'react'
 import { NavLink } from 'react-router-dom'
 import { BrandLockup } from '../BrandLockup'
 import { useAdminAuth } from '../../admin/useAdminAuth'
+import { AdminNotificationsCenter } from './AdminNotificationsCenter'
 
 const adminNav = [
   { label: 'Dashboard', href: '/admin' },
@@ -35,13 +36,16 @@ export function AdminShell({ children }: { children: ReactNode }) {
           <BrandLockup />
           <div className="flex items-center gap-3">
             {auth.status === 'ready' && (
-              <button
-                type="button"
-                onClick={() => void auth.signOut()}
-                className="hidden rounded-md border border-slate-300 bg-white px-3 py-2 text-sm font-semibold text-[#17202d] hover:border-[#235b3e] sm:inline-flex"
-              >
-                Cerrar sesión
-              </button>
+              <>
+                <AdminNotificationsCenter />
+                <button
+                  type="button"
+                  onClick={() => void auth.signOut()}
+                  className="hidden rounded-md border border-slate-300 bg-white px-3 py-2 text-sm font-semibold text-[#17202d] hover:border-[#235b3e] focus-visible:ring-2 focus-visible:ring-[#235b3e] focus-visible:ring-offset-2 sm:inline-flex"
+                >
+                  Cerrar sesión
+                </button>
+              </>
             )}
             <button
               type="button"

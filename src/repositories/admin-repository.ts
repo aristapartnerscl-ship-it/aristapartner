@@ -1,5 +1,6 @@
 import type {
   AdminProfile,
+  AdminNotificationRecord,
   CommercialAgreementCreateValues,
   CommercialAgreementRecord,
   CommercialAgreementUpdateValues,
@@ -38,6 +39,10 @@ import type {
 
 export type AdminRepository = {
   getCurrentAdminProfile(userId: string): Promise<RepositoryResult<AdminProfile | null>>
+  listAdminNotifications(limit?: number): Promise<RepositoryResult<AdminNotificationRecord[]>>
+  getUnreadAdminNotificationCount(): Promise<RepositoryResult<number>>
+  markAdminNotificationRead(id: string): Promise<RepositoryResult<AdminNotificationRecord | null>>
+  markAllAdminNotificationsRead(): Promise<RepositoryResult<number>>
   getOrganizationSettings(): Promise<RepositoryResult<OrganizationSettingsRecord | null>>
   updateOrganizationSettings(input: OrganizationSettingsUpdateValues): Promise<RepositoryResult<OrganizationSettingsRecord | null>>
   createOrganizationSettingsIfMissing(input?: OrganizationSettingsCreateValues): Promise<RepositoryResult<OrganizationSettingsRecord | null>>

@@ -1,6 +1,7 @@
 import type { PostgrestError, SupabaseClient } from '@supabase/supabase-js'
 import type {
   AdminProfile,
+  AdminNotificationRecord,
   CommercialAgreementCreateValues,
   CommercialAgreementRecord,
   CommercialAgreementUpdateValues,
@@ -81,6 +82,9 @@ const linkedOpportunityColumns = 'id, reference_code, title, status, opportunity
 
 const formSubmissionColumns =
   'id, submission_type, payload, status, submitted_at, reviewed_at, reviewed_by, converted_entity_type, converted_entity_id, source_ip_hash, user_agent, consent_contact, consent_marketing, privacy_version'
+
+const adminNotificationColumns =
+  'id, recipient_id, notification_type, entity_type, entity_id, title, message, action_path, read_at, created_at'
 
 const commercialAgreementColumns =
   'id, agreement_code, opportunity_id, counterparty_type, contact_id, supplier_id, payer_type, compensation_model, management_fee, commission_type, commission_value, currency, attribution_start, attribution_end, agreement_status, notes, archived_at, archived_by, created_at, updated_at, created_by'
@@ -255,6 +259,63 @@ export class SupabaseAdminRepository implements AdminRepository {
 
     if (error) return fail<AdminProfile | null>(null, error, 'admin_profile.read')
     return ok(data as AdminProfile | null)
+  }
+
+  async listAdminNotifications(limit = 10) {
+    const safeLimit = Math.min(Math.max(limit, 1), 20)
+    const client = this.client as SupabaseClient
+    const { data, error } = await client
+      .from('admin_notifications')
+      .select(adminNotificationColumns)
+      .order('created_at', { ascending: false })
+      .limit(safeLimit)
+
+    if (error) return fail<AdminNotificationRecord[]>([], error, 'admin_notifications.list')
+    return ok((data ?? []) as AdminNotificationRecord[])
+  }
+
+  async getUnreadAdminNotificationCount() {
+    const client = this.client as SupabaseClient
+    const { count, error } = await client
+      .from('admin_notifications')
+      .select('id', { count: 'exact', head: true })
+      .is('read_at', null)
+
+    if (error) return fail<number>(0, error, 'admin_notifications.unread_count')
+    return ok(count ?? 0)
+  }
+
+  async markAdminNotificationRead(id: string) {
+    const admin = await this.ensureActiveOwner()
+    if (!admin.userId) return { data: null, error: admin.error, errorKind: admin.errorKind }
+
+    const client = this.client as SupabaseClient
+    const { data, error } = await client
+      .from('admin_notifications')
+      .update({ read_at: new Date().toISOString() })
+      .eq('id', id)
+      .eq('recipient_id', admin.userId)
+      .select(adminNotificationColumns)
+      .single()
+
+    if (error) return fail<AdminNotificationRecord | null>(null, error, 'admin_notifications.mark_read')
+    return ok(data as AdminNotificationRecord)
+  }
+
+  async markAllAdminNotificationsRead() {
+    const admin = await this.ensureActiveOwner()
+    if (!admin.userId) return { data: 0, error: admin.error, errorKind: admin.errorKind }
+
+    const client = this.client as SupabaseClient
+    const { data, error } = await client
+      .from('admin_notifications')
+      .update({ read_at: new Date().toISOString() })
+      .eq('recipient_id', admin.userId)
+      .is('read_at', null)
+      .select('id')
+
+    if (error) return fail<number>(0, error, 'admin_notifications.mark_all_read')
+    return ok((data ?? []).length)
   }
 
   async getOrganizationSettings() {

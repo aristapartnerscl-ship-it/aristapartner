@@ -22,6 +22,9 @@ import type {
   FormSubmissionUpdate,
   InquiryInsert,
   ActivityType,
+  AdminNotificationInsert,
+  AdminNotificationRow,
+  AdminNotificationUpdate,
   InquiryRow,
   InquiryStatus,
   OpportunityInsert,
@@ -46,6 +49,9 @@ import type {
 
 export type {
   ActivityType,
+  AdminNotificationInsert,
+  AdminNotificationRow,
+  AdminNotificationUpdate,
   AgreementCounterpartyType,
   AgreementPayerType,
   AgreementStatus,
@@ -72,6 +78,8 @@ export type {
 }
 
 export type AdminProfile = AdminProfileRow
+
+export type AdminNotificationRecord = AdminNotificationRow
 
 export type ContactRecord = ContactRow
 
