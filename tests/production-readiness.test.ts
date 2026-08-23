@@ -337,6 +337,61 @@ describe('production readiness hardening', () => {
     expect(bulkUpdate).not.toMatch(/\.update\s*\(\s*\{[^}]*\b(recipient_id|notification_type|entity_type|entity_id|title|message|action_path|created_at)\b/)
   })
 
+  test('adds idempotency for generated form-submission notifications without widening grants', () => {
+    const migration = findMigration('add_admin_notification_idempotency')
+    const sql = migration.sql.toLowerCase()
+
+    expect(sql).toContain('create unique index admin_notifications_form_submission_recipient_unique_idx')
+    expect(sql).toContain('on public.admin_notifications (recipient_id, notification_type, entity_type, entity_id)')
+    expect(sql).toContain("where notification_type = 'form_submission_received'")
+    expect(sql).toContain("and entity_type = 'form_submission'")
+    expect(sql).toContain('and entity_id is not null')
+    expect(sql).not.toMatch(/\bgrant\b/i)
+    expect(sql).not.toMatch(/\bcreate\s+policy\b/i)
+    expect(sql).not.toMatch(/\balter\s+table\b/i)
+    expect(sql).not.toMatch(/\bsecurity\s+definer\b/i)
+    expect(sql).not.toMatch(/service_role/i)
+    expect(sql).not.toMatch(/auth\.role\(/i)
+    expect(sql).not.toMatch(/user_metadata/i)
+  })
+
+  test('generates public form notifications only after a confirmed submission insert', () => {
+    const index = readProjectFile('supabase/functions/submit-public-form/index.ts')
+    const notificationSource = readProjectFile('supabase/functions/submit-public-form/notifications.ts')
+    const sourceFiles = [
+      ...listTextFiles('src'),
+      ...listTextFiles('supabase/functions/submit-public-form'),
+    ].filter((file) => !file.endsWith('notifications.ts') && !file.endsWith('index.ts'))
+    const nonEdgeSource = sourceFiles.map((file) => readProjectFile(file)).join('\n')
+    const formInsertIndex = index.indexOf(".from('form_submissions')")
+    const notificationCreateIndex = index.indexOf('createAdminNotifications(')
+
+    expect(formInsertIndex).toBeGreaterThan(-1)
+    expect(notificationCreateIndex).toBeGreaterThan(formInsertIndex)
+    expect(index.slice(formInsertIndex, notificationCreateIndex)).toContain(".insert({")
+    expect(index.slice(formInsertIndex, notificationCreateIndex)).toContain(".select('id')")
+    expect(index.slice(formInsertIndex, notificationCreateIndex)).toContain('.single()')
+    expect(index).toContain('if (error || !data?.id)')
+    expect(index).toContain('data.id,')
+    expect(index).toContain('validation.value.submissionType,')
+    expect(index).not.toMatch(/recipient_id|action_path|title/)
+
+    const beforeNotification = index.slice(0, notificationCreateIndex)
+    expect(beforeNotification).toContain("validation.reason === 'honeypot'")
+    expect(beforeNotification).toContain('validateTurnstile(')
+
+    expect(notificationSource).toContain(".from('admin_profiles')")
+    expect(notificationSource).toContain(".eq('role', 'owner')")
+    expect(notificationSource).toContain(".eq('is_active', true)")
+    expect(notificationSource).toContain("notification_type: 'form_submission_received'")
+    expect(notificationSource).toContain("entity_type: 'form_submission'")
+    expect(notificationSource).toContain("action_path: adminNotificationActionPath")
+    expect(notificationSource).toContain("export const adminNotificationActionPath = '/admin/recepciones'")
+    expect(notificationSource).not.toMatch(/\b(fullName|email|phone|payload|token|service_role|supabase_service|secret)\b/i)
+
+    expect(nonEdgeSource).not.toMatch(/\.from\(['"]admin_notifications['"]\)[\s\S]{0,160}\.insert\s*\(/)
+  })
+
   test('requires an unambiguous contact strategy for public submission conversions', () => {
     const { sql } = findMigration('add_transactional_conversions')
 

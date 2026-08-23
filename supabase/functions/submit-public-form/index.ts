@@ -1,5 +1,6 @@
 import { createClient } from 'npm:@supabase/supabase-js@2'
 import { corsHeaders, isAllowedOrigin, parseCsv } from './cors.ts'
+import { createAdminNotifications, createSupabaseAdminNotificationStore } from './notifications.ts'
 import { parseJsonBody, validatePublicForm } from './validation.ts'
 import type { TurnstileSiteverifyResponse } from './types.ts'
 
@@ -116,6 +117,12 @@ Deno.serve(async (request) => {
   if (error || !data?.id) {
     return safeError(genericErrorMessage, 503, headers)
   }
+
+  await createAdminNotifications(
+    createSupabaseAdminNotificationStore(supabase),
+    data.id,
+    validation.value.submissionType,
+  )
 
   return json({ ok: true, submissionId: data.id, message: successMessage }, { status: 201, headers })
 })
