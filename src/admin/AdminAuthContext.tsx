@@ -82,16 +82,6 @@ export function AdminAuthProvider({ children }: { children: ReactNode }) {
     setStatus('signed_out')
   }
 
-  async function sendPasswordRecovery(email: string) {
-    if (!isSupabaseConfigured || !supabase) {
-      return 'La recuperación de contraseña estará disponible cuando Supabase esté configurado.'
-    }
-    if (!email.trim()) {
-      return 'Ingresa tu correo electrónico para preparar la recuperación.'
-    }
-    return 'La recuperación de contraseña está preparada, pero no se habilitará hasta definir el flujo de correo.'
-  }
-
   const value = useMemo<AdminAuthContextValue>(
     () => ({
       status,
@@ -100,7 +90,6 @@ export function AdminAuthProvider({ children }: { children: ReactNode }) {
       profile,
       signIn,
       signOut,
-      sendPasswordRecovery,
     }),
     [profile, session, status],
   )

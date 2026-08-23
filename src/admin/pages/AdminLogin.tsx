@@ -1,16 +1,17 @@
 import { Eye, EyeOff } from 'lucide-react'
 import { useState, type FormEvent } from 'react'
-import { Navigate } from 'react-router-dom'
+import { Link, Navigate, useLocation } from 'react-router-dom'
 import { BrandLockup } from '../../components/BrandLockup'
 import { isSupabaseConfigured } from '../../lib/supabase-config'
 import { useAdminAuth } from '../useAdminAuth'
 
 export function AdminLogin() {
   const auth = useAdminAuth()
+  const location = useLocation()
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [showPassword, setShowPassword] = useState(false)
-  const [message, setMessage] = useState('')
+  const [message, setMessage] = useState(location.state === 'password-updated' ? 'Contraseña actualizada. Ya puedes iniciar sesión.' : '')
   const [loading, setLoading] = useState(false)
 
   if (auth.status === 'ready') {
@@ -28,11 +29,6 @@ export function AdminLogin() {
     const error = await auth.signIn(email, password)
     setLoading(false)
     if (error) setMessage(error)
-  }
-
-  async function handleRecovery() {
-    const result = await auth.sendPasswordRecovery(email)
-    if (result) setMessage(result)
   }
 
   return (
@@ -97,9 +93,9 @@ export function AdminLogin() {
             >
               {loading ? 'Iniciando sesión...' : 'Iniciar sesión'}
             </button>
-            <button type="button" onClick={handleRecovery} className="text-sm font-semibold text-[#235b3e]">
+            <Link to="/admin/recuperar-contrasena" className="text-center text-sm font-semibold text-[#235b3e]">
               Recuperación de contraseña
-            </button>
+            </Link>
           </form>
         </div>
       </div>

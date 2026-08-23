@@ -66,7 +66,6 @@ function renderWithAuth() {
           },
           signIn: vi.fn(),
           signOut: vi.fn(),
-          sendPasswordRecovery: vi.fn(),
         }}
       >
         <AdminFollowUps />

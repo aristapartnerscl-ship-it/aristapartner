@@ -11,7 +11,6 @@ export type AdminAuthContextValue = {
   profile: AdminProfile | null
   signIn: (email: string, password: string) => Promise<string | null>
   signOut: () => Promise<void>
-  sendPasswordRecovery: (email: string) => Promise<string | null>
 }
 
 export const AdminAuthContext = createContext<AdminAuthContextValue | null>(null)

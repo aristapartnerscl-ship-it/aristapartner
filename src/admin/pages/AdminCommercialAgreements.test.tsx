@@ -164,7 +164,6 @@ function renderOpportunityDetail() {
           profile: { id: 'owner-1', full_name: 'Owner Admin', role: 'owner', is_active: true, created_at: '', updated_at: '' },
           signIn: vi.fn(),
           signOut: vi.fn(),
-          sendPasswordRecovery: vi.fn(),
         }}
       >
         <Routes>

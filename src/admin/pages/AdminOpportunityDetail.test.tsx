@@ -82,7 +82,6 @@ function renderDetail() {
           },
           signIn: vi.fn(),
           signOut: vi.fn(),
-          sendPasswordRecovery: vi.fn(),
         }}
       >
         <Routes>

@@ -13,12 +13,15 @@ import { AdminOpportunities } from './pages/AdminOpportunities'
 import { AdminSupplierDetail, AdminSupplierFormPage, AdminSuppliers } from './pages/AdminSuppliers'
 import { AdminSettings } from './pages/AdminSettings'
 import { AdminLogin } from './pages/AdminLogin'
+import { AdminPasswordRecoveryRequest, AdminPasswordUpdate } from './pages/AdminPasswordRecovery'
 
 export default function AdminRoutes() {
   return (
     <AdminAuthProvider>
       <Routes>
         <Route path="login" element={<AdminLogin />} />
+        <Route path="recuperar-contrasena" element={<AdminPasswordRecoveryRequest />} />
+        <Route path="actualizar-contrasena" element={<AdminPasswordUpdate />} />
         <Route element={<AdminGuard />}>
           <Route index element={<AdminDashboard />} />
           <Route path="oportunidades" element={<AdminOpportunities />} />
