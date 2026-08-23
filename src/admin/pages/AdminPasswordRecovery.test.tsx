@@ -194,6 +194,27 @@ describe('admin password recovery', () => {
     expect(screen.getByRole('link', { name: 'Solicitar un enlace nuevo' })).toHaveAttribute('href', '/admin/recuperar-contrasena')
   })
 
+  test('hash de Supabase con access_denied y otp_expired muestra mensaje seguro sin excepcion', async () => {
+    const logSpy = vi.spyOn(console, 'log').mockImplementation(() => undefined)
+    const errorSpy = vi.spyOn(console, 'error').mockImplementation(() => undefined)
+    window.history.replaceState(
+      null,
+      '',
+      '/admin/actualizar-contrasena#error=access_denied&error_code=otp_expired&error_description=Email+link+is+invalid+or+has+expired',
+    )
+
+    expect(() => renderPasswordUpdate()).not.toThrow()
+
+    expect(await screen.findByRole('alert')).toHaveTextContent(
+      'El enlace de recuperación no es válido, expiró o ya fue utilizado. Solicita un nuevo enlace para continuar.',
+    )
+    expect(screen.getByRole('link', { name: 'Solicitar un enlace nuevo' })).toHaveAttribute('href', '/admin/recuperar-contrasena')
+    expect(screen.queryByText(/Email link|access_denied|otp_expired/i)).not.toBeInTheDocument()
+    expect(authMocks.getSession).not.toHaveBeenCalled()
+    expect(logSpy).not.toHaveBeenCalled()
+    expect(errorSpy).not.toHaveBeenCalled()
+  })
+
   test('rechaza contraseña menor a 12 caracteres y requisitos incompletos', async () => {
     const user = userEvent.setup()
     renderPasswordUpdate()

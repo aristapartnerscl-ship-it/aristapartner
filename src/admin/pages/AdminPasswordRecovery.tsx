@@ -24,9 +24,26 @@ function isValidEmail(value: string) {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value)
 }
 
+function getUrlParams(value: string) {
+  try {
+    return new URLSearchParams(value.replace(/^[?#]/, ''))
+  } catch {
+    return new URLSearchParams()
+  }
+}
+
+function recoveryUrlIndicatesInvalidLink() {
+  const hash = getUrlParams(window.location.hash)
+  const query = getUrlParams(window.location.search)
+  const error = hash.get('error') || query.get('error')
+  const errorCode = hash.get('error_code') || query.get('error_code')
+
+  return error === 'access_denied' || errorCode === 'otp_expired'
+}
+
 function recoveryUrlIndicatesSession() {
-  const hash = new URLSearchParams(window.location.hash.replace(/^#/, ''))
-  const query = new URLSearchParams(window.location.search)
+  const hash = getUrlParams(window.location.hash)
+  const query = getUrlParams(window.location.search)
   return hash.get('type') === 'recovery' || query.get('type') === 'recovery'
 }
 
@@ -144,6 +161,13 @@ export function AdminPasswordUpdate() {
     if (!isSupabaseConfigured || !supabase) {
       setStatus('invalid')
       setMessage(invalidRecoveryMessage)
+      return undefined
+    }
+
+    if (recoveryUrlIndicatesInvalidLink()) {
+      setStatus('invalid')
+      setMessage(invalidRecoveryMessage)
+      window.setTimeout(() => feedbackRef.current?.focus(), 0)
       return undefined
     }
 

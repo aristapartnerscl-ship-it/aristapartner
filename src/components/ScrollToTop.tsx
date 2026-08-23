@@ -1,12 +1,13 @@
 import { useEffect } from 'react'
 import { useLocation } from 'react-router-dom'
+import { getElementBySafeHash } from '../utils/hash-anchor'
 
 export function ScrollToTop() {
   const { pathname, hash } = useLocation()
 
   useEffect(() => {
     if (hash) {
-      const target = document.querySelector<HTMLElement>(hash)
+      const target = getElementBySafeHash(hash)
       if (target) {
         target.scrollIntoView({ behavior: 'smooth', block: 'start' })
         target.focus({ preventScroll: true })
