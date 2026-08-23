@@ -12,6 +12,9 @@ describe('public Layout', () => {
     render(<MemoryRouter><Layout /></MemoryRouter>)
 
     const header = screen.getByRole('banner')
+    const headerSymbol = header.querySelector('img[src="/brand/arista-symbol-v2.png"]')
+    expect(headerSymbol).toBeInTheDocument()
+    expect(headerSymbol).toHaveClass('object-contain')
     const headerLogo = within(header).getByAltText(/Arista Partners - Representación/i)
     expect(headerLogo).toHaveAttribute('src', '/brand/arista-logo-horizontal.png')
     expect(headerLogo).toHaveClass('object-contain')
@@ -38,7 +41,7 @@ describe('public Layout', () => {
     const footer = screen.getByRole('contentinfo')
     expect(footer).toHaveTextContent('Arista Partners')
     expect(footer).toHaveTextContent('Representación & Desarrollo Comercial')
-    expect(footer.querySelector('img[alt=""]')).toBeInTheDocument()
+    expect(footer.querySelector('img[alt=""]')).toHaveAttribute('src', '/brand/arista-symbol-v2.png')
     expect(footer.querySelector('img[alt*="Representación"]')).not.toBeInTheDocument()
     expect(within(footer).getByRole('link', { name: 'Contacto' })).toHaveAttribute('href', '/contacto')
     expect(within(footer).getByRole('link', { name: 'Términos y condiciones' })).toHaveAttribute('href', '/terminos')

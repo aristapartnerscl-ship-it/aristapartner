@@ -116,7 +116,7 @@ export function Layout() {
           <div className="sm:col-span-2 lg:col-span-1">
             <div className="flex items-start gap-3">
               <span className="inline-flex shrink-0 rounded-md bg-white p-2.5" aria-hidden="true">
-                <img src="/brand/arista-symbol.png" alt="" className="h-10 w-10 object-contain" />
+                <img src="/brand/arista-symbol-v2.png" alt="" className="h-10 w-10 object-contain" />
               </span>
               <div className="pt-0.5">
                 <p className="text-base font-semibold text-white">Arista Partners</p>

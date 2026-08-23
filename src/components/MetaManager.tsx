@@ -29,7 +29,7 @@ export function MetaManager() {
     upsertMeta('meta[property="og:description"]', { property: 'og:description', content: description })
     upsertMeta('meta[property="og:type"]', { property: 'og:type', content: 'website' })
     upsertMeta('meta[name="theme-color"]', { name: 'theme-color', content: siteMeta.themeColor })
-    upsertMeta('link[rel="icon"]', { rel: 'icon', type: 'image/png', href: '/brand/arista-symbol.png' })
+    upsertMeta('link[rel="icon"][sizes="32x32"]', { rel: 'icon', type: 'image/png', sizes: '32x32', href: '/brand/arista-app-icon-v2-32.png' })
 
     const canonical = document.head.querySelector('link[rel="canonical"]')
     if (canonical) canonical.remove()
