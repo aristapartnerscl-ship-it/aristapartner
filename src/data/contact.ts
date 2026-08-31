@@ -8,6 +8,9 @@ export const publicContact = {
   email: 'contacto@aristapartners.cl',
   phone: '+56 9 8289 1168',
   whatsappNumber: '56982891168',
+  instagram: 'https://www.instagram.com/aristapartners/',
+  facebook: 'https://www.facebook.com/profile.php?id=61593622778886',
+  linkedin: 'https://www.linkedin.com/company/arista-partners/?viewAsMember=true',
 } as const
 
 export const contactChannels: ContactChannel[] = [

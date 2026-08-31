@@ -52,15 +52,22 @@ describe('public Layout', () => {
     expect(within(footer).getByRole('link', { name: 'Términos y condiciones' })).toHaveAttribute('href', '/terminos')
   })
 
-  test('publishes the official contact email and phone', () => {
+  test('publishes official contact and social links without repeating them in the brand block', () => {
     render(<MemoryRouter><Layout /></MemoryRouter>)
 
     const footer = screen.getByRole('contentinfo')
-    expect(within(footer).getByRole('link', { name: /contacto@aristapartners\.cl/i })).toHaveAttribute(
-      'href',
-      'mailto:contacto@aristapartners.cl',
-    )
-    expect(footer).toHaveTextContent('+56 9 8289 1168')
+    expect(within(footer).getByText('CONTACTO')).toBeInTheDocument()
+    expect(within(footer).getByRole('link', { name: 'Enviar correo a Arista Partners' })).toHaveAttribute('href', 'mailto:contacto@aristapartners.cl')
+    expect(within(footer).getByRole('link', { name: 'Contactar Arista Partners por WhatsApp' })).toHaveAttribute('href', 'https://wa.me/56982891168')
+    expect(within(footer).getByRole('link', { name: 'Instagram de Arista Partners' })).toHaveAttribute('href', 'https://www.instagram.com/aristapartners/')
+    expect(within(footer).getByRole('link', { name: 'Facebook de Arista Partners' })).toHaveAttribute('href', 'https://www.facebook.com/profile.php?id=61593622778886')
+    const linkedin = within(footer).getByRole('link', { name: 'LinkedIn de Arista Partners' })
+    expect(linkedin).toHaveAttribute('href', 'https://www.linkedin.com/company/arista-partners/?viewAsMember=true')
+    for (const link of [within(footer).getByRole('link', { name: 'Contactar Arista Partners por WhatsApp' }), within(footer).getByRole('link', { name: 'Instagram de Arista Partners' }), within(footer).getByRole('link', { name: 'Facebook de Arista Partners' }), linkedin]) {
+      expect(link).toHaveAttribute('target', '_blank')
+      expect(link).toHaveAttribute('rel', 'noopener noreferrer')
+    }
+    expect(footer).not.toHaveTextContent('+56 9 8289 1168')
     expect(footer).not.toHaveTextContent('aristapartnerscl@gmail.com')
   })
 })

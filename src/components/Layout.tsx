@@ -1,16 +1,35 @@
-import { Menu, X } from 'lucide-react'
+import { Mail, Menu, X } from 'lucide-react'
 import { useEffect, useRef, useState } from 'react'
 import { Link, NavLink, Outlet } from 'react-router-dom'
-import { contactChannels } from '../data/contact'
+import { publicContact } from '../data/contact'
 import { hasPendingLegalIdentity, legalConfig } from '../data/legal'
 import { navItems } from '../data/site'
 import { BrandLockup } from './BrandLockup'
-import { WhatsAppFloatingButton } from './WhatsAppFloatingButton'
+import { WhatsAppFloatingButton, WhatsAppIcon } from './WhatsAppFloatingButton'
+
+function InstagramIcon({ className = 'h-4 w-4' }: { className?: string }) {
+  return <svg viewBox="0 0 24 24" aria-hidden="true" className={`${className} fill-none stroke-current`} strokeWidth="1.8"><rect x="3" y="3" width="18" height="18" rx="5" /><circle cx="12" cy="12" r="4" /><circle cx="17.5" cy="6.5" r="1" className="fill-current stroke-none" /></svg>
+}
+
+function FacebookIcon({ className = 'h-4 w-4' }: { className?: string }) {
+  return <svg viewBox="0 0 24 24" aria-hidden="true" className={`${className} fill-current`}><path d="M13.5 21v-8h2.7l.4-3h-3.1V8.1c0-.9.3-1.6 1.7-1.6h1.8V3.8c-.3 0-1.3-.1-2.4-.1-2.4 0-4 1.5-4 4.1V10H8v3h2.6v8h2.9Z" /></svg>
+}
+
+function LinkedInIcon({ className = 'h-4 w-4' }: { className?: string }) {
+  return <svg viewBox="0 0 24 24" aria-hidden="true" className={`${className} fill-current`}><path d="M5.2 7.4a1.7 1.7 0 1 0 0-3.4 1.7 1.7 0 0 0 0 3.4ZM3.8 20.1h2.8V9.2H3.8v10.9Zm4.6 0h2.8v-6.1c0-1.6.3-3.1 2.3-3.1 1.9 0 1.9 1.8 1.9 3.2v6h2.8v-6.7c0-3.3-.7-5.8-4.5-5.8-1.8 0-3 .9-3.5 1.8h-.1V9.2H8.4v10.9Z" /></svg>
+}
+
+const footerContactLinks = [
+  { label: 'Correo', href: `mailto:${publicContact.email}`, ariaLabel: 'Enviar correo a Arista Partners', Icon: Mail, external: false },
+  { label: 'WhatsApp', href: `https://wa.me/${publicContact.whatsappNumber}`, ariaLabel: 'Contactar Arista Partners por WhatsApp', Icon: WhatsAppIcon, external: true },
+  { label: 'Instagram', href: publicContact.instagram, ariaLabel: 'Instagram de Arista Partners', Icon: InstagramIcon, external: true },
+  { label: 'Facebook', href: publicContact.facebook, ariaLabel: 'Facebook de Arista Partners', Icon: FacebookIcon, external: true },
+  { label: 'LinkedIn', href: publicContact.linkedin, ariaLabel: 'LinkedIn de Arista Partners', Icon: LinkedInIcon, external: true },
+] as const
 
 export function Layout() {
   const [isOpen, setIsOpen] = useState(false)
   const menuButtonRef = useRef<HTMLButtonElement>(null)
-  const visibleChannels = contactChannels.filter((channel) => channel.value)
 
   useEffect(() => {
     function handleKeyDown(event: KeyboardEvent) {
@@ -113,7 +132,7 @@ export function Layout() {
       </main>
 
       <footer className="border-t-4 border-brand bg-graphite text-white">
-        <div className="mx-auto grid max-w-7xl grid-cols-1 gap-6 px-5 py-8 sm:grid-cols-2 sm:gap-8 lg:grid-cols-[1.25fr_0.7fr_0.8fr_0.8fr] lg:px-8 lg:py-10">
+        <div className="mx-auto grid max-w-7xl grid-cols-1 gap-6 px-5 py-8 sm:grid-cols-2 sm:gap-8 lg:grid-cols-[1.2fr_0.7fr_0.8fr_0.8fr_0.9fr] lg:px-8 lg:py-10">
           <div className="sm:col-span-2 lg:col-span-1">
             <div className="flex items-start gap-3">
               <span className="inline-flex shrink-0 rounded-md bg-white p-2.5" aria-hidden="true">
@@ -128,21 +147,6 @@ export function Layout() {
               Intermediación, representación y gestión comercial para conectar compradores, vendedores y proveedores con
               foco en oportunidades B2B.
             </p>
-            {visibleChannels.length > 0 && (
-              <div className="mt-4 grid gap-2 text-sm text-white/75">
-                {visibleChannels.map((channel) =>
-                  channel.href ? (
-                    <a key={channel.label} href={channel.href} target="_blank" rel="noopener noreferrer">
-                      {channel.label}: {channel.value}
-                    </a>
-                  ) : (
-                    <span key={channel.label}>
-                      {channel.label}: {channel.value}
-                    </span>
-                  ),
-                )}
-              </div>
-            )}
           </div>
           <div>
             <p className="text-sm font-semibold uppercase tracking-[0.18em] text-white/60">Navegación</p>
@@ -167,6 +171,23 @@ export function Layout() {
               <Link to="/contacto">Contacto</Link>
               <Link to="/privacidad">Privacidad</Link>
               <Link to="/terminos">Términos y condiciones</Link>
+            </div>
+          </div>
+          <div>
+            <p className="text-sm font-semibold uppercase tracking-[0.18em] text-white/60">CONTACTO</p>
+            <div className="mt-3 grid gap-1 text-sm text-white/75">
+              {footerContactLinks.map(({ label, href, ariaLabel, Icon, external }) => (
+                <a
+                  key={label}
+                  href={href}
+                  aria-label={ariaLabel}
+                  className="inline-flex min-h-10 items-center gap-2 rounded-md px-2 py-2 transition hover:bg-white/10 hover:text-white"
+                  {...(external ? { target: '_blank', rel: 'noopener noreferrer' } : {})}
+                >
+                  <Icon className="h-4 w-4 shrink-0" aria-hidden="true" />
+                  <span>{label}</span>
+                </a>
+              ))}
             </div>
           </div>
         </div>
