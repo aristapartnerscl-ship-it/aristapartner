@@ -21,6 +21,7 @@ describe('PublicProposal', () => {
     expect(await screen.findByText('PROP-2026-00000001 · Versión 2')).toBeInTheDocument()
     expect(screen.getByText('Empresa XYZ')).toBeInTheDocument()
     expect(screen.getByText('1.190.000 CLP')).toBeInTheDocument()
+    expect(screen.queryByRole('link', { name: 'Contactar por WhatsApp' })).not.toBeInTheDocument()
     expect(document.body.textContent).not.toContain('internal_notes')
     expect(document.body.textContent).not.toContain('proposal-')
   })

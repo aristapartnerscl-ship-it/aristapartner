@@ -22,8 +22,8 @@ export const legalConfig: LegalConfig = {
   rut: '',
   legalAddress: '',
   country: 'Chile',
-  generalEmail: 'aristapartnerscl@gmail.com',
-  privacyEmail: 'aristapartnerscl@gmail.com',
+  generalEmail: publicContact.email,
+  privacyEmail: publicContact.email,
   privacy: {
     effectiveDate: '22 de agosto de 2026',
     version: '1.0',
@@ -52,3 +52,4 @@ export function configuredLegalFields() {
 export function hasPendingLegalIdentity() {
   return !legalConfig.legalName
 }
+import { publicContact } from './contact'

@@ -25,6 +25,11 @@ describe('public Layout', () => {
     expect(menuButton).toHaveAttribute('aria-expanded', 'false')
     expect(screen.getByRole('navigation', { name: /Navegaci/i })).toBeInTheDocument()
     expect(screen.getByRole('contentinfo')).toBeInTheDocument()
+    const whatsapp = screen.getByRole('link', { name: 'Contactar por WhatsApp' })
+    expect(whatsapp).toHaveAttribute('href', expect.stringContaining('https://wa.me/56982891168'))
+    expect(whatsapp.getAttribute('href')).toContain(encodeURIComponent('Hola Arista Partners, quisiera realizar una consulta.'))
+    expect(whatsapp).toHaveAttribute('target', '_blank')
+    expect(whatsapp).toHaveAttribute('rel', 'noopener noreferrer')
 
     await user.click(menuButton)
     expect(menuButton).toHaveAttribute('aria-expanded', 'true')
@@ -45,5 +50,17 @@ describe('public Layout', () => {
     expect(footer.querySelector('img[alt*="Representación"]')).not.toBeInTheDocument()
     expect(within(footer).getByRole('link', { name: 'Contacto' })).toHaveAttribute('href', '/contacto')
     expect(within(footer).getByRole('link', { name: 'Términos y condiciones' })).toHaveAttribute('href', '/terminos')
+  })
+
+  test('publishes the official contact email and phone', () => {
+    render(<MemoryRouter><Layout /></MemoryRouter>)
+
+    const footer = screen.getByRole('contentinfo')
+    expect(within(footer).getByRole('link', { name: /contacto@aristapartners\.cl/i })).toHaveAttribute(
+      'href',
+      'mailto:contacto@aristapartners.cl',
+    )
+    expect(footer).toHaveTextContent('+56 9 8289 1168')
+    expect(footer).not.toHaveTextContent('aristapartnerscl@gmail.com')
   })
 })

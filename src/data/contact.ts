@@ -4,11 +4,15 @@ export type ContactChannel = {
   href?: string
 }
 
-// Incorpora aquí los datos reales cuando estén definidos.
-// Si un valor queda vacío, no se mostrará públicamente en la página.
+export const publicContact = {
+  email: 'contacto@aristapartners.cl',
+  phone: '+56 9 8289 1168',
+  whatsappNumber: '56982891168',
+} as const
+
 export const contactChannels: ContactChannel[] = [
-  { label: 'Correo electrónico', value: 'aristapartnerscl@gmail.com', href: 'mailto:aristapartnerscl@gmail.com' },
-  { label: 'WhatsApp o teléfono', value: '' },
+  { label: 'Correo electrónico', value: publicContact.email, href: `mailto:${publicContact.email}` },
+  { label: 'WhatsApp o teléfono', value: publicContact.phone, href: `https://wa.me/${publicContact.whatsappNumber}` },
   { label: 'LinkedIn', value: '', href: '' },
   { label: 'Instagram', value: '', href: '' },
   { label: 'Horario de atención', value: '' },

@@ -88,9 +88,9 @@ describe('public forms', () => {
     expect(screen.getAllByRole('link', { name: /Ver política de privacidad/i })[0]).toHaveAttribute('href', '/privacidad')
     expect(screen.getByRole('link', { name: /Revisar Política de Privacidad/i })).toHaveAttribute('href', '/privacidad')
     expect(screen.getByText(/Canales oficiales/i)).toBeInTheDocument()
-    expect(screen.getByRole('link', { name: 'aristapartnerscl@gmail.com' })).toHaveAttribute(
+    expect(screen.getByRole('link', { name: 'contacto@aristapartners.cl' })).toHaveAttribute(
       'href',
-      'mailto:aristapartnerscl@gmail.com',
+      'mailto:contacto@aristapartners.cl',
     )
     expect(screen.getByRole('checkbox', { name: /información proporcionada es correcta/i })).not.toBeChecked()
     expect(screen.getByRole('checkbox', { name: /recibir información relacionada/i })).not.toBeChecked()

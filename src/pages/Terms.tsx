@@ -9,7 +9,7 @@ import {
 } from '../components/legal/LegalDocument'
 
 const publicWebsite = 'https://www.aristapartners.cl'
-const contactEmail = 'aristapartnerscl@gmail.com'
+const contactEmail = legalConfig.generalEmail
 
 const toc: TocItem[] = [
   { id: 'identificacion', label: 'Identificación del sitio' },

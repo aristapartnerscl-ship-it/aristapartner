@@ -14,5 +14,6 @@ describe('AdminShell', () => {
     render(<MemoryRouter><AdminShell><div>Contenido</div></AdminShell></MemoryRouter>)
     expect(screen.getByRole('link', { name: 'Pipeline comercial' })).toHaveAttribute('href', '/admin/pipeline')
     expect(screen.getByRole('link', { name: 'Propuestas' })).toHaveAttribute('href', '/admin/propuestas')
+    expect(screen.queryByRole('link', { name: 'Contactar por WhatsApp' })).not.toBeInTheDocument()
   })
 })

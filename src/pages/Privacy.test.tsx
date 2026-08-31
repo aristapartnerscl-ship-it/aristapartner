@@ -26,9 +26,9 @@ describe('Privacy policy', () => {
       'href',
       'https://www.aristapartners.cl',
     )
-    expect(screen.getAllByRole('link', { name: 'aristapartnerscl@gmail.com' })[0]).toHaveAttribute(
+    expect(screen.getAllByRole('link', { name: 'contacto@aristapartners.cl' })[0]).toHaveAttribute(
       'href',
-      'mailto:aristapartnerscl@gmail.com',
+      'mailto:contacto@aristapartners.cl',
     )
   })
 

@@ -5,6 +5,7 @@ import { contactChannels } from '../data/contact'
 import { hasPendingLegalIdentity, legalConfig } from '../data/legal'
 import { navItems } from '../data/site'
 import { BrandLockup } from './BrandLockup'
+import { WhatsAppFloatingButton } from './WhatsAppFloatingButton'
 
 export function Layout() {
   const [isOpen, setIsOpen] = useState(false)
@@ -174,6 +175,7 @@ export function Layout() {
           {hasPendingLegalIdentity() ? '. Sitio informativo en preparación.' : '. Información legal configurada.'}
         </div>
       </footer>
+      <WhatsAppFloatingButton />
     </div>
   )
 }

@@ -7,7 +7,7 @@ import {
   type TocItem,
 } from '../components/legal/LegalDocument'
 
-const privacyEmail = 'aristapartnerscl@gmail.com'
+const privacyEmail = legalConfig.privacyEmail ?? legalConfig.generalEmail
 const publicWebsite = 'https://www.aristapartners.cl'
 
 const toc: TocItem[] = [
