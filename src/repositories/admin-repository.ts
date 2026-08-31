@@ -20,6 +20,14 @@ import type {
   InquiryWithContact,
   OpportunityActivityInsert,
   OpportunityActivityRecord,
+  ProspectActivityRecord,
+  ProspectContactStrategy,
+  ProspectConversionResult,
+  ProspectConversionValues,
+  ProspectFollowUpRecord,
+  ProspectInsert,
+  ProspectRecord,
+  ProspectUpdate,
   OpportunitySupplierFormValues,
   OpportunitySupplierInsert,
   OpportunitySupplierRecord,
@@ -53,6 +61,28 @@ export type AdminRepository = {
   updateOpportunity(id: string, values: Partial<Omit<OpportunityInsert, 'created_by' | 'reference_code'>>): Promise<RepositoryResult<OpportunityRecord | null>>
   listOpportunityActivities(opportunityId: string): Promise<RepositoryResult<OpportunityActivityRecord[]>>
   createOpportunityActivity(values: Omit<OpportunityActivityInsert, 'created_by'>): Promise<RepositoryResult<OpportunityActivityRecord | null>>
+  listProspects(): Promise<RepositoryResult<ProspectRecord[]>>
+  getProspectById(id: string): Promise<RepositoryResult<ProspectRecord | null>>
+  createProspect(values: Omit<ProspectInsert, 'created_by' | 'assigned_to'>): Promise<RepositoryResult<ProspectRecord | null>>
+  updateProspect(id: string, values: ProspectUpdate): Promise<RepositoryResult<ProspectRecord | null>>
+  listProspectActivities(prospectId: string): Promise<RepositoryResult<ProspectActivityRecord[]>>
+  createProspectActivity(values: {
+    prospect_id: string
+    activity_type: ProspectActivityRecord['activity_type']
+    outcome?: ProspectActivityRecord['outcome']
+    subject: string
+    notes?: string | null
+    occurred_at?: string | null
+    next_action_type?: string | null
+    next_action_at?: string | null
+    status?: ProspectRecord['status'] | null
+  }): Promise<RepositoryResult<ProspectActivityRecord | null>>
+  completeProspectFollowUp(activityId: string): Promise<RepositoryResult<ProspectActivityRecord | null>>
+  reopenProspectFollowUp(activityId: string): Promise<RepositoryResult<ProspectActivityRecord | null>>
+  listProspectFollowUps(): Promise<RepositoryResult<ProspectFollowUpRecord[]>>
+  listCompletedProspectFollowUps(): Promise<RepositoryResult<ProspectFollowUpRecord[]>>
+  findContactCandidatesForProspect(prospectId: string): Promise<RepositoryResult<ContactRecord[]>>
+  convertProspectToOpportunity(id: string, values: ProspectConversionValues, strategy: ProspectContactStrategy): Promise<RepositoryResult<ProspectConversionResult>>
   listContactsForSelector(): Promise<RepositoryResult<ContactSelectorRecord[]>>
   listFollowUps(): Promise<RepositoryResult<FollowUpRecord[]>>
   listCompletedFollowUps(): Promise<RepositoryResult<FollowUpRecord[]>>

@@ -7,6 +7,7 @@ import { AdminNotificationsCenter } from './AdminNotificationsCenter'
 
 const adminNav = [
   { label: 'Dashboard', href: '/admin' },
+  { label: 'Prospección', href: '/admin/prospeccion' },
   { label: 'Oportunidades', href: '/admin/oportunidades' },
   { label: 'Proveedores', href: '/admin/proveedores' },
   { label: 'Contactos', href: '/admin/contactos' },

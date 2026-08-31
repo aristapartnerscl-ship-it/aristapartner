@@ -50,6 +50,33 @@ export type SubmissionStatus = 'received' | 'under_review' | 'converted' | 'reje
 export type OrganizationSettingsKey = 'arista_partners'
 export type AdminNotificationType = 'form_submission_received'
 export type AdminNotificationEntityType = 'form_submission'
+export type ProspectType = 'person' | 'company'
+export type ProspectTemperature = 'cold' | 'identified' | 'qualified'
+export type ProspectLeadTemperature = ProspectTemperature
+export type ProspectPriority = 'low' | 'medium' | 'high'
+export type ProspectStatus =
+  | 'new'
+  | 'pending_contact'
+  | 'attempted'
+  | 'contacted'
+  | 'awaiting_response'
+  | 'follow_up'
+  | 'interested'
+  | 'qualified'
+  | 'not_interested'
+  | 'no_response'
+  | 'converted'
+  | 'archived'
+export type ProspectActivityType = 'call' | 'whatsapp' | 'email' | 'meeting' | 'note' | 'status_change' | 'follow_up'
+export type ProspectActivityOutcome =
+  | 'answered'
+  | 'no_answer'
+  | 'message_sent'
+  | 'interested'
+  | 'call_later'
+  | 'meeting_scheduled'
+  | 'not_interested'
+  | 'other'
 
 export type AdminProfileRow = Override<TableRow<'admin_profiles'>, { role: AdminRole }>
 
@@ -234,6 +261,98 @@ export type ContactFormValues = {
   source: string
   notes: string
 }
+
+export type ProspectRow = Override<
+  TableRow<'prospects'>,
+  {
+    prospect_type: ProspectType
+    lead_temperature: ProspectLeadTemperature
+    status: ProspectStatus
+    priority: ProspectPriority
+  }
+>
+export type ProspectInsert = Override<
+  TableInsert<'prospects'>,
+  {
+    prospect_type: ProspectType
+    lead_temperature?: ProspectLeadTemperature
+    status?: ProspectStatus
+    priority?: ProspectPriority
+  }
+>
+export type ProspectUpdate = Override<
+  TableUpdate<'prospects'>,
+  {
+    prospect_type?: ProspectType
+    lead_temperature?: ProspectLeadTemperature
+    status?: ProspectStatus
+    priority?: ProspectPriority
+  }
+>
+
+export type ProspectActivityRow = Override<
+  TableRow<'prospect_activities'>,
+  {
+    activity_type: ProspectActivityType
+    outcome: ProspectActivityOutcome | null
+  }
+>
+export type ProspectActivityInsert = Override<
+  TableInsert<'prospect_activities'>,
+  {
+    activity_type: ProspectActivityType
+    outcome?: ProspectActivityOutcome | null
+  }
+>
+export type ProspectActivityUpdate = Override<
+  TableUpdate<'prospect_activities'>,
+  {
+    activity_type?: ProspectActivityType
+    outcome?: ProspectActivityOutcome | null
+  }
+>
+
+export type CreateProspectActivityAtomicArgs = Override<
+  FunctionArgs<'create_prospect_activity_atomic'>,
+  {
+    p_activity_type: ProspectActivityType
+    p_outcome?: ProspectActivityOutcome | null
+    p_subject?: string | null
+    p_notes?: string | null
+    p_occurred_at?: string | null
+    p_next_action_type?: string | null
+    p_next_action_at?: string | null
+    p_status?: ProspectStatus | null
+  }
+>
+export type ConvertProspectToOpportunityArgs = Override<
+  FunctionArgs<'convert_prospect_to_opportunity'>,
+  {
+    p_opportunity_type: OpportunityType
+    p_description?: string | null
+    p_expected_date?: string | null
+    p_country?: string | null
+    p_region?: string | null
+    p_city?: string | null
+    p_estimated_value?: number | null
+    p_currency?: string | null
+    p_internal_notes?: string | null
+    p_existing_contact_id?: string | null
+    p_contact_type?: ContactType | null
+    p_contact_full_name?: string | null
+    p_contact_company_name?: string | null
+    p_contact_position?: string | null
+    p_contact_email?: string | null
+    p_contact_phone?: string | null
+    p_contact_website?: string | null
+    p_contact_social_media?: string | null
+    p_contact_country?: string | null
+    p_contact_region?: string | null
+    p_contact_city?: string | null
+    p_contact_notes?: string | null
+  }
+>
+export type ConvertProspectToOpportunityRow = FunctionReturns<'convert_prospect_to_opportunity'>[number]
 
 export type ConvertInquiryToOpportunityAtomicArgs = FunctionArgs<'convert_inquiry_to_opportunity_atomic'>
 export type ConvertInquiryToOpportunityAtomicRow = FunctionReturns<'convert_inquiry_to_opportunity_atomic'>[number]

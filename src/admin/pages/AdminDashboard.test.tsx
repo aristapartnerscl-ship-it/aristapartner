@@ -27,8 +27,11 @@ describe('AdminDashboard', () => {
           pendingSuppliers: 0,
           newInquiries: 0,
           newFormSubmissions: 2,
+          prospectsDueToday: 0,
+          overdueProspectFollowUps: 0,
         },
         upcomingActions: [],
+        upcomingProspectActions: [],
         recentActivities: [
           {
             id: 'completed-activity',

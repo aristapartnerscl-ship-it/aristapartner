@@ -15,7 +15,7 @@ export type Database = {
   // Allows to automatically instantiate createClient with right options
   // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
   __InternalSupabase: {
-    PostgrestVersion: "14.15"
+    PostgrestVersion: "14.5"
   }
   public: {
     Tables: {
@@ -694,6 +694,194 @@ export type Database = {
           },
         ]
       }
+      prospect_activities: {
+        Row: {
+          activity_type: string
+          completed_at: string | null
+          created_at: string
+          created_by: string | null
+          id: string
+          next_action_at: string | null
+          next_action_type: string | null
+          notes: string | null
+          occurred_at: string
+          outcome: string | null
+          prospect_id: string
+          subject: string
+        }
+        Insert: {
+          activity_type: string
+          completed_at?: string | null
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          next_action_at?: string | null
+          next_action_type?: string | null
+          notes?: string | null
+          occurred_at?: string
+          outcome?: string | null
+          prospect_id: string
+          subject: string
+        }
+        Update: {
+          activity_type?: string
+          completed_at?: string | null
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          next_action_at?: string | null
+          next_action_type?: string | null
+          notes?: string | null
+          occurred_at?: string
+          outcome?: string | null
+          prospect_id?: string
+          subject?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "prospect_activities_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "admin_profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "prospect_activities_prospect_id_fkey"
+            columns: ["prospect_id"]
+            isOneToOne: false
+            referencedRelation: "prospects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      prospects: {
+        Row: {
+          assigned_to: string | null
+          city_region: string | null
+          commercial_origin: string | null
+          company_name: string | null
+          contact_attempts: number
+          converted_at: string | null
+          converted_contact_id: string | null
+          converted_opportunity_id: string | null
+          country: string | null
+          created_at: string
+          created_by: string | null
+          email: string | null
+          full_name: string | null
+          id: string
+          last_contact_at: string | null
+          lead_temperature: string
+          next_action_at: string | null
+          next_action_type: string | null
+          notes: string | null
+          phone: string | null
+          preferred_contact_method: string | null
+          priority: string
+          product_or_service: string | null
+          prospect_type: string
+          role_or_activity: string | null
+          social_network: string | null
+          source: string | null
+          status: string
+          updated_at: string
+          website: string | null
+        }
+        Insert: {
+          assigned_to?: string | null
+          city_region?: string | null
+          commercial_origin?: string | null
+          company_name?: string | null
+          contact_attempts?: number
+          converted_at?: string | null
+          converted_contact_id?: string | null
+          converted_opportunity_id?: string | null
+          country?: string | null
+          created_at?: string
+          created_by?: string | null
+          email?: string | null
+          full_name?: string | null
+          id?: string
+          last_contact_at?: string | null
+          lead_temperature?: string
+          next_action_at?: string | null
+          next_action_type?: string | null
+          notes?: string | null
+          phone?: string | null
+          preferred_contact_method?: string | null
+          priority?: string
+          product_or_service?: string | null
+          prospect_type: string
+          role_or_activity?: string | null
+          social_network?: string | null
+          source?: string | null
+          status?: string
+          updated_at?: string
+          website?: string | null
+        }
+        Update: {
+          assigned_to?: string | null
+          city_region?: string | null
+          commercial_origin?: string | null
+          company_name?: string | null
+          contact_attempts?: number
+          converted_at?: string | null
+          converted_contact_id?: string | null
+          converted_opportunity_id?: string | null
+          country?: string | null
+          created_at?: string
+          created_by?: string | null
+          email?: string | null
+          full_name?: string | null
+          id?: string
+          last_contact_at?: string | null
+          lead_temperature?: string
+          next_action_at?: string | null
+          next_action_type?: string | null
+          notes?: string | null
+          phone?: string | null
+          preferred_contact_method?: string | null
+          priority?: string
+          product_or_service?: string | null
+          prospect_type?: string
+          role_or_activity?: string | null
+          social_network?: string | null
+          source?: string | null
+          status?: string
+          updated_at?: string
+          website?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "prospects_assigned_to_fkey"
+            columns: ["assigned_to"]
+            isOneToOne: false
+            referencedRelation: "admin_profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "prospects_converted_contact_id_fkey"
+            columns: ["converted_contact_id"]
+            isOneToOne: false
+            referencedRelation: "contacts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "prospects_converted_opportunity_id_fkey"
+            columns: ["converted_opportunity_id"]
+            isOneToOne: false
+            referencedRelation: "opportunities"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "prospects_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "admin_profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       suppliers: {
         Row: {
           business_name: string
@@ -864,6 +1052,41 @@ export type Database = {
           reference_code: string
         }[]
       }
+      convert_prospect_to_opportunity: {
+        Args: {
+          p_city?: string
+          p_contact_city?: string
+          p_contact_company_name?: string
+          p_contact_country?: string
+          p_contact_email?: string
+          p_contact_full_name?: string
+          p_contact_notes?: string
+          p_contact_phone?: string
+          p_contact_position?: string
+          p_contact_region?: string
+          p_contact_social_media?: string
+          p_contact_type?: string
+          p_contact_website?: string
+          p_country?: string
+          p_currency?: string
+          p_description?: string
+          p_estimated_value?: number
+          p_existing_contact_id?: string
+          p_expected_date?: string
+          p_internal_notes?: string
+          p_opportunity_type: string
+          p_prospect_id: string
+          p_region?: string
+          p_title: string
+        }
+        Returns: {
+          already_converted: boolean
+          contact_id: string
+          opportunity_id: string
+          prospect_id: string
+          reference_code: string
+        }[]
+      }
       convert_sell_submission_atomic: {
         Args: {
           p_city?: string
@@ -935,6 +1158,33 @@ export type Database = {
           entity_type: string
           submission_id: string
           visible_identifier: string
+        }[]
+      }
+      create_prospect_activity_atomic: {
+        Args: {
+          p_activity_type: string
+          p_next_action_at?: string
+          p_next_action_type?: string
+          p_notes?: string
+          p_occurred_at?: string
+          p_outcome?: string
+          p_prospect_id: string
+          p_status?: string
+          p_subject?: string
+        }
+        Returns: {
+          activity_type: string
+          completed_at: string
+          created_at: string
+          created_by: string
+          id: string
+          next_action_at: string
+          next_action_type: string
+          notes: string
+          occurred_at: string
+          outcome: string
+          prospect_id: string
+          subject: string
         }[]
       }
     }

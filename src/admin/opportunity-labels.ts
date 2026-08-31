@@ -1,4 +1,4 @@
-import type { ActivityType, AgreementCounterpartyType, AgreementPayerType, AgreementStatus, CommissionType, CompensationModel, InquiryReason, InquiryStatus, OpportunityStatus, OpportunitySupplierStatus, OpportunityType, PreferredContactMethod, Priority, SupplierStatus } from '../types/admin'
+import type { ActivityType, AgreementCounterpartyType, AgreementPayerType, AgreementStatus, CommissionType, CompensationModel, InquiryReason, InquiryStatus, OpportunityStatus, OpportunitySupplierStatus, OpportunityType, PreferredContactMethod, Priority, ProspectActivityOutcome, ProspectActivityType, ProspectStatus, ProspectTemperature, ProspectType, SupplierStatus } from '../types/admin'
 
 export const opportunityTypeLabels: Record<OpportunityType, string> = {
   buy: 'Compra',
@@ -78,6 +78,53 @@ export const preferredContactMethodLabels: Record<PreferredContactMethod, string
   any: 'Cualquiera',
 }
 
+export const prospectTypeLabels: Record<ProspectType, string> = {
+  person: 'Persona',
+  company: 'Empresa',
+}
+
+export const prospectTemperatureLabels: Record<ProspectTemperature, string> = {
+  cold: 'Frío',
+  identified: 'Identificado',
+  qualified: 'Calificado',
+}
+
+export const prospectStatusLabels: Record<ProspectStatus, string> = {
+  new: 'Nuevo',
+  pending_contact: 'Por contactar',
+  attempted: 'Intentado',
+  contacted: 'Contactado',
+  awaiting_response: 'Esperando respuesta',
+  follow_up: 'Seguimiento',
+  interested: 'Interesado',
+  qualified: 'Calificado',
+  not_interested: 'No interesado',
+  no_response: 'Sin respuesta',
+  converted: 'Convertido',
+  archived: 'Archivado',
+}
+
+export const prospectActivityTypeLabels: Record<ProspectActivityType, string> = {
+  call: 'Llamada',
+  whatsapp: 'WhatsApp',
+  email: 'Correo',
+  meeting: 'Reunión',
+  note: 'Nota',
+  status_change: 'Cambio de estado',
+  follow_up: 'Seguimiento',
+}
+
+export const prospectActivityOutcomeLabels: Record<ProspectActivityOutcome, string> = {
+  answered: 'Respondió',
+  no_answer: 'No respondió',
+  message_sent: 'Mensaje enviado',
+  interested: 'Interesado',
+  call_later: 'Llamar después',
+  meeting_scheduled: 'Reunión agendada',
+  not_interested: 'No interesado',
+  other: 'Otro',
+}
+
 export const compensationModelLabels: Record<CompensationModel, string> = {
   management_fee: 'Fee de gestion',
   commission: 'Comision',
@@ -118,6 +165,11 @@ export const opportunitySupplierStatuses = Object.keys(opportunitySupplierStatus
 export const inquiryStatuses = Object.keys(inquiryStatusLabels) as InquiryStatus[]
 export const inquiryReasons = Object.keys(inquiryReasonLabels) as InquiryReason[]
 export const preferredContactMethods = Object.keys(preferredContactMethodLabels) as PreferredContactMethod[]
+export const prospectTypes = Object.keys(prospectTypeLabels) as ProspectType[]
+export const prospectTemperatures = Object.keys(prospectTemperatureLabels) as ProspectTemperature[]
+export const prospectStatuses = Object.keys(prospectStatusLabels) as ProspectStatus[]
+export const prospectActivityTypes = Object.keys(prospectActivityTypeLabels) as ProspectActivityType[]
+export const prospectActivityOutcomes = Object.keys(prospectActivityOutcomeLabels) as ProspectActivityOutcome[]
 export const compensationModels = Object.keys(compensationModelLabels) as CompensationModel[]
 export const commissionTypes = Object.keys(commissionTypeLabels) as CommissionType[]
 export const agreementStatuses = Object.keys(agreementStatusLabels) as AgreementStatus[]

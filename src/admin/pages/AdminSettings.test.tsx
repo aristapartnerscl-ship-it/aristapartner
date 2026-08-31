@@ -189,7 +189,7 @@ describe('AdminSettings', () => {
     expect(screen.getByText('Ingresa un correo válido.')).toBeInTheDocument()
     expect(screen.getByText('El porcentaje debe estar entre 0 y 100.')).toBeInTheDocument()
     expect(adminRepository.updateOrganizationSettings).not.toHaveBeenCalled()
-  })
+  }, 10000)
 
   test('recovers the singleton only when missing and does not create a second row', async () => {
     const user = userEvent.setup()

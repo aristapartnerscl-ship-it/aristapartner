@@ -3,8 +3,8 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import { CheckCircle2, Clock3, RotateCcw } from 'lucide-react'
 import { AdminPageHeader } from '../../components/admin/AdminPageHeader'
 import { adminRepository } from '../../repositories'
-import type { FollowUpRecord, OpportunityActivityRecord } from '../../types/admin'
-import { activityTypeLabels, contactName, formatDateTime } from '../opportunity-labels'
+import type { AgendaFollowUpRecord, FollowUpRecord, OpportunityActivityRecord, ProspectActivityRecord, ProspectFollowUpRecord } from '../../types/admin'
+import { activityTypeLabels, contactName, formatDateTime, prospectActivityTypeLabels } from '../opportunity-labels'
 import { useAdminAuth } from '../useAdminAuth'
 
 type GroupKey = 'overdue' | 'today' | 'next7' | 'later'
@@ -42,10 +42,14 @@ function mergeActivity(record: FollowUpRecord, activity: OpportunityActivityReco
   }
 }
 
+function mergeProspectActivity(record: ProspectFollowUpRecord, activity: ProspectActivityRecord): ProspectFollowUpRecord {
+  return { ...record, ...activity, completedByProfile: null }
+}
+
 export function AdminFollowUps() {
   const auth = useAdminAuth()
-  const [items, setItems] = useState<FollowUpRecord[]>([])
-  const [completed, setCompleted] = useState<FollowUpRecord[]>([])
+  const [items, setItems] = useState<AgendaFollowUpRecord[]>([])
+  const [completed, setCompleted] = useState<AgendaFollowUpRecord[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
   const [status, setStatus] = useState('')
@@ -61,17 +65,29 @@ export function AdminFollowUps() {
   async function load() {
     setLoading(true)
     setError('')
-    const [pendingResult, completedResult] = await Promise.all([
+    const [pendingResult, completedResult, prospectPendingResult, prospectCompletedResult] = await Promise.all([
       adminRepository.listFollowUps(),
       adminRepository.listCompletedFollowUps(),
+      adminRepository.listProspectFollowUps(),
+      adminRepository.listCompletedProspectFollowUps(),
     ])
     setLoading(false)
     if (pendingResult.error) {
       setError(pendingResult.error)
       return
     }
-    setItems(pendingResult.data)
-    if (!completedResult.error) setCompleted(completedResult.data)
+    if (prospectPendingResult.error) {
+      setError(prospectPendingResult.error)
+      return
+    }
+    setItems([
+      ...pendingResult.data.map((item) => ({ ...item, sourceType: 'opportunity' as const })),
+      ...prospectPendingResult.data.map((item) => ({ ...item, sourceType: 'prospect' as const })),
+    ].sort((a, b) => new Date(a.next_action_at!).getTime() - new Date(b.next_action_at!).getTime()))
+    const nextCompleted: AgendaFollowUpRecord[] = []
+    if (!completedResult.error) nextCompleted.push(...completedResult.data.map((item) => ({ ...item, sourceType: 'opportunity' as const })))
+    if (!prospectCompletedResult.error) nextCompleted.push(...prospectCompletedResult.data.map((item) => ({ ...item, sourceType: 'prospect' as const })))
+    setCompleted(nextCompleted.sort((a, b) => new Date(b.completed_at ?? '').getTime() - new Date(a.completed_at ?? '').getTime()).slice(0, 50))
   }
 
   useEffect(() => {
@@ -79,7 +95,7 @@ export function AdminFollowUps() {
   }, [])
 
   const groups = useMemo(() => {
-    const grouped: Record<GroupKey, FollowUpRecord[]> = { overdue: [], today: [], next7: [], later: [] }
+    const grouped: Record<GroupKey, AgendaFollowUpRecord[]> = { overdue: [], today: [], next7: [], later: [] }
     items.forEach((item) => {
       if (!item.next_action_at || item.completed_at) return
       grouped[groupFor(item.next_action_at)].push(item)
@@ -87,33 +103,41 @@ export function AdminFollowUps() {
     return grouped
   }, [items])
 
-  async function complete(item: FollowUpRecord) {
+  async function complete(item: AgendaFollowUpRecord) {
     if (!window.confirm('¿Marcar este seguimiento como completado?')) return
     setProcessingId(item.id)
     setStatus('')
-    const result = await adminRepository.completeFollowUp(item.id)
+    const result = item.sourceType === 'prospect'
+      ? await adminRepository.completeProspectFollowUp(item.id)
+      : await adminRepository.completeFollowUp(item.id)
     setProcessingId(null)
     if (result.error || !result.data) {
       announce(result.error ?? 'No fue posible completar el seguimiento.')
       return
     }
-    const nextCompleted = mergeActivity(item, result.data, auth.profile?.full_name ?? auth.user?.email ?? null)
+    const nextCompleted = item.sourceType === 'prospect'
+      ? { ...mergeProspectActivity(item, result.data as ProspectActivityRecord), sourceType: 'prospect' as const }
+      : { ...mergeActivity(item, result.data as OpportunityActivityRecord, auth.profile?.full_name ?? auth.user?.email ?? null), sourceType: 'opportunity' as const }
     setItems((current) => current.filter((followUp) => followUp.id !== item.id))
     setCompleted((current) => [nextCompleted, ...current.filter((followUp) => followUp.id !== item.id)].slice(0, 50))
     announce('Seguimiento marcado como completado.')
   }
 
-  async function reopen(item: FollowUpRecord) {
+  async function reopen(item: AgendaFollowUpRecord) {
     if (!window.confirm('¿Reabrir este seguimiento?')) return
     setProcessingId(item.id)
     setStatus('')
-    const result = await adminRepository.reopenFollowUp(item.id)
+    const result = item.sourceType === 'prospect'
+      ? await adminRepository.reopenProspectFollowUp(item.id)
+      : await adminRepository.reopenFollowUp(item.id)
     setProcessingId(null)
     if (result.error || !result.data) {
       announce(result.error ?? 'No fue posible reabrir el seguimiento.')
       return
     }
-    const reopened = mergeActivity(item, result.data, null)
+    const reopened = item.sourceType === 'prospect'
+      ? { ...mergeProspectActivity(item, result.data as ProspectActivityRecord), sourceType: 'prospect' as const }
+      : { ...mergeActivity(item, result.data as OpportunityActivityRecord, null), sourceType: 'opportunity' as const }
     setCompleted((current) => current.filter((followUp) => followUp.id !== item.id))
     setItems((current) => [...current.filter((followUp) => followUp.id !== item.id), reopened].sort((a, b) => new Date(a.next_action_at!).getTime() - new Date(b.next_action_at!).getTime()))
     announce('Seguimiento reabierto.')
@@ -203,21 +227,26 @@ function FollowUpCard({
   actionIcon,
   onAction,
 }: {
-  item: FollowUpRecord
+  item: AgendaFollowUpRecord
   completed?: boolean
   processing: boolean
   actionLabel: string
   actionIcon: 'complete' | 'reopen'
   onAction: () => void
 }) {
+  const isProspect = item.sourceType === 'prospect'
   return (
     <article className="rounded-md border border-slate-200 p-4">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
         <div>
           <p className="text-sm font-semibold text-[#17202d]">{formatDateTime(item.next_action_at)}</p>
-          <p className="mt-1 text-sm text-slate-700">{item.opportunity.reference_code} · {item.opportunity.title}</p>
-          <p className="mt-1 text-sm text-slate-600">{activityTypeLabels[item.activity_type]} · {item.title}</p>
-          {item.contact && <p className="mt-1 text-sm text-slate-600">{contactName(item.contact)}</p>}
+          <p className="mt-1 text-sm text-slate-700">
+            {isProspect ? `Prospecto · ${item.prospect.full_name || item.prospect.company_name || 'Sin nombre'}` : `${item.opportunity.reference_code} · ${item.opportunity.title}`}
+          </p>
+          <p className="mt-1 text-sm text-slate-600">
+            {isProspect ? prospectActivityTypeLabels[item.activity_type as ProspectActivityRecord['activity_type']] : activityTypeLabels[item.activity_type as OpportunityActivityRecord['activity_type']]} · {'subject' in item ? item.subject : item.title}
+          </p>
+          {!isProspect && item.contact && <p className="mt-1 text-sm text-slate-600">{contactName(item.contact)}</p>}
           {completed && (
             <div className="mt-2 text-sm text-slate-700">
               <p>Finalización: {formatDateTime(item.completed_at)}</p>
@@ -231,8 +260,8 @@ function FollowUpCard({
         </span>
       </div>
       <div className="mt-4 flex flex-wrap gap-3">
-        <Link to={`/admin/oportunidades/${item.opportunity.id}`} className="rounded-md border border-slate-300 px-3 py-2 text-sm font-semibold text-[#17202d]">
-          Ver oportunidad
+        <Link to={isProspect ? `/admin/prospeccion/${item.prospect.id}` : `/admin/oportunidades/${item.opportunity.id}`} className="rounded-md border border-slate-300 px-3 py-2 text-sm font-semibold text-[#17202d]">
+          {isProspect ? 'Ver prospecto' : 'Ver oportunidad'}
         </Link>
         <button
           type="button"

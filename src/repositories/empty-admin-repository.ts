@@ -9,8 +9,11 @@ const emptyDashboardData = {
     pendingSuppliers: null,
     newInquiries: null,
     newFormSubmissions: null,
+    prospectsDueToday: null,
+    overdueProspectFollowUps: null,
   },
   upcomingActions: [],
+  upcomingProspectActions: [],
   recentActivities: [],
   hasMetricErrors: true,
   activityError: true,
@@ -61,6 +64,42 @@ export const emptyAdminRepository: AdminRepository = {
   },
   async createOpportunityActivity() {
     return { data: null, error: 'La conexión del panel administrativo aún no está disponible.', errorKind: 'auth' }
+  },
+  async listProspects() {
+    return { data: [], error: null }
+  },
+  async getProspectById() {
+    return { data: null, error: null }
+  },
+  async createProspect() {
+    return { data: null, error: 'La conexión del panel administrativo aún no está disponible.', errorKind: 'auth' }
+  },
+  async updateProspect() {
+    return { data: null, error: 'La conexión del panel administrativo aún no está disponible.', errorKind: 'auth' }
+  },
+  async listProspectActivities() {
+    return { data: [], error: null }
+  },
+  async createProspectActivity() {
+    return { data: null, error: 'La conexión del panel administrativo aún no está disponible.', errorKind: 'auth' }
+  },
+  async completeProspectFollowUp() {
+    return { data: null, error: 'La conexión del panel administrativo aún no está disponible.', errorKind: 'auth' }
+  },
+  async reopenProspectFollowUp() {
+    return { data: null, error: 'La conexión del panel administrativo aún no está disponible.', errorKind: 'auth' }
+  },
+  async listProspectFollowUps() {
+    return { data: [], error: null }
+  },
+  async listCompletedProspectFollowUps() {
+    return { data: [], error: null }
+  },
+  async findContactCandidatesForProspect() {
+    return { data: [], error: null }
+  },
+  async convertProspectToOpportunity() {
+    return { data: { prospect: null, contact: null, opportunity: null, alreadyConverted: false, rpcResult: null }, error: 'La conexión del panel administrativo aún no está disponible.', errorKind: 'auth' }
   },
   async listContactsForSelector() {
     return { data: [], error: null }

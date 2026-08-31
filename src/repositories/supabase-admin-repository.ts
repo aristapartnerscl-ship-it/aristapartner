@@ -6,6 +6,7 @@ import type {
   CommercialAgreementRecord,
   CommercialAgreementUpdateValues,
   CommercialAgreementWithOpportunity,
+  ContactFormValues,
   ContactInsert,
   ContactRecord,
   ContactSelectorRecord,
@@ -30,6 +31,14 @@ import type {
   OrganizationSettingsRecord,
   OrganizationSettingsUpdateValues,
   OpportunityRecord,
+  ProspectActivityRecord,
+  ProspectContactStrategy,
+  ProspectConversionResult,
+  ProspectConversionValues,
+  ProspectFollowUpRecord,
+  ProspectInsert,
+  ProspectRecord,
+  ProspectUpdate,
   RepositoryErrorKind,
   RepositoryResult,
   SupplierOpportunityRecord,
@@ -50,9 +59,12 @@ import type {
   ConvertContactSubmissionAtomicArgs,
   ConvertInquiryToOpportunityAtomicArgs,
   ConvertInquiryToOpportunityAtomicRow,
+  ConvertProspectToOpportunityArgs,
   ConvertSellSubmissionAtomicArgs,
   ConvertSubmissionAtomicRow,
   ConvertSupplierSubmissionAtomicArgs,
+  CreateProspectActivityAtomicArgs,
+  ConvertProspectToOpportunityRow,
   Database,
 } from '../types/database'
 import type { AdminRepository } from './admin-repository'
@@ -69,6 +81,14 @@ const opportunityActivityColumns =
   'id, opportunity_id, activity_type, title, description, occurred_at, next_action_at, completed_at, completed_by, created_at, created_by'
 
 const dashboardActivityColumns = 'id, opportunity_id, title, activity_type, next_action_at, occurred_at, completed_at, completed_by'
+
+const prospectColumns =
+  'id, prospect_type, full_name, company_name, role_or_activity, email, phone, website, social_network, country, city_region, source, product_or_service, commercial_origin, lead_temperature, status, priority, preferred_contact_method, next_action_type, next_action_at, last_contact_at, contact_attempts, notes, assigned_to, converted_contact_id, converted_opportunity_id, converted_at, created_by, created_at, updated_at'
+
+const prospectActivityColumns =
+  'id, prospect_id, activity_type, outcome, subject, notes, occurred_at, next_action_type, next_action_at, completed_at, created_by, created_at'
+
+const dashboardProspectActionColumns = 'id, full_name, company_name, status, priority, next_action_type, next_action_at'
 
 const supplierColumns =
   'id, contact_id, business_name, legal_name, tax_id, description, categories, geographic_coverage, supply_capacity, minimum_order, minimum_order_currency, issues_invoice, commercial_terms, status, internal_notes, created_at, updated_at, created_by'
@@ -92,6 +112,38 @@ const commercialAgreementColumns =
 const organizationSettingsColumns =
   'singleton_key, display_name, legal_name, tax_identifier, public_email, public_phone, website_url, address_line, city_region, country_code, timezone, locale, default_currency, default_opportunity_priority, default_follow_up_days, default_attribution_days, default_commission_type, default_commission_value, created_at, updated_at, created_by, updated_by'
 
+const prospectEditableFields = [
+  'prospect_type',
+  'full_name',
+  'company_name',
+  'role_or_activity',
+  'email',
+  'phone',
+  'website',
+  'social_network',
+  'country',
+  'city_region',
+  'source',
+  'product_or_service',
+  'commercial_origin',
+  'lead_temperature',
+  'status',
+  'priority',
+  'preferred_contact_method',
+  'next_action_type',
+  'next_action_at',
+  'notes',
+] as const
+
+function prospectEditablePayload(values: Partial<ProspectInsert | ProspectUpdate>) {
+  const payload: Record<string, unknown> = {}
+  for (const field of prospectEditableFields) {
+    if (field in values) payload[field] = values[field]
+  }
+  if ('email' in payload) payload.email = optionalText(payload.email as string | null | undefined)?.toLowerCase() ?? null
+  return payload
+}
+
 const emptyDashboardData: DashboardData = {
   metrics: {
     newOpportunities: null,
@@ -101,8 +153,11 @@ const emptyDashboardData: DashboardData = {
     pendingSuppliers: null,
     newInquiries: null,
     newFormSubmissions: null,
+    prospectsDueToday: null,
+    overdueProspectFollowUps: null,
   },
   upcomingActions: [],
+  upcomingProspectActions: [],
   recentActivities: [],
   hasMetricErrors: false,
   activityError: false,
@@ -159,6 +214,7 @@ const rpcErrorMessages: Record<string, string> = {
   AP_OWNER_REQUIRED: 'Tu usuario no tiene permisos para realizar esta conversión.',
   AP_INQUIRY_NOT_FOUND: 'No se encontró la consulta solicitada.',
   AP_SUBMISSION_NOT_FOUND: 'No se encontró la recepción solicitada.',
+  AP_PROSPECT_NOT_FOUND: 'No se encontró el prospecto solicitado.',
   AP_INVALID_SUBMISSION_TYPE: 'El tipo de recepción no coincide con la conversión solicitada.',
   AP_SOURCE_CLOSED: 'Este registro no está disponible para conversión.',
   AP_CONVERSION_INTEGRITY_ERROR: 'La trazabilidad de conversión requiere revisión administrativa.',
@@ -169,6 +225,12 @@ const rpcErrorMessages: Record<string, string> = {
   AP_CONTACT_COMPANY_REQUIRED: 'Ingresa la empresa para crear el contacto.',
   AP_INVALID_EMAIL: 'Ingresa un correo electrónico válido.',
   AP_INVALID_PHONE: 'Ingresa un teléfono válido.',
+  AP_INVALID_ACTIVITY_TYPE: 'Selecciona un tipo de actividad válido.',
+  AP_INVALID_OUTCOME: 'Selecciona un resultado válido.',
+  AP_INVALID_PROSPECT_STATUS: 'Selecciona un estado de prospecto válido.',
+  AP_ACTIVITY_SUBJECT_REQUIRED: 'Ingresa un asunto para la actividad.',
+  AP_NEXT_ACTION_IN_PAST: 'Programa la próxima acción para una fecha futura.',
+  AP_INVALID_OPPORTUNITY_TYPE: 'Selecciona compra o venta para la oportunidad.',
   AP_TITLE_REQUIRED: 'Ingresa un título para la oportunidad.',
   AP_INQUIRY_FIELDS_REQUIRED: 'Completa asunto y mensaje para crear la consulta.',
   AP_SUPPLIER_NAME_REQUIRED: 'Ingresa el nombre comercial del proveedor.',
@@ -224,6 +286,24 @@ function contactRpcArgs(strategy: SubmissionContactStrategy) {
     return { p_existing_contact_id: strategy.existing_contact_id }
   }
   const contact = strategy.contact
+  if (!contact) return {}
+  return {
+    p_contact_type: contact.contact_type,
+    p_contact_full_name: optionalText(contact.full_name),
+    p_contact_company_name: optionalText(contact.company_name),
+    p_contact_position: optionalText(contact.position),
+    p_contact_email: optionalText(contact.email),
+    p_contact_phone: optionalText(contact.phone),
+    p_contact_website: optionalText(contact.website),
+    p_contact_social_media: optionalText(contact.social_media),
+    p_contact_country: optionalText(contact.country),
+    p_contact_region: optionalText(contact.region),
+    p_contact_city: optionalText(contact.city),
+    p_contact_notes: optionalText(contact.notes),
+  }
+}
+
+function prospectContactRpcArgs(contact: ContactFormValues | undefined) {
   if (!contact) return {}
   return {
     p_contact_type: contact.contact_type,
@@ -413,6 +493,23 @@ export class SupabaseAdminRepository implements AdminRepository {
       ['pendingSuppliers', this.client.from('suppliers').select('id', { count: 'exact', head: true }).eq('status', 'pending')],
       ['newInquiries', this.client.from('inquiries').select('id', { count: 'exact', head: true }).eq('status', 'new')],
       ['newFormSubmissions', this.client.from('form_submissions').select('id', { count: 'exact', head: true }).eq('status', 'received')],
+      [
+        'prospectsDueToday',
+        (this.client as SupabaseClient)
+          .from('prospects')
+          .select('id', { count: 'exact', head: true })
+          .gte('next_action_at', new Date(new Date().setHours(0, 0, 0, 0)).toISOString())
+          .lt('next_action_at', new Date(new Date().setHours(24, 0, 0, 0)).toISOString())
+          .not('status', 'in', '(converted,archived,not_interested)'),
+      ],
+      [
+        'overdueProspectFollowUps',
+        (this.client as SupabaseClient)
+          .from('prospects')
+          .select('id', { count: 'exact', head: true })
+          .lt('next_action_at', now)
+          .not('status', 'in', '(converted,archived,not_interested)'),
+      ],
     ] as const
 
     const results = await Promise.all(countQueries.map(([, query]) => query))
@@ -450,6 +547,21 @@ export class SupabaseAdminRepository implements AdminRepository {
       logSafeError('dashboard.recent_activities', recent.error)
     } else {
       data.recentActivities = (recent.data ?? []) as DashboardActivity[]
+    }
+
+    const prospectActions = await (this.client as SupabaseClient)
+      .from('prospects')
+      .select(dashboardProspectActionColumns)
+      .not('next_action_at', 'is', null)
+      .not('status', 'in', '(converted,archived,not_interested)')
+      .order('next_action_at', { ascending: true })
+      .limit(5)
+
+    if (prospectActions.error) {
+      data.activityError = true
+      logSafeError('dashboard.prospect_actions', prospectActions.error)
+    } else {
+      data.upcomingProspectActions = (prospectActions.data ?? []) as DashboardData['upcomingProspectActions']
     }
 
     return ok(data)
@@ -527,6 +639,255 @@ export class SupabaseAdminRepository implements AdminRepository {
 
     if (error) return fail<OpportunityActivityRecord | null>(null, error, 'opportunity_activities.create')
     return ok(data as OpportunityActivityRecord)
+  }
+
+  async listProspects() {
+    const client = this.client as SupabaseClient
+    const { data, error } = await client.from('prospects').select(prospectColumns).order('updated_at', { ascending: false })
+    if (error) return fail<ProspectRecord[]>([], error, 'prospects.list')
+    return ok((data ?? []) as ProspectRecord[])
+  }
+
+  async getProspectById(id: string) {
+    const client = this.client as SupabaseClient
+    const { data, error } = await client.from('prospects').select(prospectColumns).eq('id', id).maybeSingle()
+    if (error) return fail<ProspectRecord | null>(null, error, 'prospects.get')
+    return ok(data as ProspectRecord | null)
+  }
+
+  async createProspect(values: Omit<ProspectInsert, 'created_by' | 'assigned_to'>) {
+    const admin = await this.ensureActiveOwner()
+    if (!admin.userId) return { data: null, error: admin.error, errorKind: admin.errorKind }
+
+    const client = this.client as SupabaseClient
+    const { data, error } = await client
+      .from('prospects')
+      .insert({ ...prospectEditablePayload(values), assigned_to: admin.userId, created_by: admin.userId })
+      .select(prospectColumns)
+      .single()
+
+    if (error) return fail<ProspectRecord | null>(null, error, 'prospects.create')
+    return ok(data as ProspectRecord)
+  }
+
+  async updateProspect(id: string, values: ProspectUpdate) {
+    const admin = await this.ensureActiveOwner()
+    if (!admin.userId) return { data: null, error: admin.error, errorKind: admin.errorKind }
+    if (values.status === 'converted') {
+      return {
+        data: null,
+        error: 'La conversión debe realizarse desde la acción Convertir.',
+        errorKind: 'validation' as const,
+      }
+    }
+
+    const payload = prospectEditablePayload(values)
+    const client = this.client as SupabaseClient
+    const { data, error } = await client.from('prospects').update(payload).eq('id', id).select(prospectColumns).single()
+    if (error) return fail<ProspectRecord | null>(null, error, 'prospects.update')
+    return ok(data as ProspectRecord)
+  }
+
+  async listProspectActivities(prospectId: string) {
+    const client = this.client as SupabaseClient
+    const { data, error } = await client
+      .from('prospect_activities')
+      .select(prospectActivityColumns)
+      .eq('prospect_id', prospectId)
+      .order('occurred_at', { ascending: false })
+
+    if (error) return fail<ProspectActivityRecord[]>([], error, 'prospect_activities.list')
+    return ok((data ?? []) as ProspectActivityRecord[])
+  }
+
+  async createProspectActivity(values: {
+    prospect_id: string
+    activity_type: ProspectActivityRecord['activity_type']
+    outcome?: ProspectActivityRecord['outcome']
+    subject: string
+    notes?: string | null
+    occurred_at?: string | null
+    next_action_type?: string | null
+    next_action_at?: string | null
+    status?: ProspectRecord['status'] | null
+  }) {
+    const admin = await this.ensureActiveOwner()
+    if (!admin.userId) return { data: null, error: admin.error, errorKind: admin.errorKind }
+
+    const client = this.client as SupabaseClient
+    const rpcArgs: CreateProspectActivityAtomicArgs = {
+      p_prospect_id: values.prospect_id,
+      p_activity_type: values.activity_type,
+      p_outcome: values.outcome ?? null,
+      p_subject: optionalText(values.subject),
+      p_notes: optionalText(values.notes),
+      p_occurred_at: values.occurred_at ?? null,
+      p_next_action_type: optionalText(values.next_action_type),
+      p_next_action_at: values.next_action_at ?? null,
+      p_status: values.status ?? null,
+    }
+
+    const { data, error } = await client.rpc('create_prospect_activity_atomic', rpcArgs)
+
+    if (error) return failRpc<ProspectActivityRecord | null>(null, error, 'prospect_activities.create.rpc')
+    const row = singleRpcRow<ProspectActivityRecord>(data as ProspectActivityRecord[] | null, 'prospect_activities.create.rpc_result')
+    if (row.error) return { data: null, error: row.error, errorKind: row.errorKind }
+    return ok(row.data)
+  }
+
+  async completeProspectFollowUp(activityId: string) {
+    const admin = await this.ensureActiveOwner()
+    if (!admin.userId) return { data: null, error: admin.error, errorKind: admin.errorKind }
+
+    const client = this.client as SupabaseClient
+    const { data, error } = await client
+      .from('prospect_activities')
+      .update({ completed_at: new Date().toISOString() })
+      .eq('id', activityId)
+      .select(prospectActivityColumns)
+      .single()
+
+    if (error) return fail<ProspectActivityRecord | null>(null, error, 'prospect_followups.complete')
+    return ok(data as ProspectActivityRecord)
+  }
+
+  async reopenProspectFollowUp(activityId: string) {
+    const admin = await this.ensureActiveOwner()
+    if (!admin.userId) return { data: null, error: admin.error, errorKind: admin.errorKind }
+
+    const client = this.client as SupabaseClient
+    const { data, error } = await client
+      .from('prospect_activities')
+      .update({ completed_at: null })
+      .eq('id', activityId)
+      .select(prospectActivityColumns)
+      .single()
+
+    if (error) return fail<ProspectActivityRecord | null>(null, error, 'prospect_followups.reopen')
+    return ok(data as ProspectActivityRecord)
+  }
+
+  async listProspectFollowUps() {
+    const client = this.client as SupabaseClient
+    const { data: activities, error } = await client
+      .from('prospect_activities')
+      .select(prospectActivityColumns)
+      .not('next_action_at', 'is', null)
+      .is('completed_at', null)
+      .order('next_action_at', { ascending: true })
+      .limit(1000)
+
+    if (error) return fail<ProspectFollowUpRecord[]>([], error, 'prospect_followups.list.activities')
+    return this.hydrateProspectFollowUps((activities ?? []) as ProspectActivityRecord[], 'prospect_followups.list')
+  }
+
+  async listCompletedProspectFollowUps() {
+    const client = this.client as SupabaseClient
+    const { data: activities, error } = await client
+      .from('prospect_activities')
+      .select(prospectActivityColumns)
+      .not('next_action_at', 'is', null)
+      .not('completed_at', 'is', null)
+      .order('completed_at', { ascending: false })
+      .limit(50)
+
+    if (error) return fail<ProspectFollowUpRecord[]>([], error, 'prospect_followups.completed.activities')
+    return this.hydrateProspectFollowUps((activities ?? []) as ProspectActivityRecord[], 'prospect_followups.completed')
+  }
+
+  private async hydrateProspectFollowUps(activities: ProspectActivityRecord[], context: string) {
+    const prospectIds = Array.from(new Set(activities.map((item) => item.prospect_id)))
+    if (prospectIds.length === 0) return ok([] as ProspectFollowUpRecord[])
+
+    const client = this.client as SupabaseClient
+    const { data: prospects, error: prospectError } = await client
+      .from('prospects')
+      .select('id, full_name, company_name, status, priority, phone, email')
+      .in('id', prospectIds)
+      .not('status', 'in', '(converted,archived,not_interested)')
+
+    if (prospectError) return fail<ProspectFollowUpRecord[]>([], prospectError, `${context}.prospects`)
+    const prospectMap = new Map((prospects ?? []).map((item) => [item.id, item]))
+    return ok(
+      activities
+        .map((activity) => {
+          const prospect = prospectMap.get(activity.prospect_id)
+          if (!prospect) return null
+          return { ...activity, prospect, completedByProfile: null }
+        })
+        .filter(Boolean) as ProspectFollowUpRecord[],
+    )
+  }
+
+  async findContactCandidatesForProspect(prospectId: string) {
+    const prospect = await this.getProspectById(prospectId)
+    if (prospect.error) return fail<ContactRecord[]>([], new Error(prospect.error), 'prospects.contact_candidates.prospect')
+    if (!prospect.data) return { data: [], error: 'No se encontró el prospecto solicitado.', errorKind: 'not_found' as const }
+    const contacts = await this.listContacts()
+    if (contacts.error) return contacts
+    const target = prospect.data
+    return ok(
+      contacts.data
+        .map((contact) => ({
+          contact,
+          score:
+            Number(Boolean(target.email && contact.email && target.email.toLowerCase() === contact.email.toLowerCase())) * 4 +
+            Number(Boolean(target.phone && contact.phone && target.phone === contact.phone)) * 3 +
+            Number(Boolean(target.company_name && contact.company_name && target.company_name.toLowerCase() === contact.company_name.toLowerCase())) * 2 +
+            Number(Boolean(target.full_name && contact.full_name && target.full_name.toLowerCase() === contact.full_name.toLowerCase())),
+        }))
+        .filter((entry) => entry.score > 0)
+        .sort((a, b) => b.score - a.score)
+        .slice(0, 8)
+        .map((entry) => entry.contact),
+    )
+  }
+
+  async convertProspectToOpportunity(id: string, values: ProspectConversionValues, strategy: ProspectContactStrategy): Promise<RepositoryResult<ProspectConversionResult>> {
+    const admin = await this.ensureActiveOwner()
+    if (!admin.userId) return { data: { prospect: null, contact: null, opportunity: null, alreadyConverted: false, rpcResult: null }, error: admin.error, errorKind: admin.errorKind }
+
+    const prospect = await this.getProspectById(id)
+    if (prospect.error) return { data: { prospect: null, contact: null, opportunity: null, alreadyConverted: false, rpcResult: null }, error: prospect.error, errorKind: prospect.errorKind }
+    if (!prospect.data) return { data: { prospect: null, contact: null, opportunity: null, alreadyConverted: false, rpcResult: null }, error: 'No se encontró el prospecto solicitado.', errorKind: 'not_found' as const }
+
+    const contactArgs: Partial<ConvertProspectToOpportunityArgs> = 'existing_contact_id' in strategy && strategy.existing_contact_id
+      ? { p_existing_contact_id: strategy.existing_contact_id }
+      : prospectContactRpcArgs(strategy.contact)
+
+    const estimatedValue = values.estimated_value.trim() ? Number(values.estimated_value) : null
+    const client = this.client as SupabaseClient
+    const rpcArgs: ConvertProspectToOpportunityArgs = {
+      p_prospect_id: id,
+      p_opportunity_type: values.opportunity_type,
+      p_title: values.title.trim(),
+      p_description: optionalText(values.description),
+      p_expected_date: values.expected_date || null,
+      p_country: optionalText(prospect.data.country),
+      p_region: null,
+      p_city: optionalText(prospect.data.city_region),
+      p_estimated_value: estimatedValue,
+      p_currency: optionalUpperText(values.currency) ?? null,
+      p_internal_notes: optionalText(values.internal_notes),
+      ...contactArgs,
+    }
+
+    const { data, error } = await client.rpc('convert_prospect_to_opportunity', rpcArgs)
+
+    if (error) return failRpc<ProspectConversionResult>({ prospect: prospect.data, contact: null, opportunity: null, alreadyConverted: false, rpcResult: null }, error, 'prospects.convert.rpc')
+    const row = singleRpcRow<ConvertProspectToOpportunityRow>(data as ConvertProspectToOpportunityRow[] | null, 'prospects.convert.rpc_result')
+    if (row.error || !row.data) return { data: { prospect: prospect.data, contact: null, opportunity: null, alreadyConverted: false, rpcResult: null }, error: row.error, errorKind: row.errorKind }
+
+    const [updatedProspect, contact, opportunity] = await Promise.all([
+      this.getProspectById(row.data.prospect_id),
+      this.getContactById(row.data.contact_id),
+      this.getOpportunityById(row.data.opportunity_id),
+    ])
+    if (updatedProspect.error) return { data: { prospect: prospect.data, contact: contact.data, opportunity: opportunity.data, alreadyConverted: row.data.already_converted, rpcResult: row.data }, error: updatedProspect.error, errorKind: updatedProspect.errorKind }
+    if (contact.error) return { data: { prospect: updatedProspect.data, contact: null, opportunity: opportunity.data, alreadyConverted: row.data.already_converted, rpcResult: row.data }, error: contact.error, errorKind: contact.errorKind }
+    if (opportunity.error) return { data: { prospect: updatedProspect.data, contact: contact.data, opportunity: null, alreadyConverted: row.data.already_converted, rpcResult: row.data }, error: opportunity.error, errorKind: opportunity.errorKind }
+
+    return ok({ prospect: updatedProspect.data, contact: contact.data, opportunity: opportunity.data, alreadyConverted: row.data.already_converted, rpcResult: row.data })
   }
 
   async listContactsForSelector() {

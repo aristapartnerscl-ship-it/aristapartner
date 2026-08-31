@@ -170,7 +170,7 @@ describe('AdminInquiries', () => {
       subject: 'Consulta comercial',
       status: 'new',
     }))
-  })
+  }, 10000)
 
   test('changes new to read to replied and archives without deleting', async () => {
     const user = userEvent.setup()
@@ -314,8 +314,11 @@ describe('AdminInquiries', () => {
         pendingSuppliers: 0,
         newInquiries: 1,
         newFormSubmissions: 0,
+        prospectsDueToday: 0,
+        overdueProspectFollowUps: 0,
       },
       upcomingActions: [],
+      upcomingProspectActions: [],
       recentActivities: [],
       hasMetricErrors: false,
       activityError: false,

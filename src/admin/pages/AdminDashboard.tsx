@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom'
 import { AdminPageHeader } from '../../components/admin/AdminPageHeader'
 import { EmptyState } from '../../components/admin/EmptyState'
 import { adminRepository } from '../../repositories'
-import type { DashboardActivity, DashboardData } from '../../types/admin'
+import type { DashboardActivity, DashboardData, DashboardProspectAction } from '../../types/admin'
 
 const metricLabels: Array<[keyof DashboardData['metrics'], string]> = [
   ['newOpportunities', 'Oportunidades nuevas'],
@@ -13,12 +13,15 @@ const metricLabels: Array<[keyof DashboardData['metrics'], string]> = [
   ['pendingSuppliers', 'Proveedores pendientes'],
   ['newInquiries', 'Consultas nuevas'],
   ['newFormSubmissions', 'Recepciones nuevas'],
+  ['prospectsDueToday', 'Prospectos para contactar hoy'],
+  ['overdueProspectFollowUps', 'Seguimientos de prospectos vencidos'],
 ]
 
 const quickLinks = [
   ['Nueva oportunidad', '/admin/oportunidades'],
   ['Nuevo proveedor', '/admin/proveedores'],
   ['Nuevo contacto', '/admin/contactos'],
+  ['Nuevo prospecto', '/admin/prospeccion'],
   ['Nuevo acuerdo', '/admin/acuerdos/nuevo'],
   ['Ver seguimiento', '/admin/seguimiento'],
 ]
@@ -31,12 +34,34 @@ function metricHref(key: keyof DashboardData['metrics']) {
   if (key === 'pendingSuppliers') return '/admin/proveedores?status=pending'
   if (key === 'newInquiries') return '/admin/consultas?status=new'
   if (key === 'newFormSubmissions') return '/admin/recepciones?status=received'
+  if (key === 'prospectsDueToday') return '/admin/prospeccion?view=today'
+  if (key === 'overdueProspectFollowUps') return '/admin/prospeccion?view=overdue'
   return '/admin'
 }
 
 function formatDate(value: string | null) {
   if (!value) return 'Sin fecha'
   return new Intl.DateTimeFormat('es-CL', { dateStyle: 'medium', timeStyle: 'short' }).format(new Date(value))
+}
+
+function ProspectActionList({ items }: { items: DashboardProspectAction[] }) {
+  if (items.length === 0) return <EmptyState title="Próximas acciones de prospectos" text="No hay acciones de prospectos para mostrar." />
+
+  return (
+    <section className="rounded-lg border border-slate-200 bg-white p-6">
+      <h2 className="text-xl font-semibold text-[#17202d]">Próximas acciones de prospectos</h2>
+      <div className="mt-4 grid gap-3">
+        {items.map((item) => (
+          <article key={item.id} className="rounded-md border border-slate-200 p-4">
+            <Link to={`/admin/prospeccion/${item.id}`} className="text-sm font-semibold text-[#17202d] hover:text-[#235b3e]">
+              {item.full_name || item.company_name || 'Prospecto sin nombre'}
+            </Link>
+            <p className="mt-1 text-sm text-slate-600">{item.next_action_type || 'Seguimiento'} · {formatDate(item.next_action_at)}</p>
+          </article>
+        ))}
+      </div>
+    </section>
+  )
 }
 
 function ActivityList({ title, items, dateField }: { title: string; items: DashboardActivity[]; dateField: 'next_action_at' | 'occurred_at' }) {
@@ -124,6 +149,7 @@ export function AdminDashboard() {
 
           <div className="grid gap-6 xl:grid-cols-2">
             <ActivityList title="Próximas acciones" items={dashboard.upcomingActions} dateField="next_action_at" />
+            <ProspectActionList items={dashboard.upcomingProspectActions} />
             <ActivityList title="Actividad reciente" items={dashboard.recentActivities} dateField="occurred_at" />
             <EmptyState title="Oportunidades que requieren atención" text="No hay oportunidades que requieran atención." />
             <section className="rounded-lg border border-slate-200 bg-white p-6">

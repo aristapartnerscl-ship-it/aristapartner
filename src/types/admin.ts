@@ -12,6 +12,8 @@ import type {
   ConvertBuySubmissionAtomicArgs,
   ConvertContactSubmissionAtomicArgs,
   ConvertInquiryToOpportunityAtomicRow,
+  ConvertProspectToOpportunityArgs,
+  ConvertProspectToOpportunityRow,
   ConvertSellSubmissionAtomicArgs,
   ConvertSubmissionAtomicRow,
   ConvertSupplierSubmissionAtomicArgs,
@@ -41,6 +43,16 @@ import type {
   OpportunitySupplierUpdate,
   OpportunityRow,
   Priority,
+  ProspectActivityInsert,
+  ProspectActivityOutcome,
+  ProspectActivityRow,
+  ProspectActivityType,
+  ProspectInsert,
+  ProspectRow,
+  ProspectStatus,
+  ProspectTemperature,
+  ProspectType,
+  ProspectUpdate,
   SupplierRow,
   SupplierStatus,
   SubmissionType,
@@ -71,6 +83,14 @@ export type {
   OrganizationSettingsInsert,
   OpportunityStatus,
   OpportunityType,
+  ProspectActivityInsert,
+  ProspectActivityOutcome,
+  ProspectActivityType,
+  ProspectInsert,
+  ProspectStatus,
+  ProspectTemperature,
+  ProspectType,
+  ProspectUpdate,
   Priority,
   SupplierStatus,
   SubmissionType,
@@ -84,6 +104,10 @@ export type AdminNotificationRecord = AdminNotificationRow
 export type ContactRecord = ContactRow
 
 export type OpportunityRecord = OpportunityRow
+
+export type ProspectRecord = ProspectRow
+
+export type ProspectActivityRecord = ProspectActivityRow
 
 export type OrganizationSettingsRecord = OrganizationSettingsRow & {
   updatedByProfile: Pick<AdminProfileRow, 'id' | 'full_name'> | null
@@ -148,6 +172,50 @@ export type OpportunityActivityFormValues = {
   next_action_at: string
 }
 
+export type ProspectFormValues = {
+  prospect_type: ProspectType
+  full_name: string
+  company_name: string
+  role_or_activity: string
+  email: string
+  phone: string
+  website: string
+  social_network: string
+  country: string
+  city_region: string
+  source: string
+  product_or_service: string
+  commercial_origin: string
+  lead_temperature: ProspectTemperature
+  status: ProspectStatus
+  priority: Priority
+  preferred_contact_method: string
+  next_action_type: string
+  next_action_at: string
+  notes: string
+}
+
+export type ProspectActivityFormValues = {
+  activity_type: ProspectActivityType
+  outcome: ProspectActivityOutcome | ''
+  subject: string
+  notes: string
+  occurred_at: string
+  next_action_type: string
+  next_action_at: string
+  status: ProspectStatus | ''
+}
+
+export type ProspectConversionValues = {
+  opportunity_type: OpportunityType
+  title: string
+  description: string
+  expected_date: string
+  estimated_value: string
+  currency: string
+  internal_notes: string
+}
+
 export type ContactSelectorRecord = Pick<ContactRow, 'id' | 'contact_type' | 'full_name' | 'company_name' | 'email' | 'phone' | 'city' | 'country'>
 
 export type FollowUpRecord = OpportunityActivityRow & {
@@ -155,6 +223,15 @@ export type FollowUpRecord = OpportunityActivityRow & {
   contact: ContactSelectorRecord | null
   completedByProfile: Pick<AdminProfileRow, 'id' | 'full_name'> | null
 }
+
+export type ProspectFollowUpRecord = ProspectActivityRow & {
+  prospect: Pick<ProspectRow, 'id' | 'full_name' | 'company_name' | 'status' | 'priority' | 'phone' | 'email'>
+  completedByProfile: Pick<AdminProfileRow, 'id' | 'full_name'> | null
+}
+
+export type AgendaFollowUpRecord =
+  | (FollowUpRecord & { sourceType: 'opportunity' })
+  | (ProspectFollowUpRecord & { sourceType: 'prospect' })
 
 export type SupplierRecord = SupplierRow
 
@@ -304,10 +381,31 @@ export type SubmissionNewContactStrategy = {
 
 export type SubmissionContactStrategy = SubmissionExistingContactStrategy | SubmissionNewContactStrategy
 
+export type ProspectExistingContactStrategy = {
+  existing_contact_id: string
+  contact?: never
+}
+
+export type ProspectNewContactStrategy = {
+  existing_contact_id?: null
+  contact: ContactFormValues
+}
+
+export type ProspectContactStrategy = ProspectExistingContactStrategy | ProspectNewContactStrategy
+
+export type ProspectConversionResult = {
+  prospect: ProspectRecord | null
+  contact: ContactRecord | null
+  opportunity: OpportunityRecord | null
+  alreadyConverted: boolean
+  rpcResult: ConvertProspectToOpportunityRow | null
+}
+
 export type ContactSubmissionRpcArgs = ConvertContactSubmissionAtomicArgs
 export type BuySubmissionRpcArgs = ConvertBuySubmissionAtomicArgs
 export type SellSubmissionRpcArgs = ConvertSellSubmissionAtomicArgs
 export type SupplierSubmissionRpcArgs = ConvertSupplierSubmissionAtomicArgs
+export type ProspectConversionRpcArgs = ConvertProspectToOpportunityArgs
 
 export type DashboardMetrics = {
   newOpportunities: number | null
@@ -317,6 +415,8 @@ export type DashboardMetrics = {
   pendingSuppliers: number | null
   newInquiries: number | null
   newFormSubmissions: number | null
+  prospectsDueToday: number | null
+  overdueProspectFollowUps: number | null
 }
 
 export type DashboardActivity = Pick<
@@ -324,9 +424,15 @@ export type DashboardActivity = Pick<
   'id' | 'opportunity_id' | 'title' | 'activity_type' | 'next_action_at' | 'occurred_at' | 'completed_at' | 'completed_by'
 >
 
+export type DashboardProspectAction = Pick<
+  ProspectRow,
+  'id' | 'full_name' | 'company_name' | 'status' | 'priority' | 'next_action_type' | 'next_action_at'
+>
+
 export type DashboardData = {
   metrics: DashboardMetrics
   upcomingActions: DashboardActivity[]
+  upcomingProspectActions: DashboardProspectAction[]
   recentActivities: DashboardActivity[]
   hasMetricErrors: boolean
   activityError: boolean

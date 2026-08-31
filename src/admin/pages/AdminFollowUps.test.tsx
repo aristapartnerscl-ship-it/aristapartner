@@ -11,8 +11,12 @@ vi.mock('../../repositories', () => ({
   adminRepository: {
     listFollowUps: vi.fn(),
     listCompletedFollowUps: vi.fn(),
+    listProspectFollowUps: vi.fn(),
+    listCompletedProspectFollowUps: vi.fn(),
     completeFollowUp: vi.fn(),
     reopenFollowUp: vi.fn(),
+    completeProspectFollowUp: vi.fn(),
+    reopenProspectFollowUp: vi.fn(),
   },
 }))
 
@@ -80,6 +84,8 @@ describe('AdminFollowUps', () => {
     vi.spyOn(window, 'confirm').mockReturnValue(true)
     vi.mocked(adminRepository.listFollowUps).mockResolvedValue({ data: [pendingFollowUp], error: null })
     vi.mocked(adminRepository.listCompletedFollowUps).mockResolvedValue({ data: [], error: null })
+    vi.mocked(adminRepository.listProspectFollowUps).mockResolvedValue({ data: [], error: null })
+    vi.mocked(adminRepository.listCompletedProspectFollowUps).mockResolvedValue({ data: [], error: null })
   })
 
   test('moves a pending follow-up to completed and back without moving focus unexpectedly', async () => {
