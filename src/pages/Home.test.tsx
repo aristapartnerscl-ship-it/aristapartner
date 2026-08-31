@@ -135,7 +135,8 @@ describe('public Home', () => {
     const sellCta = screen.getAllByRole('link', { name: /Quiero vender/i }).find((link) => link.getAttribute('href') === '/oportunidades?tipo=vender')
 
     expect(hero).toHaveClass('overflow-hidden', 'px-4', 'py-6', 'sm:py-14', 'lg:py-16')
-    expect(carousel).toHaveClass('h-[clamp(190px,31svh,240px)]', 'overflow-hidden', 'sm:aspect-video')
+    expect(carousel).toHaveClass('h-[clamp(220px,31svh,280px)]', 'overflow-hidden', 'sm:aspect-video')
+    expect(activeSlide().querySelector('picture')).toHaveClass('block', 'h-full', 'w-full')
     expect(carousel).not.toHaveClass('w-screen')
     expect(ctas).toHaveClass('grid', 'grid-cols-2', 'gap-2')
     expect(buyCta).toHaveClass('min-h-11')

@@ -35,6 +35,8 @@ describe('public Phase 3 pages', () => {
     const b2bPicture = screen.getByAltText(/Producto de consumo/i).closest('picture') as HTMLElement
     expect(providerPicture).toBeInTheDocument()
     expect(b2bPicture).toBeInTheDocument()
+    expect(providerPicture).toHaveClass('block', 'h-full', 'w-full')
+    expect(b2bPicture).toHaveClass('block', 'h-full', 'w-full')
     expect(providerPicture.querySelector('source[type="image/avif"]')).toBeInTheDocument()
     expect(providerPicture.querySelector('source[type="image/webp"]')).toBeInTheDocument()
     expect(providerPicture.querySelector('img[src="/images/arista-proveedores-comparacion.png"]')).toBeInTheDocument()

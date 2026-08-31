@@ -172,7 +172,7 @@ function HeroCarousel() {
 
   return (
     <div
-      className="relative h-[clamp(190px,31svh,240px)] overflow-hidden rounded-md border border-dark-border bg-dark-card shadow-[0_18px_38px_rgba(0,0,0,0.18)] sm:aspect-video sm:h-auto sm:rounded-lg sm:shadow-[0_22px_54px_rgba(0,0,0,0.2)]"
+      className="relative h-[clamp(220px,31svh,280px)] overflow-hidden rounded-md border border-dark-border bg-dark-card shadow-[0_18px_38px_rgba(0,0,0,0.18)] sm:aspect-video sm:h-auto sm:rounded-lg sm:shadow-[0_22px_54px_rgba(0,0,0,0.2)]"
       data-testid="hero-carousel"
       aria-label="Imágenes de apoyo de Arista Partners"
     >
@@ -186,7 +186,7 @@ function HeroCarousel() {
               data-active={isActive ? 'true' : 'false'}
               data-testid="hero-slide"
             >
-              <picture>
+              <picture className="block h-full w-full">
                 <source type="image/avif" srcSet={slide.sources.avif} sizes="(min-width: 1024px) 56vw, 100vw" />
                 <source type="image/webp" srcSet={slide.sources.webp} sizes="(min-width: 1024px) 56vw, 100vw" />
                 <img

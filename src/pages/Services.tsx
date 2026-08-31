@@ -12,7 +12,7 @@ const serviceBlocks = [
 
 function ResponsiveImage({ name, alt, width, height, sizes }: { name: string; alt: string; width: number; height: number; sizes: string }) {
   return (
-    <picture>
+    <picture className="block h-full w-full">
       <source type="image/avif" srcSet={`/images/${name}-720.avif 720w, /images/${name}-1200.avif 1200w`} sizes={sizes} />
       <source type="image/webp" srcSet={`/images/${name}-720.webp 720w, /images/${name}-1200.webp 1200w`} sizes={sizes} />
       <img src={`/images/${name}.png`} alt={alt} width={width} height={height} loading="lazy" decoding="async" className="h-full w-full object-cover" />
