@@ -62,6 +62,33 @@ export const emptyAdminRepository: AdminRepository = {
   async listOpportunityActivities() {
     return { data: [], error: null }
   },
+  async listCommercialProposals() {
+    return { data: [], error: null }
+  },
+  async getCommercialProposalById() {
+    return { data: null, error: null }
+  },
+  async createCommercialProposal() {
+    return { data: null, error: 'La conexión del panel administrativo aún no está disponible.', errorKind: 'auth' }
+  },
+  async updateCommercialProposal() {
+    return { data: null, error: 'La conexión del panel administrativo aún no está disponible.', errorKind: 'auth' }
+  },
+  async listCommercialProposalsForOpportunity() {
+    return { data: [], error: null }
+  },
+  async createCommercialProposalVersion() {
+    return { data: null, error: 'La conexión del panel administrativo aún no está disponible.', errorKind: 'auth' }
+  },
+  async listCommercialProposalVersions() {
+    return { data: [], error: null }
+  },
+  async listCommercialProposalDocuments() {
+    return { data: [], error: null }
+  },
+  async createCommercialProposalDocument() {
+    return { data: null, error: 'La conexión del panel administrativo aún no está disponible.', errorKind: 'auth' }
+  },
   async createOpportunityActivity() {
     return { data: null, error: 'La conexión del panel administrativo aún no está disponible.', errorKind: 'auth' }
   },

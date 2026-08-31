@@ -201,6 +201,227 @@ export type Database = {
           },
         ]
       }
+      commercial_proposal_documents: {
+        Row: {
+          document_type: string
+          file_name: string
+          generated_at: string
+          generated_by: string
+          id: string
+          proposal_id: string
+          version_id: string
+        }
+        Insert: {
+          document_type?: string
+          file_name: string
+          generated_at?: string
+          generated_by: string
+          id?: string
+          proposal_id: string
+          version_id: string
+        }
+        Update: {
+          document_type?: string
+          file_name?: string
+          generated_at?: string
+          generated_by?: string
+          id?: string
+          proposal_id?: string
+          version_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "commercial_proposal_documents_generated_by_fkey"
+            columns: ["generated_by"]
+            isOneToOne: false
+            referencedRelation: "admin_profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "commercial_proposal_documents_proposal_id_fkey"
+            columns: ["proposal_id"]
+            isOneToOne: false
+            referencedRelation: "commercial_proposals"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "commercial_proposal_documents_version_fk"
+            columns: ["version_id", "proposal_id"]
+            isOneToOne: false
+            referencedRelation: "commercial_proposal_versions"
+            referencedColumns: ["id", "proposal_id"]
+          },
+        ]
+      }
+      commercial_proposal_versions: {
+        Row: {
+          client_notes: string | null
+          created_at: string
+          created_by: string
+          currency: string | null
+          description: string | null
+          id: string
+          proposal_id: string
+          snapshot_data: Json
+          subtotal: number
+          tax_amount: number
+          tax_percentage: number
+          title: string
+          total_amount: number
+          valid_until: string | null
+          version_number: number
+        }
+        Insert: {
+          client_notes?: string | null
+          created_at?: string
+          created_by: string
+          currency?: string | null
+          description?: string | null
+          id?: string
+          proposal_id: string
+          snapshot_data: Json
+          subtotal: number
+          tax_amount: number
+          tax_percentage: number
+          title: string
+          total_amount: number
+          valid_until?: string | null
+          version_number: number
+        }
+        Update: {
+          client_notes?: string | null
+          created_at?: string
+          created_by?: string
+          currency?: string | null
+          description?: string | null
+          id?: string
+          proposal_id?: string
+          snapshot_data?: Json
+          subtotal?: number
+          tax_amount?: number
+          tax_percentage?: number
+          title?: string
+          total_amount?: number
+          valid_until?: string | null
+          version_number?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "commercial_proposal_versions_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "admin_profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "commercial_proposal_versions_proposal_id_fkey"
+            columns: ["proposal_id"]
+            isOneToOne: false
+            referencedRelation: "commercial_proposals"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      commercial_proposals: {
+        Row: {
+          accepted_at: string | null
+          archived_at: string | null
+          archived_by: string | null
+          client_notes: string | null
+          created_at: string
+          created_by: string
+          currency: string | null
+          description: string | null
+          id: string
+          internal_notes: string | null
+          opportunity_id: string
+          proposal_code: string
+          rejected_at: string | null
+          sent_at: string | null
+          status: string
+          subtotal: number
+          tax_amount: number | null
+          tax_percentage: number
+          title: string
+          total_amount: number | null
+          updated_at: string
+          valid_until: string | null
+          viewed_at: string | null
+        }
+        Insert: {
+          accepted_at?: string | null
+          archived_at?: string | null
+          archived_by?: string | null
+          client_notes?: string | null
+          created_at?: string
+          created_by: string
+          currency?: string | null
+          description?: string | null
+          id?: string
+          internal_notes?: string | null
+          opportunity_id: string
+          proposal_code?: string
+          rejected_at?: string | null
+          sent_at?: string | null
+          status?: string
+          subtotal?: number
+          tax_amount?: number | null
+          tax_percentage?: number
+          title: string
+          total_amount?: number | null
+          updated_at?: string
+          valid_until?: string | null
+          viewed_at?: string | null
+        }
+        Update: {
+          accepted_at?: string | null
+          archived_at?: string | null
+          archived_by?: string | null
+          client_notes?: string | null
+          created_at?: string
+          created_by?: string
+          currency?: string | null
+          description?: string | null
+          id?: string
+          internal_notes?: string | null
+          opportunity_id?: string
+          proposal_code?: string
+          rejected_at?: string | null
+          sent_at?: string | null
+          status?: string
+          subtotal?: number
+          tax_amount?: number | null
+          tax_percentage?: number
+          title?: string
+          total_amount?: number | null
+          updated_at?: string
+          valid_until?: string | null
+          viewed_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "commercial_proposals_archived_by_fkey"
+            columns: ["archived_by"]
+            isOneToOne: false
+            referencedRelation: "admin_profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "commercial_proposals_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "admin_profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "commercial_proposals_opportunity_id_fkey"
+            columns: ["opportunity_id"]
+            isOneToOne: false
+            referencedRelation: "opportunities"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       contacts: {
         Row: {
           city: string | null
@@ -1159,6 +1380,32 @@ export type Database = {
           submission_id: string
           visible_identifier: string
         }[]
+      }
+      create_commercial_proposal_version: {
+        Args: { p_proposal_id: string }
+        Returns: {
+          client_notes: string | null
+          created_at: string
+          created_by: string
+          currency: string | null
+          description: string | null
+          id: string
+          proposal_id: string
+          snapshot_data: Json
+          subtotal: number
+          tax_amount: number
+          tax_percentage: number
+          title: string
+          total_amount: number
+          valid_until: string | null
+          version_number: number
+        }
+        SetofOptions: {
+          from: "*"
+          to: "commercial_proposal_versions"
+          isOneToOne: true
+          isSetofReturn: false
+        }
       }
       create_prospect_activity_atomic: {
         Args: {

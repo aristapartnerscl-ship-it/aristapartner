@@ -7,6 +7,12 @@ import type {
   CommercialAgreementRow,
   CommercialAgreementInsert,
   CommercialAgreementUpdate,
+  CommercialProposalInsert,
+  CommercialProposalRow,
+  CommercialProposalUpdate,
+  CommercialProposalDocumentInsert,
+  CommercialProposalDocumentRow,
+  CommercialProposalVersionRow,
   CompensationModel,
   ContactFormValues,
   ConvertBuySubmissionAtomicArgs,
@@ -35,6 +41,7 @@ import type {
   OrganizationSettingsUpdate,
   OpportunityStatus,
   OpportunityType,
+  ProposalStatus,
   OpportunityActivityRow,
   OpportunityActivityInsert,
   OpportunitySupplierInsert,
@@ -69,6 +76,11 @@ export type {
   AgreementStatus,
   CommissionType,
   CompensationModel,
+  CommercialProposalInsert,
+  CommercialProposalUpdate,
+  CommercialProposalDocumentInsert,
+  CommercialProposalDocumentRow,
+  CommercialProposalVersionRow,
   ContactFormValues,
   ContactInsert,
   ContactType,
@@ -83,6 +95,7 @@ export type {
   OrganizationSettingsInsert,
   OpportunityStatus,
   OpportunityType,
+  ProposalStatus,
   ProspectActivityInsert,
   ProspectActivityOutcome,
   ProspectActivityType,
@@ -104,6 +117,28 @@ export type AdminNotificationRecord = AdminNotificationRow
 export type ContactRecord = ContactRow
 
 export type OpportunityRecord = OpportunityRow
+
+export type CommercialProposalRecord = CommercialProposalRow
+
+export type CommercialProposalVersionRecord = CommercialProposalVersionRow
+export type CommercialProposalDocumentRecord = CommercialProposalDocumentRow
+
+export type CommercialProposalWithOpportunity = CommercialProposalRecord & {
+  opportunity: Pick<OpportunityRow, 'id' | 'reference_code' | 'title' | 'opportunity_type' | 'status' | 'contact_id'>
+  contact: ContactSelectorRecord | null
+}
+
+export type CommercialProposalFormValues = {
+  opportunity_id: string
+  title: string
+  description: string
+  currency: string
+  subtotal: string
+  tax_percentage: string
+  valid_until: string
+  client_notes: string
+  internal_notes: string
+}
 
 export type ProspectRecord = ProspectRow
 
@@ -408,6 +443,10 @@ export type SupplierSubmissionRpcArgs = ConvertSupplierSubmissionAtomicArgs
 export type ProspectConversionRpcArgs = ConvertProspectToOpportunityArgs
 
 export type DashboardMetrics = {
+  proposalsOpen?: number | null
+  proposalsNegotiation?: number | null
+  proposalsAccepted?: number | null
+  proposalsExpired?: number | null
   prospectsTotal?: number | null
   prospectsUncontacted?: number | null
   prospectsConverted?: number | null
@@ -440,6 +479,7 @@ export type DashboardData = {
   recentActivities: DashboardActivity[]
   recentProspects?: ProspectRecord[]
   recentOpportunities?: OpportunityRecord[]
+  recentProposals?: CommercialProposalWithOpportunity[]
   hasMetricErrors: boolean
   activityError: boolean
 }

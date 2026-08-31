@@ -5,6 +5,13 @@ import type {
   CommercialAgreementRecord,
   CommercialAgreementUpdateValues,
   CommercialAgreementWithOpportunity,
+  CommercialProposalInsert,
+  CommercialProposalRecord,
+  CommercialProposalUpdate,
+  CommercialProposalWithOpportunity,
+  CommercialProposalDocumentInsert,
+  CommercialProposalDocumentRecord,
+  CommercialProposalVersionRecord,
   ContactInsert,
   ContactRecord,
   ContactSelectorRecord,
@@ -59,6 +66,15 @@ export type AdminRepository = {
   getOpportunityById(id: string): Promise<RepositoryResult<OpportunityRecord | null>>
   createOpportunity(values: Omit<OpportunityInsert, 'created_by' | 'reference_code'>): Promise<RepositoryResult<OpportunityRecord | null>>
   updateOpportunity(id: string, values: Partial<Omit<OpportunityInsert, 'created_by' | 'reference_code'>>): Promise<RepositoryResult<OpportunityRecord | null>>
+  listCommercialProposals(): Promise<RepositoryResult<CommercialProposalWithOpportunity[]>>
+  getCommercialProposalById(id: string): Promise<RepositoryResult<CommercialProposalWithOpportunity | null>>
+  createCommercialProposal(values: Omit<CommercialProposalInsert, 'created_by'>): Promise<RepositoryResult<CommercialProposalRecord | null>>
+  updateCommercialProposal(id: string, values: CommercialProposalUpdate): Promise<RepositoryResult<CommercialProposalRecord | null>>
+  listCommercialProposalsForOpportunity(opportunityId: string): Promise<RepositoryResult<CommercialProposalRecord[]>>
+  createCommercialProposalVersion(proposalId: string): Promise<RepositoryResult<CommercialProposalVersionRecord | null>>
+  listCommercialProposalVersions(proposalId: string): Promise<RepositoryResult<CommercialProposalVersionRecord[]>>
+  listCommercialProposalDocuments(proposalId: string): Promise<RepositoryResult<CommercialProposalDocumentRecord[]>>
+  createCommercialProposalDocument(values: Omit<CommercialProposalDocumentInsert, 'generated_by'>): Promise<RepositoryResult<CommercialProposalDocumentRecord | null>>
   listOpportunityActivities(opportunityId: string): Promise<RepositoryResult<OpportunityActivityRecord[]>>
   createOpportunityActivity(values: Omit<OpportunityActivityInsert, 'created_by'>): Promise<RepositoryResult<OpportunityActivityRecord | null>>
   listProspects(): Promise<RepositoryResult<ProspectRecord[]>>

@@ -1,4 +1,4 @@
-import type { ActivityType, AgreementCounterpartyType, AgreementPayerType, AgreementStatus, CommissionType, CompensationModel, InquiryReason, InquiryStatus, OpportunityStatus, OpportunitySupplierStatus, OpportunityType, PreferredContactMethod, Priority, ProspectActivityOutcome, ProspectActivityType, ProspectStatus, ProspectTemperature, ProspectType, SupplierStatus } from '../types/admin'
+import type { ActivityType, AgreementCounterpartyType, AgreementPayerType, AgreementStatus, CommissionType, CompensationModel, InquiryReason, InquiryStatus, OpportunityStatus, OpportunitySupplierStatus, OpportunityType, PreferredContactMethod, Priority, ProposalStatus, ProspectActivityOutcome, ProspectActivityType, ProspectStatus, ProspectTemperature, ProspectType, SupplierStatus } from '../types/admin'
 
 export const opportunityTypeLabels: Record<OpportunityType, string> = {
   buy: 'Compra',
@@ -17,6 +17,17 @@ export const opportunityStatusLabels: Record<OpportunityStatus, string> = {
   rejected: 'Rechazada',
   archived: 'Archivada',
 }
+
+export const proposalStatusLabels: Record<ProposalStatus, string> = {
+  draft: 'Borrador',
+  sent: 'Enviada',
+  viewed: 'Vista',
+  negotiation: 'En negociación',
+  accepted: 'Aceptada',
+  rejected: 'Rechazada',
+  expired: 'Vencida',
+}
+export const proposalStatuses = Object.keys(proposalStatusLabels) as ProposalStatus[]
 
 export const priorityLabels: Record<Priority, string> = {
   low: 'Baja',

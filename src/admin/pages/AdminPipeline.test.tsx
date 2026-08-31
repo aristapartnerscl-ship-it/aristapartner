@@ -6,7 +6,7 @@ import { adminRepository } from '../../repositories'
 import type { OpportunityRecord, ProspectRecord } from '../../types/admin'
 
 vi.mock('../../repositories', () => ({
-  adminRepository: { listProspects: vi.fn(), listOpportunities: vi.fn() },
+  adminRepository: { listProspects: vi.fn(), listOpportunities: vi.fn(), listCommercialProposals: vi.fn() },
 }))
 
 const prospect: ProspectRecord = {
@@ -30,6 +30,7 @@ describe('AdminPipeline', () => {
     vi.clearAllMocks()
     vi.mocked(adminRepository.listProspects).mockResolvedValue({ data: [prospect], error: null })
     vi.mocked(adminRepository.listOpportunities).mockResolvedValue({ data: [opportunity], error: null })
+    vi.mocked(adminRepository.listCommercialProposals).mockResolvedValue({ data: [], error: null })
   })
 
   test('muestra prospectos y oportunidades reales con enlaces de detalle', async () => {

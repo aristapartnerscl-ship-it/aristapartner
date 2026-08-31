@@ -5,6 +5,7 @@ import { AdminPageHeader } from '../../components/admin/AdminPageHeader'
 import { adminRepository } from '../../repositories'
 import type {
   CommercialAgreementWithOpportunity,
+  CommercialProposalRecord,
   ContactSelectorRecord,
   OpportunityActivityFormValues,
   OpportunityActivityRecord,
@@ -82,6 +83,7 @@ export function AdminOpportunityDetail() {
   const [availableSuppliers, setAvailableSuppliers] = useState<SupplierWithContact[]>([])
   const [supplierStatus, setSupplierStatus] = useState('')
   const [commercialAgreements, setCommercialAgreements] = useState<CommercialAgreementWithOpportunity[]>([])
+  const [commercialProposals, setCommercialProposals] = useState<CommercialProposalRecord[]>([])
 
   const load = useCallback(async function load() {
     setLoading(true)
@@ -91,11 +93,12 @@ export function AdminOpportunityDetail() {
       setLoading(false)
       return
     }
-    const [opportunityResult, contactsResult, activitiesResult, agreementsResult] = await Promise.all([
+    const [opportunityResult, contactsResult, activitiesResult, agreementsResult, proposalsResult] = await Promise.all([
       adminRepository.getOpportunityById(id!),
       adminRepository.listContactsForSelector(),
       adminRepository.listOpportunityActivities(id!),
       adminRepository.listAgreementsForOpportunity(id!),
+      adminRepository.listCommercialProposalsForOpportunity?.(id!),
     ])
     setLoading(false)
     if (opportunityResult.error) {
@@ -110,6 +113,7 @@ export function AdminOpportunityDetail() {
     if (!contactsResult.error) setContacts(contactsResult.data)
     if (!activitiesResult.error) setActivities(activitiesResult.data)
     if (!agreementsResult.error) setCommercialAgreements(agreementsResult.data)
+    if (proposalsResult && !proposalsResult.error) setCommercialProposals(proposalsResult.data)
   }, [id])
 
   useEffect(() => {
@@ -312,6 +316,7 @@ export function AdminOpportunityDetail() {
       </section>
 
       <CommercialAgreementsSection opportunityId={opportunity.id} agreements={commercialAgreements} />
+      <CommercialProposalsSection opportunityId={opportunity.id} proposals={commercialProposals} />
 
       {opportunity.opportunity_type === 'buy' && (
         <OpportunitySuppliersSection
@@ -378,6 +383,10 @@ export function AdminOpportunityDetail() {
       </section>
     </div>
   )
+}
+
+function CommercialProposalsSection({ opportunityId, proposals }: { opportunityId: string; proposals: CommercialProposalRecord[] }) {
+  return <section className="grid gap-4 rounded-lg border border-slate-200 bg-white p-6"><div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between"><div><h2 className="text-xl font-semibold text-[#17202d]">Propuestas comerciales</h2><p className="mt-2 text-sm text-slate-600">Versiones de propuesta vinculadas a esta oportunidad.</p></div><Link to={`/admin/propuestas/nueva?opportunityId=${opportunityId}`} className="inline-flex w-fit items-center gap-2 rounded-md bg-[#17202d] px-4 py-3 text-sm font-semibold text-white"><Plus size={18} />Nueva propuesta</Link></div>{proposals.length === 0 ? <p className="rounded-md border border-dashed border-slate-300 p-4 text-sm text-slate-600">Aún no hay propuestas para esta oportunidad.</p> : <div className="grid gap-3">{proposals.map((proposal) => <article key={proposal.id} className="rounded-md border border-slate-200 p-4"><div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between"><div><Link to={`/admin/propuestas/${proposal.id}`} className="font-semibold text-[#235b3e]">{proposal.proposal_code}</Link><p className="mt-1 text-sm text-slate-700">{proposal.title}</p><p className="mt-1 text-sm text-slate-600">{formatMoney(proposal.total_amount, proposal.currency)} · {proposal.valid_until || 'Sin vigencia'}</p></div><span className="rounded-md bg-slate-100 px-2 py-1 text-xs font-semibold">{proposal.status}</span></div></article>)}</div>}</section>
 }
 
 function CommercialAgreementsSection({

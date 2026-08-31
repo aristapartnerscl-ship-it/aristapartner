@@ -6,6 +6,10 @@ import { adminRepository } from '../../repositories'
 import type { DashboardActivity, DashboardData, DashboardProspectAction } from '../../types/admin'
 
 const metricLabels: Array<[keyof DashboardData['metrics'], string]> = [
+  ['proposalsOpen', 'Propuestas abiertas'],
+  ['proposalsNegotiation', 'Propuestas en negociación'],
+  ['proposalsAccepted', 'Propuestas aceptadas'],
+  ['proposalsExpired', 'Propuestas vencidas'],
   ['prospectsTotal', 'Prospectos totales'],
   ['prospectsUncontacted', 'Prospectos sin contactar'],
   ['overdueProspectFollowUps', 'Prospectos vencidos'],
@@ -33,6 +37,9 @@ const quickLinks = [
 ]
 
 function metricHref(key: keyof DashboardData['metrics']) {
+  if (key === 'proposalsOpen' || key === 'proposalsNegotiation') return '/admin/propuestas?status=negotiation'
+  if (key === 'proposalsAccepted') return '/admin/propuestas?status=accepted'
+  if (key === 'proposalsExpired') return '/admin/propuestas?vigencia=expired'
   if (key === 'prospectsTotal') return '/admin/prospeccion'
   if (key === 'prospectsUncontacted') return '/admin/prospeccion?view=uncontacted'
   if (key === 'prospectsConverted') return '/admin/prospeccion?view=converted'
@@ -102,6 +109,12 @@ function RecentOpportunities({ items }: { items: DashboardData['recentOpportunit
   if (!items) return <EmptyState title="Oportunidades recientes" text="No fue posible consultar oportunidades recientes." />
   if (items.length === 0) return <EmptyState title="Oportunidades recientes" text="No hay oportunidades recientes." />
   return <section className="rounded-lg border border-slate-200 bg-white p-6"><h2 className="text-xl font-semibold text-[#17202d]">Oportunidades recientes</h2><div className="mt-4 grid gap-3">{items.map((item) => <Link key={item.id} to={`/admin/oportunidades/${item.id}`} className="rounded-md border border-slate-200 p-4 hover:border-[#235b3e]"><p className="font-semibold text-[#17202d]">{item.reference_code}</p><p className="mt-1 text-sm text-slate-600">{item.title}</p></Link>)}</div></section>
+}
+
+function RecentProposals({ items }: { items: DashboardData['recentProposals'] }) {
+  if (!items) return <EmptyState title="Propuestas recientes" text="No fue posible consultar propuestas recientes." />
+  if (items.length === 0) return <EmptyState title="Propuestas recientes" text="No hay propuestas recientes." />
+  return <section className="rounded-lg border border-slate-200 bg-white p-6"><h2 className="text-xl font-semibold text-[#17202d]">Propuestas recientes</h2><div className="mt-4 grid gap-3">{items.map((item) => <Link key={item.id} to={`/admin/propuestas/${item.id}`} className="rounded-md border border-slate-200 p-4 hover:border-[#235b3e]"><p className="font-semibold text-[#17202d]">{item.proposal_code}</p><p className="mt-1 text-sm text-slate-600">{item.contact?.company_name || item.contact?.full_name || 'Sin contraparte'} · {item.total_amount.toLocaleString('es-CL')} {item.currency || ''} · {item.status}</p></Link>)}</div></section>
 }
 
 export function AdminDashboard() {
@@ -175,6 +188,7 @@ export function AdminDashboard() {
             <ActivityList title="Actividad reciente" items={dashboard.recentActivities} dateField="occurred_at" />
             <RecentProspects items={dashboard.recentProspects} />
             <RecentOpportunities items={dashboard.recentOpportunities} />
+            <RecentProposals items={dashboard.recentProposals} />
             <EmptyState title="Oportunidades que requieren atención" text="No hay oportunidades que requieran atención." />
             <section className="rounded-lg border border-slate-200 bg-white p-6">
               <h2 className="text-xl font-semibold text-[#17202d]">Accesos rápidos</h2>

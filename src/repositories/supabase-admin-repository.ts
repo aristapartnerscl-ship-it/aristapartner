@@ -6,6 +6,13 @@ import type {
   CommercialAgreementRecord,
   CommercialAgreementUpdateValues,
   CommercialAgreementWithOpportunity,
+  CommercialProposalInsert,
+  CommercialProposalRecord,
+  CommercialProposalUpdate,
+  CommercialProposalWithOpportunity,
+  CommercialProposalDocumentInsert,
+  CommercialProposalDocumentRecord,
+  CommercialProposalVersionRecord,
   ContactFormValues,
   ContactInsert,
   ContactRecord,
@@ -108,6 +115,13 @@ const adminNotificationColumns =
 
 const commercialAgreementColumns =
   'id, agreement_code, opportunity_id, counterparty_type, contact_id, supplier_id, payer_type, compensation_model, management_fee, commission_type, commission_value, currency, attribution_start, attribution_end, agreement_status, notes, archived_at, archived_by, created_at, updated_at, created_by'
+
+const commercialProposalColumns =
+  'id, proposal_code, opportunity_id, title, description, currency, subtotal, tax_percentage, tax_amount, total_amount, valid_until, status, sent_at, viewed_at, accepted_at, rejected_at, internal_notes, client_notes, archived_at, archived_by, created_by, created_at, updated_at'
+
+const commercialProposalVersionColumns =
+  'id, proposal_id, version_number, title, description, currency, subtotal, tax_percentage, tax_amount, total_amount, valid_until, client_notes, snapshot_data, created_by, created_at'
+const commercialProposalDocumentColumns = 'id, proposal_id, version_id, document_type, file_name, generated_at, generated_by'
 
 const organizationSettingsColumns =
   'singleton_key, display_name, legal_name, tax_identifier, public_email, public_phone, website_url, address_line, city_region, country_code, timezone, locale, default_currency, default_opportunity_priority, default_follow_up_days, default_attribution_days, default_commission_type, default_commission_value, created_at, updated_at, created_by, updated_by'
@@ -484,6 +498,10 @@ export class SupabaseAdminRepository implements AdminRepository {
     const now = new Date().toISOString()
 
     const countQueries = [
+      ['proposalsOpen', (this.client as SupabaseClient).from('commercial_proposals').select('id', { count: 'exact', head: true }).in('status', ['sent', 'viewed', 'negotiation'])],
+      ['proposalsNegotiation', (this.client as SupabaseClient).from('commercial_proposals').select('id', { count: 'exact', head: true }).eq('status', 'negotiation')],
+      ['proposalsAccepted', (this.client as SupabaseClient).from('commercial_proposals').select('id', { count: 'exact', head: true }).eq('status', 'accepted')],
+      ['proposalsExpired', (this.client as SupabaseClient).from('commercial_proposals').select('id', { count: 'exact', head: true }).eq('status', 'expired')],
       ['prospectsTotal', (this.client as SupabaseClient).from('prospects').select('id', { count: 'exact', head: true })],
       ['prospectsUncontacted', (this.client as SupabaseClient).from('prospects').select('id', { count: 'exact', head: true }).is('last_contact_at', null).not('status', 'in', '(converted,archived,not_interested)')],
       ['prospectsConverted', (this.client as SupabaseClient).from('prospects').select('id', { count: 'exact', head: true }).eq('status', 'converted')],
@@ -584,6 +602,9 @@ export class SupabaseAdminRepository implements AdminRepository {
     else data.recentProspects = (recentProspects.data ?? []) as ProspectRecord[]
     if (recentOpportunities.error) { data.activityError = true; logSafeError('dashboard.recent_opportunities', recentOpportunities.error) }
     else data.recentOpportunities = (recentOpportunities.data ?? []) as OpportunityRecord[]
+    const recentProposals = await this.listCommercialProposals()
+    if (recentProposals.error) { data.activityError = true; logSafeError('dashboard.recent_proposals', new Error(recentProposals.error)) }
+    else data.recentProposals = recentProposals.data.slice(0, 5)
 
     return ok(data)
   }
@@ -592,6 +613,123 @@ export class SupabaseAdminRepository implements AdminRepository {
     const { data, error } = await this.client.from('opportunities').select(opportunityColumns).order('updated_at', { ascending: false })
     if (error) return fail<OpportunityRecord[]>([], error, 'opportunities.list')
     return ok((data ?? []) as OpportunityRecord[])
+  }
+
+  async listCommercialProposals() {
+    const client = this.client as SupabaseClient
+    const { data, error } = await client.from('commercial_proposals').select(commercialProposalColumns).order('updated_at', { ascending: false })
+    if (error) return fail<CommercialProposalWithOpportunity[]>([], error, 'commercial_proposals.list')
+    return this.hydrateCommercialProposals((data ?? []) as CommercialProposalRecord[], 'commercial_proposals.list')
+  }
+
+  async getCommercialProposalById(id: string) {
+    const client = this.client as SupabaseClient
+    const { data, error } = await client.from('commercial_proposals').select(commercialProposalColumns).eq('id', id).maybeSingle()
+    if (error) return fail<CommercialProposalWithOpportunity | null>(null, error, 'commercial_proposals.get')
+    if (!data) return ok(null)
+    const result = await this.hydrateCommercialProposals([data as CommercialProposalRecord], 'commercial_proposals.get')
+    if (result.error) return { data: null, error: result.error, errorKind: result.errorKind }
+    return ok(result.data[0] ?? null)
+  }
+
+  async createCommercialProposal(values: Omit<CommercialProposalInsert, 'created_by'>) {
+    const admin = await this.ensureActiveOwner()
+    if (!admin.userId) return { data: null, error: admin.error, errorKind: admin.errorKind }
+    const client = this.client as SupabaseClient
+    const { data, error } = await client.from('commercial_proposals').insert({
+      opportunity_id: values.opportunity_id,
+      title: values.title,
+      description: values.description ?? null,
+      currency: values.currency ?? null,
+      subtotal: values.subtotal,
+      tax_percentage: values.tax_percentage,
+      valid_until: values.valid_until ?? null,
+      status: values.status ?? 'draft',
+      sent_at: values.sent_at ?? null,
+      viewed_at: values.viewed_at ?? null,
+      accepted_at: values.accepted_at ?? null,
+      rejected_at: values.rejected_at ?? null,
+      internal_notes: values.internal_notes ?? null,
+      client_notes: values.client_notes ?? null,
+      created_by: admin.userId,
+    }).select(commercialProposalColumns).single()
+    if (error) return fail<CommercialProposalRecord | null>(null, error, 'commercial_proposals.create')
+    return ok(data as CommercialProposalRecord)
+  }
+
+  async updateCommercialProposal(id: string, values: CommercialProposalUpdate) {
+    const admin = await this.ensureActiveOwner()
+    if (!admin.userId) return { data: null, error: admin.error, errorKind: admin.errorKind }
+    const payload: Record<string, unknown> = {}
+    const editable = ['opportunity_id', 'title', 'description', 'currency', 'subtotal', 'tax_percentage', 'valid_until', 'status', 'sent_at', 'viewed_at', 'accepted_at', 'rejected_at', 'internal_notes', 'client_notes', 'archived_at'] as const
+      editable.forEach((field) => { if (field in values) payload[field] = values[field] })
+      if ('archived_at' in values) payload.archived_by = values.archived_at ? admin.userId : null
+      if (values.status === 'sent' && !('sent_at' in values)) payload.sent_at = new Date().toISOString()
+    if (values.status === 'viewed' && !('viewed_at' in values)) payload.viewed_at = new Date().toISOString()
+    if (values.status === 'accepted' && !('accepted_at' in values)) payload.accepted_at = new Date().toISOString()
+    if (values.status === 'rejected' && !('rejected_at' in values)) payload.rejected_at = new Date().toISOString()
+    if ('currency' in payload && typeof payload.currency === 'string') payload.currency = optionalText(payload.currency)?.toUpperCase() ?? null
+    const client = this.client as SupabaseClient
+    const { data, error } = await client.from('commercial_proposals').update(payload).eq('id', id).select(commercialProposalColumns).single()
+    if (error) return fail<CommercialProposalRecord | null>(null, error, 'commercial_proposals.update')
+    return ok(data as CommercialProposalRecord)
+  }
+
+  async listCommercialProposalsForOpportunity(opportunityId: string) {
+    const client = this.client as SupabaseClient
+    const { data, error } = await client.from('commercial_proposals').select(commercialProposalColumns).eq('opportunity_id', opportunityId).is('archived_at', null).order('updated_at', { ascending: false })
+    if (error) return fail<CommercialProposalRecord[]>([], error, 'commercial_proposals.by_opportunity')
+    return ok((data ?? []) as CommercialProposalRecord[])
+  }
+
+  async createCommercialProposalVersion(proposalId: string) {
+    const admin = await this.ensureActiveOwner()
+    if (!admin.userId) return { data: null, error: admin.error, errorKind: admin.errorKind }
+    const client = this.client as SupabaseClient
+    const { data, error } = await client.rpc('create_commercial_proposal_version', { p_proposal_id: proposalId })
+    if (error) return fail<CommercialProposalVersionRecord | null>(null, error, 'commercial_proposal_versions.create')
+    return ok(data as CommercialProposalVersionRecord)
+  }
+
+  async listCommercialProposalVersions(proposalId: string) {
+    const client = this.client as SupabaseClient
+    const { data, error } = await client.from('commercial_proposal_versions').select(commercialProposalVersionColumns).eq('proposal_id', proposalId).order('version_number', { ascending: false })
+    if (error) return fail<CommercialProposalVersionRecord[]>([], error, 'commercial_proposal_versions.list')
+    return ok((data ?? []) as CommercialProposalVersionRecord[])
+  }
+
+  async listCommercialProposalDocuments(proposalId: string) {
+    const client = this.client as SupabaseClient
+    const { data, error } = await client.from('commercial_proposal_documents').select(commercialProposalDocumentColumns).eq('proposal_id', proposalId).order('generated_at', { ascending: false })
+    if (error) return fail<CommercialProposalDocumentRecord[]>([], error, 'commercial_proposal_documents.list')
+    return ok((data ?? []) as CommercialProposalDocumentRecord[])
+  }
+
+  async createCommercialProposalDocument(values: Omit<CommercialProposalDocumentInsert, 'generated_by'>) {
+    const admin = await this.ensureActiveOwner()
+    if (!admin.userId) return { data: null, error: admin.error, errorKind: admin.errorKind }
+    const client = this.client as SupabaseClient
+    const { data, error } = await client.from('commercial_proposal_documents').insert({
+      proposal_id: values.proposal_id,
+      version_id: values.version_id,
+      document_type: 'pdf',
+      file_name: values.file_name,
+      generated_by: admin.userId,
+    }).select(commercialProposalDocumentColumns).single()
+    if (error) return fail<CommercialProposalDocumentRecord | null>(null, error, 'commercial_proposal_documents.create')
+    return ok(data as CommercialProposalDocumentRecord)
+  }
+
+  private async hydrateCommercialProposals(proposals: CommercialProposalRecord[], context: string) {
+    const opportunityIds = Array.from(new Set(proposals.map((proposal) => proposal.opportunity_id)))
+    const client = this.client as SupabaseClient
+    const { data: opportunities, error } = await client.from('opportunities').select('id, reference_code, title, opportunity_type, status, contact_id').in('id', opportunityIds)
+    if (error) return fail<CommercialProposalWithOpportunity[]>([], error, `${context}.opportunities`)
+    const opportunityMap = new Map((opportunities ?? []).map((item) => [item.id, item]))
+    const contactIds = Array.from(new Set((opportunities ?? []).map((item) => item.contact_id).filter(Boolean) as string[]))
+    const { data: contacts } = contactIds.length > 0 ? await client.from('contacts').select(contactSelectorColumns).in('id', contactIds) : { data: [] }
+    const contactMap = new Map((contacts ?? []).map((item) => [item.id, item]))
+    return ok(proposals.map((proposal) => ({ ...proposal, opportunity: opportunityMap.get(proposal.opportunity_id), contact: contactMap.get(opportunityMap.get(proposal.opportunity_id)?.contact_id ?? '') ?? null })).filter((item) => item.opportunity) as CommercialProposalWithOpportunity[])
   }
 
   async getOpportunityById(id: string) {

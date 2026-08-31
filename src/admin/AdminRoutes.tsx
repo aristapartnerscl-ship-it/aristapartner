@@ -12,6 +12,8 @@ import { AdminOpportunityFormPage } from './pages/AdminOpportunityForm'
 import { AdminOpportunities } from './pages/AdminOpportunities'
 import { AdminProspectDetail, AdminProspecting } from './pages/AdminProspecting'
 import { AdminPipeline } from './pages/AdminPipeline'
+import { AdminProposalFormPage, AdminProposals } from './pages/AdminProposals'
+import { AdminProposalWorkspace } from './pages/AdminProposalWorkspace'
 import { AdminSupplierDetail, AdminSupplierFormPage, AdminSuppliers } from './pages/AdminSuppliers'
 import { AdminSettings } from './pages/AdminSettings'
 import { AdminLogin } from './pages/AdminLogin'
@@ -29,6 +31,10 @@ export default function AdminRoutes() {
           <Route path="prospeccion" element={<AdminProspecting />} />
           <Route path="prospeccion/:id" element={<AdminProspectDetail />} />
           <Route path="pipeline" element={<AdminPipeline />} />
+          <Route path="propuestas" element={<AdminProposals />} />
+          <Route path="propuestas/nueva" element={<AdminProposalFormPage mode="create" />} />
+          <Route path="propuestas/:id" element={<AdminProposalWorkspace />} />
+          <Route path="propuestas/:id/editar" element={<AdminProposalFormPage mode="edit" />} />
           <Route path="oportunidades" element={<AdminOpportunities />} />
           <Route path="oportunidades/nueva" element={<AdminOpportunityFormPage mode="create" />} />
           <Route path="oportunidades/:id" element={<AdminOpportunityDetail />} />

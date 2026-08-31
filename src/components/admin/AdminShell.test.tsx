@@ -13,5 +13,6 @@ describe('AdminShell', () => {
   test('incluye el acceso al Pipeline comercial en el menú privado', () => {
     render(<MemoryRouter><AdminShell><div>Contenido</div></AdminShell></MemoryRouter>)
     expect(screen.getByRole('link', { name: 'Pipeline comercial' })).toHaveAttribute('href', '/admin/pipeline')
+    expect(screen.getByRole('link', { name: 'Propuestas' })).toHaveAttribute('href', '/admin/propuestas')
   })
 })

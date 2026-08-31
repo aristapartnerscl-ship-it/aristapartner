@@ -221,6 +221,69 @@ export type CommercialAgreementUpdate = Override<
   }
 >
 
+export type ProposalStatus = 'draft' | 'sent' | 'viewed' | 'negotiation' | 'accepted' | 'rejected' | 'expired'
+
+export type CommercialProposalRow = {
+  id: string
+  proposal_code: string
+  opportunity_id: string
+  title: string
+  description: string | null
+  currency: string | null
+  subtotal: number
+  tax_percentage: number
+  tax_amount: number
+  total_amount: number
+  valid_until: string | null
+  status: ProposalStatus
+  sent_at: string | null
+  viewed_at: string | null
+  accepted_at: string | null
+  rejected_at: string | null
+  internal_notes: string | null
+  client_notes: string | null
+  archived_at: string | null
+  archived_by: string | null
+  created_by: string
+  created_at: string
+  updated_at: string
+}
+
+export type CommercialProposalInsert = Omit<CommercialProposalRow, 'id' | 'proposal_code' | 'tax_amount' | 'total_amount' | 'archived_at' | 'archived_by' | 'created_by' | 'created_at' | 'updated_at' | 'sent_at' | 'viewed_at' | 'accepted_at' | 'rejected_at'> & Partial<Pick<CommercialProposalRow, 'sent_at' | 'viewed_at' | 'accepted_at' | 'rejected_at'>>
+export type CommercialProposalUpdate = Partial<Omit<CommercialProposalRow, 'id' | 'proposal_code' | 'tax_amount' | 'total_amount' | 'created_by' | 'created_at' | 'updated_at' | 'archived_by'>>
+
+// These aliases stay local until the versions migration is applied remotely and types are regenerated.
+export type CommercialProposalVersionRow = {
+  id: string
+  proposal_id: string
+  version_number: number
+  title: string
+  description: string | null
+  currency: string | null
+  subtotal: number
+  tax_percentage: number
+  tax_amount: number
+  total_amount: number
+  valid_until: string | null
+  client_notes: string | null
+  snapshot_data: Json
+  created_by: string
+  created_at: string
+}
+export type CommercialProposalVersionInsert = Omit<CommercialProposalVersionRow, 'id' | 'created_by' | 'created_at'> & { created_by?: string; created_at?: string }
+export type CommercialProposalVersionUpdate = never
+export type CommercialProposalDocumentRow = {
+  id: string
+  proposal_id: string
+  version_id: string
+  document_type: 'pdf'
+  file_name: string
+  generated_at: string
+  generated_by: string
+}
+export type CommercialProposalDocumentInsert = Omit<CommercialProposalDocumentRow, 'id' | 'generated_at' | 'generated_by'> & { generated_at?: string; generated_by?: string }
+export type CommercialProposalDocumentUpdate = never
+
 export type FormSubmissionInsert = Override<
   Omit<TableInsert<'form_submissions'>, 'id' | 'submitted_at'>,
   {

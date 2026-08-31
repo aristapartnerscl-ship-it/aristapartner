@@ -4,7 +4,7 @@ import { Link, useSearchParams } from 'react-router-dom'
 import { AdminPageHeader } from '../../components/admin/AdminPageHeader'
 import { EmptyState } from '../../components/admin/EmptyState'
 import { adminRepository } from '../../repositories'
-import type { OpportunityRecord, ProspectRecord } from '../../types/admin'
+import type { CommercialProposalWithOpportunity, OpportunityRecord, ProspectRecord } from '../../types/admin'
 import { opportunityStatusLabels, opportunityTypeLabels, priorityLabels, prospectStatusLabels, prospectTemperatureLabels } from '../opportunity-labels'
 
 type PipelineFilter = 'all' | 'prospects' | 'opportunities' | 'overdue' | 'today' | 'converted'
@@ -25,6 +25,7 @@ export function AdminPipeline() {
   const [params, setParams] = useSearchParams()
   const [prospects, setProspects] = useState<ProspectRecord[]>([])
   const [opportunities, setOpportunities] = useState<OpportunityRecord[]>([])
+  const [proposals, setProposals] = useState<CommercialProposalWithOpportunity[]>([])
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(true)
   const filter = (params.get('vista') as PipelineFilter | null) ?? 'all'
@@ -33,13 +34,14 @@ export function AdminPipeline() {
     let cancelled = false
     async function load() {
       setLoading(true)
-      const [prospectResult, opportunityResult] = await Promise.all([adminRepository.listProspects(), adminRepository.listOpportunities()])
+      const [prospectResult, opportunityResult, proposalResult] = await Promise.all([adminRepository.listProspects(), adminRepository.listOpportunities(), adminRepository.listCommercialProposals()])
       if (cancelled) return
       setLoading(false)
       if (prospectResult.error && opportunityResult.error) { setError('No fue posible cargar el pipeline comercial.'); return }
       setError('')
       setProspects(prospectResult.error ? [] : prospectResult.data)
       setOpportunities(opportunityResult.error ? [] : opportunityResult.data)
+      setProposals(proposalResult.error ? [] : proposalResult.data)
     }
     void load()
     return () => { cancelled = true }
@@ -80,7 +82,7 @@ export function AdminPipeline() {
     </section>
     {loading && <div className="h-40 animate-pulse rounded-lg border border-slate-200 bg-white" />}
     {!loading && error && <section className="rounded-lg border border-red-200 bg-red-50 p-6"><h2 className="font-semibold">No fue posible cargar el pipeline</h2><p className="mt-2 text-sm">{error}</p></section>}
-    {!loading && !error && <><PipelineProspects items={visibleProspects} /><PipelineOpportunities items={visibleOpportunities} /></>}
+    {!loading && !error && <><PipelineProspects items={visibleProspects} /><PipelineOpportunities items={visibleOpportunities} proposals={proposals} /></>}
   </div>
 }
 
@@ -88,6 +90,8 @@ function PipelineProspects({ items }: { items: ProspectRecord[] }) {
   return <section className="rounded-lg border border-slate-200 bg-white p-5"><h2 className="text-xl font-semibold text-[#17202d]">Prospectos</h2>{items.length === 0 ? <EmptyState title="Sin prospectos en esta vista" text="Prueba otro filtro del pipeline." /> : <div className="mt-4 grid gap-3">{items.map((item) => <article key={item.id} className="grid gap-3 rounded-md border border-slate-200 p-4 lg:grid-cols-[1.3fr_1fr_1fr_1fr_1.4fr_auto] lg:items-center"><div><Link to={`/admin/prospeccion/${item.id}`} className="font-semibold text-[#17202d] hover:text-[#235b3e]">{prospectName(item)}</Link><p className="text-sm text-slate-600">{item.company_name || 'Sin empresa'}</p></div><span className="text-sm">{prospectStatusLabels[item.status]}</span><span className="text-sm">{priorityLabels[item.priority]} · {prospectTemperatureLabels[item.lead_temperature]}</span><span className="text-sm">{item.next_action_type || 'Sin acción'}</span><span className="text-sm text-slate-600">{formatDate(item.next_action_at)}</span><Link to={`/admin/prospeccion/${item.id}`} className="inline-flex items-center gap-1 text-sm font-semibold text-[#235b3e]">Abrir <ArrowRight size={16} /></Link></article>)}</div>}</section>
 }
 
-function PipelineOpportunities({ items }: { items: OpportunityRecord[] }) {
-  return <section className="rounded-lg border border-slate-200 bg-white p-5"><h2 className="text-xl font-semibold text-[#17202d]">Oportunidades</h2>{items.length === 0 ? <EmptyState title="Sin oportunidades en esta vista" text="Prueba otro filtro del pipeline." /> : <div className="mt-4 grid gap-3">{items.map((item) => <article key={item.id} className="grid gap-3 rounded-md border border-slate-200 p-4 lg:grid-cols-[1fr_1.2fr_0.8fr_1fr_1fr_auto] lg:items-center"><div><Link to={`/admin/oportunidades/${item.id}`} className="font-semibold text-[#17202d] hover:text-[#235b3e]">{item.reference_code}</Link><p className="text-sm text-slate-600">{item.title}</p></div><span className="text-sm">{opportunityTypeLabels[item.opportunity_type]}</span><span className="text-sm">{opportunityStatusLabels[item.status]}</span><span className="text-sm">{item.estimated_value != null ? `${item.estimated_value.toLocaleString('es-CL')} ${item.currency || ''}` : 'Sin valor'}</span><span className="text-sm text-slate-600"><CalendarClock size={15} className="mr-1 inline" />{formatDate(item.expected_date)}</span><Link to={`/admin/oportunidades/${item.id}`} className="inline-flex items-center gap-1 text-sm font-semibold text-[#235b3e]">Abrir <ArrowRight size={16} /></Link></article>)}</div>}</section>
+function PipelineOpportunities({ items, proposals }: { items: OpportunityRecord[]; proposals: CommercialProposalWithOpportunity[] }) {
+  const latest = new Map<string, CommercialProposalWithOpportunity>()
+  proposals.forEach((proposal) => { if (!latest.has(proposal.opportunity_id)) latest.set(proposal.opportunity_id, proposal) })
+  return <section className="rounded-lg border border-slate-200 bg-white p-5"><h2 className="text-xl font-semibold text-[#17202d]">Oportunidades</h2>{items.length === 0 ? <EmptyState title="Sin oportunidades en esta vista" text="Prueba otro filtro del pipeline." /> : <div className="mt-4 grid gap-3">{items.map((item) => { const proposal = latest.get(item.id); return <article key={item.id} className="grid gap-3 rounded-md border border-slate-200 p-4 lg:grid-cols-[1fr_1.2fr_0.8fr_1fr_1fr_1.3fr_auto] lg:items-center"><div><Link to={`/admin/oportunidades/${item.id}`} className="font-semibold text-[#17202d] hover:text-[#235b3e]">{item.reference_code}</Link><p className="text-sm text-slate-600">{item.title}</p></div><span className="text-sm">{opportunityTypeLabels[item.opportunity_type]}</span><span className="text-sm">{opportunityStatusLabels[item.status]}</span><span className="text-sm">{item.estimated_value != null ? `${item.estimated_value.toLocaleString('es-CL')} ${item.currency || ''}` : 'Sin valor'}</span><span className="text-sm text-slate-600"><CalendarClock size={15} className="mr-1 inline" />{formatDate(item.expected_date)}</span><span className="text-sm text-slate-600">Propuesta: {proposal ? proposal.status : 'Sin propuesta'}{proposal ? ` · ${proposal.total_amount.toLocaleString('es-CL')} ${proposal.currency || ''}` : ''}</span><Link to={`/admin/oportunidades/${item.id}`} className="inline-flex items-center gap-1 text-sm font-semibold text-[#235b3e]">Abrir <ArrowRight size={16} /></Link></article> })}</div>}</section>
 }
