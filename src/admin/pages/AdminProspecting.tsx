@@ -655,8 +655,8 @@ function ProspectFormModal({ prospect, onClose, onSaved }: { prospect: ProspectR
         <div className="grid gap-4 md:grid-cols-2">
           <Select label="Tipo" value={values.prospect_type} onChange={(value) => setField('prospect_type', value as ProspectType)} options={prospectTypes.map((item) => [item, prospectTypeLabels[item]])} />
           <Select label="Estado" value={values.status} onChange={(value) => setField('status', value as ProspectStatus)} options={prospectStatuses.filter((item) => item !== 'converted').map((item) => [item, prospectStatusLabels[item]])} />
-          <TextField id="prospect-full-name" label="Nombre completo" value={values.full_name} error={errors.full_name} onChange={(value) => setField('full_name', value)} />
-          <TextField id="prospect-company" label="Empresa" value={values.company_name} error={errors.company_name} onChange={(value) => setField('company_name', value)} />
+          <TextField id="prospect-full-name" label="Nombre del prospecto" placeholder="Ej. Ana Pérez" value={values.full_name} error={errors.full_name} onChange={(value) => setField('full_name', value)} />
+          <TextField id="prospect-company" label="Empresa" placeholder="Ej. Empresa Uno" value={values.company_name} error={errors.company_name} onChange={(value) => setField('company_name', value)} />
           <TextField id="prospect-role" label="Cargo o actividad" value={values.role_or_activity} onChange={(value) => setField('role_or_activity', value)} />
           <TextField id="prospect-email" label="Correo" value={values.email} error={errors.email} type="email" onChange={(value) => setField('email', value)} />
           <TextField id="prospect-phone" label="Teléfono" value={values.phone} error={errors.phone} onChange={(value) => setField('phone', value)} />
@@ -862,11 +862,11 @@ function Select({ label, value, options, onChange }: { label: string; value: str
   )
 }
 
-function TextField({ id, label, value, error, type = 'text', onChange }: { id: string; label: string; value: string; error?: string; type?: string; onChange: (value: string) => void }) {
+function TextField({ id, label, value, error, type = 'text', placeholder, onChange }: { id: string; label: string; value: string; error?: string; type?: string; placeholder?: string; onChange: (value: string) => void }) {
   return (
     <label className="grid gap-2 text-sm font-medium text-slate-700" htmlFor={id}>
       {label}
-      <input id={id} type={type} value={value} onChange={(event) => onChange(event.target.value)} aria-invalid={Boolean(error)} className="rounded-md border border-slate-300 px-3 py-3 text-base outline-none focus:border-[#235b3e] focus:ring-2 focus:ring-[#235b3e]/20" />
+      <input id={id} type={type} value={value} placeholder={placeholder} onChange={(event) => onChange(event.target.value)} aria-invalid={Boolean(error)} className="rounded-md border border-slate-300 px-3 py-3 text-base outline-none focus:border-[#235b3e] focus:ring-2 focus:ring-[#235b3e]/20" />
       {error && <span className="text-sm text-red-700">{error}</span>}
     </label>
   )
@@ -901,7 +901,7 @@ function Modal({ title, children, onClose, closeRef }: { title: string; children
           <h2 id="prospecting-modal-title" className="text-xl font-semibold text-[#17202d]">{title}</h2>
           <button ref={closeRef} type="button" onClick={onClose} className="rounded-md p-2 text-slate-600 hover:bg-slate-100" aria-label="Cerrar"><X size={22} /></button>
         </div>
-        <div className="px-5 py-5">{children}</div>
+        <div className="max-h-[calc(92vh-76px)] overflow-y-auto px-5 py-5">{children}</div>
       </div>
     </div>
   )

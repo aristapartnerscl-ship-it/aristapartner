@@ -408,6 +408,10 @@ export type SupplierSubmissionRpcArgs = ConvertSupplierSubmissionAtomicArgs
 export type ProspectConversionRpcArgs = ConvertProspectToOpportunityArgs
 
 export type DashboardMetrics = {
+  prospectsTotal?: number | null
+  prospectsUncontacted?: number | null
+  prospectsConverted?: number | null
+  pendingFollowUpsToday?: number | null
   newOpportunities: number | null
   activeOpportunities: number | null
   negotiations: number | null
@@ -434,6 +438,8 @@ export type DashboardData = {
   upcomingActions: DashboardActivity[]
   upcomingProspectActions: DashboardProspectAction[]
   recentActivities: DashboardActivity[]
+  recentProspects?: ProspectRecord[]
+  recentOpportunities?: OpportunityRecord[]
   hasMetricErrors: boolean
   activityError: boolean
 }

@@ -484,6 +484,9 @@ export class SupabaseAdminRepository implements AdminRepository {
     const now = new Date().toISOString()
 
     const countQueries = [
+      ['prospectsTotal', (this.client as SupabaseClient).from('prospects').select('id', { count: 'exact', head: true })],
+      ['prospectsUncontacted', (this.client as SupabaseClient).from('prospects').select('id', { count: 'exact', head: true }).is('last_contact_at', null).not('status', 'in', '(converted,archived,not_interested)')],
+      ['prospectsConverted', (this.client as SupabaseClient).from('prospects').select('id', { count: 'exact', head: true }).eq('status', 'converted')],
       ['newOpportunities', this.client.from('opportunities').select('id', { count: 'exact', head: true }).eq('status', 'new')],
       [
         'activeOpportunities',
@@ -509,6 +512,15 @@ export class SupabaseAdminRepository implements AdminRepository {
           .select('id', { count: 'exact', head: true })
           .lt('next_action_at', now)
           .not('status', 'in', '(converted,archived,not_interested)'),
+      ],
+      [
+        'pendingFollowUpsToday',
+        (this.client as SupabaseClient)
+          .from('prospect_activities')
+          .select('id', { count: 'exact', head: true })
+          .gte('next_action_at', new Date(new Date().setHours(0, 0, 0, 0)).toISOString())
+          .lt('next_action_at', new Date(new Date().setHours(24, 0, 0, 0)).toISOString())
+          .is('completed_at', null),
       ],
     ] as const
 
@@ -563,6 +575,15 @@ export class SupabaseAdminRepository implements AdminRepository {
     } else {
       data.upcomingProspectActions = (prospectActions.data ?? []) as DashboardData['upcomingProspectActions']
     }
+
+    const [recentProspects, recentOpportunities] = await Promise.all([
+      (this.client as SupabaseClient).from('prospects').select(prospectColumns).order('created_at', { ascending: false }).limit(5),
+      this.client.from('opportunities').select(opportunityColumns).order('created_at', { ascending: false }).limit(5),
+    ])
+    if (recentProspects.error) { data.activityError = true; logSafeError('dashboard.recent_prospects', recentProspects.error) }
+    else data.recentProspects = (recentProspects.data ?? []) as ProspectRecord[]
+    if (recentOpportunities.error) { data.activityError = true; logSafeError('dashboard.recent_opportunities', recentOpportunities.error) }
+    else data.recentOpportunities = (recentOpportunities.data ?? []) as OpportunityRecord[]
 
     return ok(data)
   }

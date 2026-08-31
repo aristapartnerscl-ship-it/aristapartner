@@ -1,4 +1,4 @@
-import { Link } from 'react-router-dom'
+import { Link, useSearchParams } from 'react-router-dom'
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { CheckCircle2, Clock3, RotateCcw } from 'lucide-react'
 import { AdminPageHeader } from '../../components/admin/AdminPageHeader'
@@ -8,6 +8,7 @@ import { activityTypeLabels, contactName, formatDateTime, prospectActivityTypeLa
 import { useAdminAuth } from '../useAdminAuth'
 
 type GroupKey = 'overdue' | 'today' | 'next7' | 'later'
+type SourceFilter = 'all' | 'prospects' | 'opportunities'
 
 const groupLabels: Record<GroupKey, string> = {
   overdue: 'Vencidas',
@@ -55,7 +56,10 @@ export function AdminFollowUps() {
   const [status, setStatus] = useState('')
   const [processingId, setProcessingId] = useState<string | null>(null)
   const [showCompleted, setShowCompleted] = useState(false)
+  const [searchParams, setSearchParams] = useSearchParams()
   const statusRef = useRef<HTMLDivElement>(null)
+  const dateFilter = searchParams.get('fecha') ?? 'all'
+  const sourceFilter = (searchParams.get('origen') as SourceFilter | null) ?? 'all'
 
   function announce(message: string) {
     setStatus(message)
@@ -96,12 +100,24 @@ export function AdminFollowUps() {
 
   const groups = useMemo(() => {
     const grouped: Record<GroupKey, AgendaFollowUpRecord[]> = { overdue: [], today: [], next7: [], later: [] }
-    items.forEach((item) => {
+    items.filter((item) => {
+      if (sourceFilter !== 'all' && item.sourceType !== (sourceFilter === 'prospects' ? 'prospect' : 'opportunity')) return false
+      if (dateFilter === 'overdue') return Boolean(item.next_action_at && new Date(item.next_action_at).getTime() < Date.now())
+      if (dateFilter === 'today') return groupFor(item.next_action_at!) === 'today'
+      if (dateFilter === 'next7') return ['today', 'next7'].includes(groupFor(item.next_action_at!))
+      return true
+    }).forEach((item) => {
       if (!item.next_action_at || item.completed_at) return
       grouped[groupFor(item.next_action_at)].push(item)
     })
     return grouped
-  }, [items])
+  }, [dateFilter, items, sourceFilter])
+
+  function setFilter(key: 'fecha' | 'origen', value: string) {
+    const next = new URLSearchParams(searchParams)
+    if (value === 'all') next.delete(key); else next.set(key, value)
+    setSearchParams(next)
+  }
 
   async function complete(item: AgendaFollowUpRecord) {
     if (!window.confirm('¿Marcar este seguimiento como completado?')) return
@@ -146,6 +162,18 @@ export function AdminFollowUps() {
   return (
     <div className="grid gap-6">
       <AdminPageHeader title="Seguimiento" text="Próximas acciones pendientes y completadas en oportunidades activas." />
+      <section className="grid gap-3 rounded-lg border border-slate-200 bg-white p-4 sm:grid-cols-2">
+        <label className="grid gap-2 text-sm font-medium text-slate-700">Fecha
+          <select value={dateFilter} onChange={(event) => setFilter('fecha', event.target.value)} className="rounded-md border border-slate-300 px-3 py-3 text-base">
+            <option value="all">Todas</option><option value="today">Hoy</option><option value="overdue">Vencidos</option><option value="next7">Próximos</option>
+          </select>
+        </label>
+        <label className="grid gap-2 text-sm font-medium text-slate-700">Origen
+          <select value={sourceFilter} onChange={(event) => setFilter('origen', event.target.value)} className="rounded-md border border-slate-300 px-3 py-3 text-base">
+            <option value="all">Todos</option><option value="prospects">Prospectos</option><option value="opportunities">Oportunidades</option>
+          </select>
+        </label>
+      </section>
       <div className="rounded-lg border border-slate-200 bg-white p-4 text-sm text-slate-700">
         Las acciones completadas salen de pendientes y se conservan en el historial de cada oportunidad.
       </div>

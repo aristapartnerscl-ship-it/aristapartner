@@ -6,6 +6,12 @@ import { adminRepository } from '../../repositories'
 import type { DashboardActivity, DashboardData, DashboardProspectAction } from '../../types/admin'
 
 const metricLabels: Array<[keyof DashboardData['metrics'], string]> = [
+  ['prospectsTotal', 'Prospectos totales'],
+  ['prospectsUncontacted', 'Prospectos sin contactar'],
+  ['overdueProspectFollowUps', 'Prospectos vencidos'],
+  ['prospectsConverted', 'Prospectos convertidos'],
+  ['activeOpportunities', 'Oportunidades activas'],
+  ['pendingFollowUpsToday', 'Seguimientos pendientes hoy'],
   ['newOpportunities', 'Oportunidades nuevas'],
   ['activeOpportunities', 'Oportunidades activas'],
   ['negotiations', 'Negociaciones en curso'],
@@ -27,6 +33,10 @@ const quickLinks = [
 ]
 
 function metricHref(key: keyof DashboardData['metrics']) {
+  if (key === 'prospectsTotal') return '/admin/prospeccion'
+  if (key === 'prospectsUncontacted') return '/admin/prospeccion?view=uncontacted'
+  if (key === 'prospectsConverted') return '/admin/prospeccion?view=converted'
+  if (key === 'pendingFollowUpsToday') return '/admin/seguimiento?fecha=today'
   if (key === 'newOpportunities') return '/admin/oportunidades?status=new'
   if (key === 'activeOpportunities') return '/admin/oportunidades?status=active'
   if (key === 'negotiations') return '/admin/oportunidades?status=negotiating'
@@ -80,6 +90,18 @@ function ActivityList({ title, items, dateField }: { title: string; items: Dashb
       </div>
     </section>
   )
+}
+
+function RecentProspects({ items }: { items: DashboardData['recentProspects'] }) {
+  if (!items) return <EmptyState title="Prospectos recientes" text="No fue posible consultar prospectos recientes." />
+  if (items.length === 0) return <EmptyState title="Prospectos recientes" text="No hay prospectos recientes." />
+  return <section className="rounded-lg border border-slate-200 bg-white p-6"><h2 className="text-xl font-semibold text-[#17202d]">Prospectos recientes</h2><div className="mt-4 grid gap-3">{items.map((item) => <Link key={item.id} to={`/admin/prospeccion/${item.id}`} className="rounded-md border border-slate-200 p-4 hover:border-[#235b3e]"><p className="font-semibold text-[#17202d]">{item.full_name || item.company_name || 'Prospecto sin nombre'}</p><p className="mt-1 text-sm text-slate-600">{item.company_name || 'Sin empresa'} · {item.status}</p></Link>)}</div></section>
+}
+
+function RecentOpportunities({ items }: { items: DashboardData['recentOpportunities'] }) {
+  if (!items) return <EmptyState title="Oportunidades recientes" text="No fue posible consultar oportunidades recientes." />
+  if (items.length === 0) return <EmptyState title="Oportunidades recientes" text="No hay oportunidades recientes." />
+  return <section className="rounded-lg border border-slate-200 bg-white p-6"><h2 className="text-xl font-semibold text-[#17202d]">Oportunidades recientes</h2><div className="mt-4 grid gap-3">{items.map((item) => <Link key={item.id} to={`/admin/oportunidades/${item.id}`} className="rounded-md border border-slate-200 p-4 hover:border-[#235b3e]"><p className="font-semibold text-[#17202d]">{item.reference_code}</p><p className="mt-1 text-sm text-slate-600">{item.title}</p></Link>)}</div></section>
 }
 
 export function AdminDashboard() {
@@ -151,6 +173,8 @@ export function AdminDashboard() {
             <ActivityList title="Próximas acciones" items={dashboard.upcomingActions} dateField="next_action_at" />
             <ProspectActionList items={dashboard.upcomingProspectActions} />
             <ActivityList title="Actividad reciente" items={dashboard.recentActivities} dateField="occurred_at" />
+            <RecentProspects items={dashboard.recentProspects} />
+            <RecentOpportunities items={dashboard.recentOpportunities} />
             <EmptyState title="Oportunidades que requieren atención" text="No hay oportunidades que requieran atención." />
             <section className="rounded-lg border border-slate-200 bg-white p-6">
               <h2 className="text-xl font-semibold text-[#17202d]">Accesos rápidos</h2>

@@ -172,7 +172,7 @@ describe('AdminProspecting', () => {
 
     renderList()
     await user.click(await screen.findByRole('button', { name: 'Nuevo prospecto' }))
-    const name = screen.getByLabelText('Nombre completo')
+    const name = screen.getByLabelText('Nombre del prospecto')
     await user.click(name)
     await user.type(name, 'Nuevo Prospecto')
     expect(document.activeElement).toBe(name)
