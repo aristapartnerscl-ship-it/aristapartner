@@ -4,6 +4,7 @@ import { Layout } from './components/Layout'
 import { MetaManager } from './components/MetaManager'
 import { ScrollToTop } from './components/ScrollToTop'
 import { Home } from './pages/Home'
+import { PublicProposal } from './pages/PublicProposal'
 
 const AdminRoutes = lazy(() => import('./admin/AdminRoutes'))
 const About = lazy(() => import('./pages/About').then((module) => ({ default: module.About })))
@@ -26,6 +27,7 @@ function App() {
       <MetaManager />
       <ScrollToTop />
       <Routes>
+        <Route path="/propuesta/:token" element={<PublicProposal />} />
         <Route
           path="/admin/*"
           element={

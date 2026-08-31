@@ -12,6 +12,8 @@ import type {
   CommercialProposalDocumentInsert,
   CommercialProposalDocumentRecord,
   CommercialProposalVersionRecord,
+  CommercialProposalPublicLinkInsert,
+  CommercialProposalPublicLinkRecord,
   ContactInsert,
   ContactRecord,
   ContactSelectorRecord,
@@ -75,6 +77,9 @@ export type AdminRepository = {
   listCommercialProposalVersions(proposalId: string): Promise<RepositoryResult<CommercialProposalVersionRecord[]>>
   listCommercialProposalDocuments(proposalId: string): Promise<RepositoryResult<CommercialProposalDocumentRecord[]>>
   createCommercialProposalDocument(values: Omit<CommercialProposalDocumentInsert, 'generated_by'>): Promise<RepositoryResult<CommercialProposalDocumentRecord | null>>
+  listCommercialProposalPublicLinks(proposalId: string): Promise<RepositoryResult<CommercialProposalPublicLinkRecord[]>>
+  createCommercialProposalPublicLink(values: Omit<CommercialProposalPublicLinkInsert, 'token_hash'> & { token_hash: string }): Promise<RepositoryResult<CommercialProposalPublicLinkRecord | null>>
+  revokeCommercialProposalPublicLink(id: string): Promise<RepositoryResult<CommercialProposalPublicLinkRecord | null>>
   listOpportunityActivities(opportunityId: string): Promise<RepositoryResult<OpportunityActivityRecord[]>>
   createOpportunityActivity(values: Omit<OpportunityActivityInsert, 'created_by'>): Promise<RepositoryResult<OpportunityActivityRecord | null>>
   listProspects(): Promise<RepositoryResult<ProspectRecord[]>>

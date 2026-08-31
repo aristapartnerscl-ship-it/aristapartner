@@ -13,6 +13,8 @@ import type {
   CommercialProposalDocumentInsert,
   CommercialProposalDocumentRecord,
   CommercialProposalVersionRecord,
+  CommercialProposalPublicLinkInsert,
+  CommercialProposalPublicLinkRecord,
   ContactFormValues,
   ContactInsert,
   ContactRecord,
@@ -117,11 +119,12 @@ const commercialAgreementColumns =
   'id, agreement_code, opportunity_id, counterparty_type, contact_id, supplier_id, payer_type, compensation_model, management_fee, commission_type, commission_value, currency, attribution_start, attribution_end, agreement_status, notes, archived_at, archived_by, created_at, updated_at, created_by'
 
 const commercialProposalColumns =
-  'id, proposal_code, opportunity_id, title, description, currency, subtotal, tax_percentage, tax_amount, total_amount, valid_until, status, sent_at, viewed_at, accepted_at, rejected_at, internal_notes, client_notes, archived_at, archived_by, created_by, created_at, updated_at'
+  'id, proposal_code, opportunity_id, title, description, currency, subtotal, tax_percentage, tax_amount, total_amount, valid_until, status, sent_at, viewed_at, accepted_at, accepted_version_id, rejected_at, internal_notes, client_notes, archived_at, archived_by, created_by, created_at, updated_at'
 
 const commercialProposalVersionColumns =
   'id, proposal_id, version_number, title, description, currency, subtotal, tax_percentage, tax_amount, total_amount, valid_until, client_notes, snapshot_data, created_by, created_at'
 const commercialProposalDocumentColumns = 'id, proposal_id, version_id, document_type, file_name, generated_at, generated_by'
+const commercialProposalPublicLinkColumns = 'id, proposal_id, version_id, token_hash, status, expires_at, created_by, created_at, revoked_at, first_viewed_at, last_viewed_at, view_count, responded_at, response, response_name, response_email, response_comment'
 
 const organizationSettingsColumns =
   'singleton_key, display_name, legal_name, tax_identifier, public_email, public_phone, website_url, address_line, city_region, country_code, timezone, locale, default_currency, default_opportunity_priority, default_follow_up_days, default_attribution_days, default_commission_type, default_commission_value, created_at, updated_at, created_by, updated_by'
@@ -718,6 +721,31 @@ export class SupabaseAdminRepository implements AdminRepository {
     }).select(commercialProposalDocumentColumns).single()
     if (error) return fail<CommercialProposalDocumentRecord | null>(null, error, 'commercial_proposal_documents.create')
     return ok(data as CommercialProposalDocumentRecord)
+  }
+
+  async listCommercialProposalPublicLinks(proposalId: string) {
+    const client = this.client as SupabaseClient
+    const { data, error } = await client.from('commercial_proposal_public_links').select(commercialProposalPublicLinkColumns).eq('proposal_id', proposalId).order('created_at', { ascending: false })
+    if (error) return fail<CommercialProposalPublicLinkRecord[]>([], error, 'commercial_proposal_public_links.list')
+    return ok((data ?? []) as CommercialProposalPublicLinkRecord[])
+  }
+
+  async createCommercialProposalPublicLink(values: Omit<CommercialProposalPublicLinkInsert, 'token_hash'> & { token_hash: string }) {
+    const admin = await this.ensureActiveOwner()
+    if (!admin.userId) return { data: null, error: admin.error, errorKind: admin.errorKind }
+    const client = this.client as SupabaseClient
+    const { data, error } = await client.from('commercial_proposal_public_links').insert({ proposal_id: values.proposal_id, version_id: values.version_id, token_hash: values.token_hash, expires_at: values.expires_at, created_by: admin.userId }).select(commercialProposalPublicLinkColumns).single()
+    if (error) return fail<CommercialProposalPublicLinkRecord | null>(null, error, 'commercial_proposal_public_links.create')
+    return ok(data as CommercialProposalPublicLinkRecord)
+  }
+
+  async revokeCommercialProposalPublicLink(id: string) {
+    const admin = await this.ensureActiveOwner()
+    if (!admin.userId) return { data: null, error: admin.error, errorKind: admin.errorKind }
+    const client = this.client as SupabaseClient
+    const { data, error } = await client.from('commercial_proposal_public_links').update({ status: 'revoked', revoked_at: new Date().toISOString() }).eq('id', id).eq('status', 'active').select(commercialProposalPublicLinkColumns).single()
+    if (error) return fail<CommercialProposalPublicLinkRecord | null>(null, error, 'commercial_proposal_public_links.revoke')
+    return ok(data as CommercialProposalPublicLinkRecord)
   }
 
   private async hydrateCommercialProposals(proposals: CommercialProposalRecord[], context: string) {

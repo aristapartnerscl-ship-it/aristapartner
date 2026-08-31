@@ -13,6 +13,10 @@ import type {
   CommercialProposalDocumentInsert,
   CommercialProposalDocumentRow,
   CommercialProposalVersionRow,
+  CommercialProposalPublicLinkInsert,
+  CommercialProposalPublicLinkRow,
+  CommercialProposalPublicLinkStatus,
+  CommercialProposalPublicResponse,
   CompensationModel,
   ContactFormValues,
   ConvertBuySubmissionAtomicArgs,
@@ -81,6 +85,9 @@ export type {
   CommercialProposalDocumentInsert,
   CommercialProposalDocumentRow,
   CommercialProposalVersionRow,
+  CommercialProposalPublicLinkInsert,
+  CommercialProposalPublicLinkStatus,
+  CommercialProposalPublicResponse,
   ContactFormValues,
   ContactInsert,
   ContactType,
@@ -122,6 +129,42 @@ export type CommercialProposalRecord = CommercialProposalRow
 
 export type CommercialProposalVersionRecord = CommercialProposalVersionRow
 export type CommercialProposalDocumentRecord = CommercialProposalDocumentRow
+export type CommercialProposalPublicLinkRecord = CommercialProposalPublicLinkRow
+
+export type PublicProposalPayload = {
+  status: CommercialProposalPublicLinkStatus
+  response: CommercialProposalPublicResponse | null
+  response_name: string | null
+  response_email: string | null
+  response_comment: string | null
+  responded_at: string | null
+  code: string
+  version: number
+  issued_at: string
+  valid_until: string | null
+  title: string
+  description: string | null
+  currency: string | null
+  subtotal: number
+  tax_percentage: number
+  tax_amount: number
+  total_amount: number
+  client_notes: string | null
+  counterparty_name: string | null
+  contact_name: string | null
+  opportunity_title: string | null
+  opportunity_type: 'buy' | 'sell' | null
+  organization: {
+    display_name: string | null
+    legal_name: string | null
+    public_email: string | null
+    public_phone: string | null
+    website_url: string | null
+    address_line: string | null
+    city_region: string | null
+    country_code: string | null
+  }
+}
 
 export type CommercialProposalWithOpportunity = CommercialProposalRecord & {
   opportunity: Pick<OpportunityRow, 'id' | 'reference_code' | 'title' | 'opportunity_type' | 'status' | 'contact_id'>

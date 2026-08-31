@@ -239,6 +239,7 @@ export type CommercialProposalRow = {
   sent_at: string | null
   viewed_at: string | null
   accepted_at: string | null
+  accepted_version_id?: string | null
   rejected_at: string | null
   internal_notes: string | null
   client_notes: string | null
@@ -249,8 +250,8 @@ export type CommercialProposalRow = {
   updated_at: string
 }
 
-export type CommercialProposalInsert = Omit<CommercialProposalRow, 'id' | 'proposal_code' | 'tax_amount' | 'total_amount' | 'archived_at' | 'archived_by' | 'created_by' | 'created_at' | 'updated_at' | 'sent_at' | 'viewed_at' | 'accepted_at' | 'rejected_at'> & Partial<Pick<CommercialProposalRow, 'sent_at' | 'viewed_at' | 'accepted_at' | 'rejected_at'>>
-export type CommercialProposalUpdate = Partial<Omit<CommercialProposalRow, 'id' | 'proposal_code' | 'tax_amount' | 'total_amount' | 'created_by' | 'created_at' | 'updated_at' | 'archived_by'>>
+export type CommercialProposalInsert = Omit<CommercialProposalRow, 'id' | 'proposal_code' | 'tax_amount' | 'total_amount' | 'archived_at' | 'archived_by' | 'created_by' | 'created_at' | 'updated_at' | 'sent_at' | 'viewed_at' | 'accepted_at' | 'accepted_version_id' | 'rejected_at'> & Partial<Pick<CommercialProposalRow, 'sent_at' | 'viewed_at' | 'accepted_at' | 'rejected_at'>>
+export type CommercialProposalUpdate = Partial<Omit<CommercialProposalRow, 'id' | 'proposal_code' | 'tax_amount' | 'total_amount' | 'created_by' | 'created_at' | 'updated_at' | 'archived_by' | 'accepted_version_id'>>
 
 // These aliases stay local until the versions migration is applied remotely and types are regenerated.
 export type CommercialProposalVersionRow = {
@@ -283,6 +284,30 @@ export type CommercialProposalDocumentRow = {
 }
 export type CommercialProposalDocumentInsert = Omit<CommercialProposalDocumentRow, 'id' | 'generated_at' | 'generated_by'> & { generated_at?: string; generated_by?: string }
 export type CommercialProposalDocumentUpdate = never
+
+export type CommercialProposalPublicLinkStatus = 'active' | 'revoked' | 'expired' | 'responded'
+export type CommercialProposalPublicResponse = 'accepted' | 'rejected'
+export type CommercialProposalPublicLinkRow = {
+  id: string
+  proposal_id: string
+  version_id: string
+  token_hash: string
+  status: CommercialProposalPublicLinkStatus
+  expires_at: string | null
+  created_by: string
+  created_at: string
+  revoked_at: string | null
+  first_viewed_at: string | null
+  last_viewed_at: string | null
+  view_count: number
+  responded_at: string | null
+  response: CommercialProposalPublicResponse | null
+  response_name: string | null
+  response_email: string | null
+  response_comment: string | null
+}
+export type CommercialProposalPublicLinkInsert = Pick<CommercialProposalPublicLinkRow, 'proposal_id' | 'version_id' | 'token_hash' | 'expires_at'>
+export type CommercialProposalPublicLinkUpdate = Pick<CommercialProposalPublicLinkRow, 'status' | 'revoked_at'>
 
 export type FormSubmissionInsert = Override<
   Omit<TableInsert<'form_submissions'>, 'id' | 'submitted_at'>,

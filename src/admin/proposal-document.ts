@@ -1,4 +1,4 @@
-import type { CommercialProposalVersionRecord, CommercialProposalWithOpportunity, OrganizationSettingsRecord } from '../types/admin'
+import type { CommercialProposalVersionRecord, CommercialProposalWithOpportunity, OrganizationSettingsRecord, PublicProposalPayload } from '../types/admin'
 
 export type ProposalDocumentModel = {
   code: string
@@ -79,6 +79,38 @@ export function buildProposalDocumentModel(proposal: CommercialProposalWithOppor
       address: organization?.address_line ?? null,
       cityRegion: organization?.city_region ?? null,
       country: organization?.country_code ?? null,
+    },
+  }
+}
+
+export function buildPublicProposalDocumentModel(payload: PublicProposalPayload): ProposalDocumentModel {
+  return {
+    code: payload.code,
+    version: payload.version,
+    issuedAt: formatProposalDate(payload.issued_at) ?? '',
+    validUntil: formatProposalDate(payload.valid_until),
+    title: payload.title,
+    description: payload.description,
+    clientNotes: payload.client_notes,
+    currency: payload.currency,
+    subtotal: payload.subtotal,
+    taxPercentage: payload.tax_percentage,
+    taxAmount: payload.tax_amount,
+    totalAmount: payload.total_amount,
+    counterparty: firstText(payload.counterparty_name),
+    contactName: firstText(payload.contact_name),
+    opportunityTitle: firstText(payload.opportunity_title),
+    opportunityType: payload.opportunity_type === 'buy' ? 'Compra' : payload.opportunity_type === 'sell' ? 'Venta' : null,
+    companyName: firstText(payload.organization.legal_name, payload.organization.display_name),
+    organization: {
+      displayName: payload.organization.display_name ?? 'ARISTA PARTNERS',
+      legalName: payload.organization.legal_name,
+      email: payload.organization.public_email,
+      phone: payload.organization.public_phone,
+      website: payload.organization.website_url,
+      address: payload.organization.address_line,
+      cityRegion: payload.organization.city_region,
+      country: payload.organization.country_code,
     },
   }
 }

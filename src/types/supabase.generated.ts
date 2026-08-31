@@ -253,6 +253,88 @@ export type Database = {
           },
         ]
       }
+      commercial_proposal_public_links: {
+        Row: {
+          created_at: string
+          created_by: string
+          expires_at: string | null
+          first_viewed_at: string | null
+          id: string
+          last_viewed_at: string | null
+          proposal_id: string
+          responded_at: string | null
+          response: string | null
+          response_comment: string | null
+          response_email: string | null
+          response_name: string | null
+          revoked_at: string | null
+          status: string
+          token_hash: string
+          version_id: string
+          view_count: number
+        }
+        Insert: {
+          created_at?: string
+          created_by: string
+          expires_at?: string | null
+          first_viewed_at?: string | null
+          id?: string
+          last_viewed_at?: string | null
+          proposal_id: string
+          responded_at?: string | null
+          response?: string | null
+          response_comment?: string | null
+          response_email?: string | null
+          response_name?: string | null
+          revoked_at?: string | null
+          status?: string
+          token_hash: string
+          version_id: string
+          view_count?: number
+        }
+        Update: {
+          created_at?: string
+          created_by?: string
+          expires_at?: string | null
+          first_viewed_at?: string | null
+          id?: string
+          last_viewed_at?: string | null
+          proposal_id?: string
+          responded_at?: string | null
+          response?: string | null
+          response_comment?: string | null
+          response_email?: string | null
+          response_name?: string | null
+          revoked_at?: string | null
+          status?: string
+          token_hash?: string
+          version_id?: string
+          view_count?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "commercial_proposal_public_links_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "admin_profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "commercial_proposal_public_links_proposal_id_fkey"
+            columns: ["proposal_id"]
+            isOneToOne: false
+            referencedRelation: "commercial_proposals"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "commercial_proposal_public_links_version_fk"
+            columns: ["version_id", "proposal_id"]
+            isOneToOne: false
+            referencedRelation: "commercial_proposal_versions"
+            referencedColumns: ["id", "proposal_id"]
+          },
+        ]
+      }
       commercial_proposal_versions: {
         Row: {
           client_notes: string | null
@@ -325,6 +407,7 @@ export type Database = {
       commercial_proposals: {
         Row: {
           accepted_at: string | null
+          accepted_version_id: string | null
           archived_at: string | null
           archived_by: string | null
           client_notes: string | null
@@ -350,6 +433,7 @@ export type Database = {
         }
         Insert: {
           accepted_at?: string | null
+          accepted_version_id?: string | null
           archived_at?: string | null
           archived_by?: string | null
           client_notes?: string | null
@@ -375,6 +459,7 @@ export type Database = {
         }
         Update: {
           accepted_at?: string | null
+          accepted_version_id?: string | null
           archived_at?: string | null
           archived_by?: string | null
           client_notes?: string | null
@@ -399,6 +484,13 @@ export type Database = {
           viewed_at?: string | null
         }
         Relationships: [
+          {
+            foreignKeyName: "commercial_proposals_accepted_version_id_fkey"
+            columns: ["accepted_version_id"]
+            isOneToOne: false
+            referencedRelation: "commercial_proposal_versions"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "commercial_proposals_archived_by_fkey"
             columns: ["archived_by"]
@@ -1433,6 +1525,20 @@ export type Database = {
           prospect_id: string
           subject: string
         }[]
+      }
+      resolve_commercial_proposal_public_link: {
+        Args: { p_token_hash: string }
+        Returns: Json
+      }
+      respond_commercial_proposal_public_link: {
+        Args: {
+          p_response: string
+          p_response_comment?: string
+          p_response_email: string
+          p_response_name: string
+          p_token_hash: string
+        }
+        Returns: Json
       }
     }
     Enums: {
