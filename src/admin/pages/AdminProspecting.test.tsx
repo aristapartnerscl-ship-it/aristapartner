@@ -164,6 +164,28 @@ describe('AdminProspecting', () => {
     expect(screen.queryByText('Ben Hoy')).not.toBeInTheDocument()
   })
 
+  test('opens the prospect detail in a same-page modal from the list', async () => {
+    const user = userEvent.setup()
+    renderList()
+    const trigger = (await screen.findAllByRole('button', { name: 'Ver' }))[0]
+    await user.click(trigger)
+    expect(screen.getByRole('dialog')).toHaveTextContent('Detalle de prospecto')
+    expect(screen.queryByRole('link', { name: /Ana Prospecto/i })).not.toBeInTheDocument()
+    expect(screen.getAllByText('Ana Prospecto').length).toBeGreaterThan(0)
+    await user.keyboard('{Escape}')
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
+  })
+
+  test('contains quick views, filters and wide table within the page width', async () => {
+    renderList()
+
+    const quickView = await screen.findByRole('button', { name: 'Todos' })
+    expect(quickView.parentElement).toHaveClass('flex-wrap', 'min-w-0', 'max-w-full')
+    expect(screen.getByLabelText('Buscar').parentElement?.parentElement?.parentElement).toHaveClass('min-w-0', 'max-w-full')
+    const table = await screen.findByRole('table')
+    expect(table.parentElement).toHaveClass('w-full', 'max-w-full', 'overflow-x-auto')
+  })
+
   test('creates and edits prospects with stable focus and nullable payloads', async () => {
     const user = userEvent.setup()
     const saved = prospect({ id: 'prospect-new', full_name: 'Nuevo Prospecto' })

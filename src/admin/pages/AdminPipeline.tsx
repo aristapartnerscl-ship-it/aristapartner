@@ -1,8 +1,11 @@
 import { ArrowRight, CalendarClock, Filter } from 'lucide-react'
-import { useEffect, useMemo, useState } from 'react'
-import { Link, useSearchParams } from 'react-router-dom'
+import { useEffect, useMemo, useRef, useState } from 'react'
+import { useSearchParams } from 'react-router-dom'
 import { AdminPageHeader } from '../../components/admin/AdminPageHeader'
+import { AdminDetailModal } from '../../components/admin/AdminDetailModal'
 import { EmptyState } from '../../components/admin/EmptyState'
+import { AdminProspectDetail } from './AdminProspecting'
+import { AdminOpportunityDetail } from './AdminOpportunityDetail'
 import { adminRepository } from '../../repositories'
 import type { CommercialProposalWithOpportunity, OpportunityRecord, ProspectRecord } from '../../types/admin'
 import { opportunityStatusLabels, opportunityTypeLabels, priorityLabels, prospectStatusLabels, prospectTemperatureLabels } from '../opportunity-labels'
@@ -27,6 +30,8 @@ export function AdminPipeline() {
   const [opportunities, setOpportunities] = useState<OpportunityRecord[]>([])
   const [proposals, setProposals] = useState<CommercialProposalWithOpportunity[]>([])
   const [error, setError] = useState('')
+  const [detail, setDetail] = useState<{ type: 'prospect' | 'opportunity'; id: string } | null>(null)
+  const detailTriggerRef = useRef<HTMLButtonElement | null>(null)
   const [loading, setLoading] = useState(true)
   const filter = (params.get('vista') as PipelineFilter | null) ?? 'all'
 
@@ -72,26 +77,27 @@ export function AdminPipeline() {
     setParams(next)
   }
 
-  return <div className="grid gap-6">
+  return <div className="grid min-w-0 max-w-full gap-6">
     <AdminPageHeader title="Pipeline comercial" text="Resumen operativo de prospectos y oportunidades." />
     <div className="flex flex-wrap gap-2" role="group" aria-label="Filtros del pipeline">
       {filters.map(([value, label]) => <button key={value} type="button" onClick={() => setFilter(value)} className={`rounded-md px-3 py-2 text-sm font-semibold ${filter === value ? 'bg-[#17202d] text-white' : 'border border-slate-300 text-[#17202d]'}`}><Filter size={15} className="mr-2 inline" />{label}</button>)}
     </div>
-    <section className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+    <section className="grid min-w-0 max-w-full gap-4 sm:grid-cols-2 xl:grid-cols-4">
       {[["Prospectos activos", summary.activeProspects], ["Oportunidades activas", summary.activeOpportunities], ["Seguimientos vencidos", summary.overdue], ["Convertidos / ganadas", summary.converted]].map(([label, value]) => <div key={label} className="rounded-lg border border-slate-200 bg-white p-5"><p className="text-sm text-slate-600">{label}</p><p className="mt-2 text-3xl font-semibold text-[#17202d]">{value}</p></div>)}
     </section>
     {loading && <div className="h-40 animate-pulse rounded-lg border border-slate-200 bg-white" />}
     {!loading && error && <section className="rounded-lg border border-red-200 bg-red-50 p-6"><h2 className="font-semibold">No fue posible cargar el pipeline</h2><p className="mt-2 text-sm">{error}</p></section>}
-    {!loading && !error && <><PipelineProspects items={visibleProspects} /><PipelineOpportunities items={visibleOpportunities} proposals={proposals} /></>}
+    {!loading && !error && <><PipelineProspects items={visibleProspects} onView={(item, trigger) => { detailTriggerRef.current = trigger; setDetail({ type: 'prospect', id: item.id }) }} /><PipelineOpportunities items={visibleOpportunities} proposals={proposals} onView={(item, trigger) => { detailTriggerRef.current = trigger; setDetail({ type: 'opportunity', id: item.id }) }} /></>}
+    {detail && <AdminDetailModal title={detail.type === 'prospect' ? 'Detalle de prospecto' : 'Detalle de oportunidad'} size="large" onClose={() => setDetail(null)} returnFocusRef={detailTriggerRef}>{detail.type === 'prospect' ? <AdminProspectDetail detailId={detail.id} embedded /> : <AdminOpportunityDetail detailId={detail.id} embedded />}</AdminDetailModal>}
   </div>
 }
 
-function PipelineProspects({ items }: { items: ProspectRecord[] }) {
-  return <section className="rounded-lg border border-slate-200 bg-white p-5"><h2 className="text-xl font-semibold text-[#17202d]">Prospectos</h2>{items.length === 0 ? <EmptyState title="Sin prospectos en esta vista" text="Prueba otro filtro del pipeline." /> : <div className="mt-4 grid gap-3">{items.map((item) => <article key={item.id} className="grid gap-3 rounded-md border border-slate-200 p-4 lg:grid-cols-[1.3fr_1fr_1fr_1fr_1.4fr_auto] lg:items-center"><div><Link to={`/admin/prospeccion/${item.id}`} className="font-semibold text-[#17202d] hover:text-[#235b3e]">{prospectName(item)}</Link><p className="text-sm text-slate-600">{item.company_name || 'Sin empresa'}</p></div><span className="text-sm">{prospectStatusLabels[item.status]}</span><span className="text-sm">{priorityLabels[item.priority]} · {prospectTemperatureLabels[item.lead_temperature]}</span><span className="text-sm">{item.next_action_type || 'Sin acción'}</span><span className="text-sm text-slate-600">{formatDate(item.next_action_at)}</span><Link to={`/admin/prospeccion/${item.id}`} className="inline-flex items-center gap-1 text-sm font-semibold text-[#235b3e]">Abrir <ArrowRight size={16} /></Link></article>)}</div>}</section>
+function PipelineProspects({ items, onView }: { items: ProspectRecord[]; onView: (item: ProspectRecord, trigger: HTMLButtonElement) => void }) {
+  return <section className="min-w-0 max-w-full rounded-lg border border-slate-200 bg-white p-5"><h2 className="text-xl font-semibold text-[#17202d]">Prospectos</h2>{items.length === 0 ? <EmptyState title="Sin prospectos en esta vista" text="Prueba otro filtro del pipeline." /> : <div className="mt-4 grid min-w-0 gap-3">{items.map((item) => <article key={item.id} className="grid min-w-0 gap-3 rounded-md border border-slate-200 p-4 lg:grid-cols-[minmax(0,1.3fr)_minmax(0,1fr)_minmax(0,1fr)_minmax(0,1fr)_minmax(0,1.4fr)_auto] lg:items-center"><div className="min-w-0"><button type="button" onClick={(event) => onView(item, event.currentTarget)} className="break-words text-left font-semibold text-[#17202d] hover:text-[#235b3e]">{prospectName(item)}</button><p className="break-words text-sm text-slate-600">{item.company_name || 'Sin empresa'}</p></div><span className="text-sm">{prospectStatusLabels[item.status]}</span><span className="text-sm">{priorityLabels[item.priority]} · {prospectTemperatureLabels[item.lead_temperature]}</span><span className="text-sm">{item.next_action_type || 'Sin acción'}</span><span className="text-sm text-slate-600">{formatDate(item.next_action_at)}</span><button type="button" onClick={(event) => onView(item, event.currentTarget)} className="inline-flex items-center gap-1 text-sm font-semibold text-[#235b3e]">Abrir <ArrowRight size={16} /></button></article>)}</div>}</section>
 }
 
-function PipelineOpportunities({ items, proposals }: { items: OpportunityRecord[]; proposals: CommercialProposalWithOpportunity[] }) {
+function PipelineOpportunities({ items, proposals, onView }: { items: OpportunityRecord[]; proposals: CommercialProposalWithOpportunity[]; onView: (item: OpportunityRecord, trigger: HTMLButtonElement) => void }) {
   const latest = new Map<string, CommercialProposalWithOpportunity>()
   proposals.forEach((proposal) => { if (!latest.has(proposal.opportunity_id)) latest.set(proposal.opportunity_id, proposal) })
-  return <section className="rounded-lg border border-slate-200 bg-white p-5"><h2 className="text-xl font-semibold text-[#17202d]">Oportunidades</h2>{items.length === 0 ? <EmptyState title="Sin oportunidades en esta vista" text="Prueba otro filtro del pipeline." /> : <div className="mt-4 grid gap-3">{items.map((item) => { const proposal = latest.get(item.id); return <article key={item.id} className="grid gap-3 rounded-md border border-slate-200 p-4 lg:grid-cols-[1fr_1.2fr_0.8fr_1fr_1fr_1.3fr_auto] lg:items-center"><div><Link to={`/admin/oportunidades/${item.id}`} className="font-semibold text-[#17202d] hover:text-[#235b3e]">{item.reference_code}</Link><p className="text-sm text-slate-600">{item.title}</p></div><span className="text-sm">{opportunityTypeLabels[item.opportunity_type]}</span><span className="text-sm">{opportunityStatusLabels[item.status]}</span><span className="text-sm">{item.estimated_value != null ? `${item.estimated_value.toLocaleString('es-CL')} ${item.currency || ''}` : 'Sin valor'}</span><span className="text-sm text-slate-600"><CalendarClock size={15} className="mr-1 inline" />{formatDate(item.expected_date)}</span><span className="text-sm text-slate-600">Propuesta: {proposal ? proposal.status : 'Sin propuesta'}{proposal ? ` · ${proposal.total_amount.toLocaleString('es-CL')} ${proposal.currency || ''}` : ''}</span><Link to={`/admin/oportunidades/${item.id}`} className="inline-flex items-center gap-1 text-sm font-semibold text-[#235b3e]">Abrir <ArrowRight size={16} /></Link></article> })}</div>}</section>
+  return <section className="min-w-0 max-w-full rounded-lg border border-slate-200 bg-white p-5"><h2 className="text-xl font-semibold text-[#17202d]">Oportunidades</h2>{items.length === 0 ? <EmptyState title="Sin oportunidades en esta vista" text="Prueba otro filtro del pipeline." /> : <div className="mt-4 grid min-w-0 gap-3">{items.map((item) => { const proposal = latest.get(item.id); return <article key={item.id} className="grid min-w-0 gap-3 rounded-md border border-slate-200 p-4 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.2fr)_minmax(0,0.8fr)_minmax(0,1fr)_minmax(0,1fr)_minmax(0,1.3fr)_auto] lg:items-center"><div className="min-w-0"><button type="button" onClick={(event) => onView(item, event.currentTarget)} className="break-words text-left font-semibold text-[#17202d] hover:text-[#235b3e]">{item.reference_code}</button><p className="break-words text-sm text-slate-600">{item.title}</p></div><span className="text-sm">{opportunityTypeLabels[item.opportunity_type]}</span><span className="text-sm">{opportunityStatusLabels[item.status]}</span><span className="text-sm">{item.estimated_value != null ? `${item.estimated_value.toLocaleString('es-CL')} ${item.currency || ''}` : 'Sin valor'}</span><span className="text-sm text-slate-600"><CalendarClock size={15} className="mr-1 inline" />{formatDate(item.expected_date)}</span><span className="break-words text-sm text-slate-600">Propuesta: {proposal ? proposal.status : 'Sin propuesta'}{proposal ? ` · ${proposal.total_amount.toLocaleString('es-CL')} ${proposal.currency || ''}` : ''}</span><button type="button" onClick={(event) => onView(item, event.currentTarget)} className="inline-flex items-center gap-1 text-sm font-semibold text-[#235b3e]">Abrir <ArrowRight size={16} /></button></article> })}</div>}</section>
 }

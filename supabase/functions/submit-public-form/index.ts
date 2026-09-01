@@ -1,6 +1,7 @@
 import { createClient } from 'npm:@supabase/supabase-js@2'
 import { corsHeaders, isAllowedOrigin, parseCsv } from './cors.ts'
 import { createAdminNotifications, createSupabaseAdminNotificationStore } from './notifications.ts'
+import { sendSubmissionEmail } from './email-notification.ts'
 import { parseJsonBody, validatePublicForm } from './validation.ts'
 import type { TurnstileSiteverifyResponse } from './types.ts'
 
@@ -122,6 +123,16 @@ Deno.serve(async (request) => {
     createSupabaseAdminNotificationStore(supabase),
     data.id,
     validation.value.submissionType,
+  )
+
+  await sendSubmissionEmail(
+    validation.value,
+    {
+      resendApiKey: Deno.env.get('RESEND_API_KEY'),
+      notificationFrom: Deno.env.get('ARISTA_NOTIFICATION_FROM'),
+      notificationTo: Deno.env.get('ARISTA_NOTIFICATION_TO'),
+    },
+    fetch,
   )
 
   return json({ ok: true, submissionId: data.id, message: successMessage }, { status: 201, headers })

@@ -1,4 +1,5 @@
 import { render, screen } from '@testing-library/react'
+import userEvent from '@testing-library/user-event'
 import { MemoryRouter } from 'react-router-dom'
 import { beforeEach, describe, expect, test, vi } from 'vitest'
 import { AdminPipeline } from './AdminPipeline'
@@ -6,7 +7,7 @@ import { adminRepository } from '../../repositories'
 import type { OpportunityRecord, ProspectRecord } from '../../types/admin'
 
 vi.mock('../../repositories', () => ({
-  adminRepository: { listProspects: vi.fn(), listOpportunities: vi.fn(), listCommercialProposals: vi.fn() },
+    adminRepository: { listProspects: vi.fn(), listOpportunities: vi.fn(), listCommercialProposals: vi.fn(), getProspectById: vi.fn(), listProspectActivities: vi.fn(), findContactCandidatesForProspect: vi.fn() },
 }))
 
 const prospect: ProspectRecord = {
@@ -33,11 +34,19 @@ describe('AdminPipeline', () => {
     vi.mocked(adminRepository.listCommercialProposals).mockResolvedValue({ data: [], error: null })
   })
 
-  test('muestra prospectos y oportunidades reales con enlaces de detalle', async () => {
-    render(<MemoryRouter><AdminPipeline /></MemoryRouter>)
+  test('muestra prospectos y oportunidades reales y abre detalle sin cambiar la URL', async () => {
+    const user = userEvent.setup()
+    vi.mocked(adminRepository.getProspectById).mockResolvedValue({ data: prospect, error: null })
+    vi.mocked(adminRepository.listProspectActivities).mockResolvedValue({ data: [], error: null })
+    vi.mocked(adminRepository.findContactCandidatesForProspect).mockResolvedValue({ data: [], error: null })
+    render(<MemoryRouter initialEntries={['/admin/pipeline?vista=all']}><AdminPipeline /></MemoryRouter>)
     expect(await screen.findByText('Pipeline comercial')).toBeInTheDocument()
-    expect(screen.getByText('Ana Prospecto')).toHaveAttribute('href', '/admin/prospeccion/prospect-1')
-    expect(screen.getByText('ARI-2026-ABC123')).toHaveAttribute('href', '/admin/oportunidades/opportunity-1')
+    expect(screen.getByRole('button', { name: 'Ana Prospecto' })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'ARI-2026-ABC123' })).toBeInTheDocument()
     expect(screen.getByText('Prospectos activos')).toBeInTheDocument()
+    await user.click(screen.getByRole('button', { name: 'Ana Prospecto' }))
+    expect(screen.getByRole('dialog')).toBeInTheDocument()
+    expect(screen.queryByRole('link', { name: /Ana Prospecto/i })).not.toBeInTheDocument()
+    expect(screen.getByText('Ana Prospecto')).toBeInTheDocument()
   })
 })

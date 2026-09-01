@@ -2,6 +2,7 @@ import { CalendarClock, CheckCircle2, Mail, MessageCircle, Pencil, Phone, Plus, 
 import { useCallback, useEffect, useMemo, useRef, useState, type FormEvent, type ReactNode, type RefObject } from 'react'
 import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import { AdminPageHeader } from '../../components/admin/AdminPageHeader'
+import { AdminDetailModal } from '../../components/admin/AdminDetailModal'
 import { EmptyState } from '../../components/admin/EmptyState'
 import { adminRepository } from '../../repositories'
 import type {
@@ -231,6 +232,8 @@ export function AdminProspecting() {
   const [editing, setEditing] = useState<ProspectRecord | null>(null)
   const [showForm, setShowForm] = useState(false)
   const [activityFor, setActivityFor] = useState<ProspectRecord | null>(null)
+  const [detailId, setDetailId] = useState<string | null>(null)
+  const detailTriggerRef = useRef<HTMLButtonElement | null>(null)
   const actionButtonRef = useRef<HTMLElement | null>(null)
 
   const query = searchParams.get('q') ?? ''
@@ -303,6 +306,11 @@ export function AdminProspecting() {
     setShowForm(true)
   }
 
+  function openDetail(prospect: ProspectRecord, trigger: HTMLButtonElement) {
+    detailTriggerRef.current = trigger
+    setDetailId(prospect.id)
+  }
+
   function closeModal() {
     setShowForm(false)
     setActivityFor(null)
@@ -323,19 +331,19 @@ export function AdminProspecting() {
   }
 
   return (
-    <div className="grid gap-6">
+    <div className="grid min-w-0 max-w-full gap-6">
       <AdminPageHeader title="Prospección" text="Planilla comercial de prospectos preliminares." actionLabel="Nuevo prospecto" onAction={openCreate} />
       <div className="sr-only" aria-live="polite">{notice}</div>
 
-      <section className="grid gap-4 rounded-lg border border-slate-200 bg-white p-4">
-        <div className="flex flex-wrap gap-2">
+      <section className="grid min-w-0 max-w-full gap-4 rounded-lg border border-slate-200 bg-white p-4">
+        <div className="flex min-w-0 max-w-full flex-wrap gap-2">
           {quickViews.map(([value, label]) => (
             <button key={value} type="button" onClick={() => setParam('view', value === 'all' ? '' : value)} className={`rounded-md px-3 py-2 text-sm font-semibold ${quick === value ? 'bg-[#17202d] text-white' : 'border border-slate-300 text-[#17202d]'}`}>
               {label}
             </button>
           ))}
         </div>
-        <div className="grid gap-3 lg:grid-cols-[1.5fr_repeat(4,1fr)]">
+        <div className="grid min-w-0 max-w-full gap-3 lg:grid-cols-[1.5fr_repeat(4,1fr)]">
           <label className="grid gap-2 text-sm font-medium text-slate-700">
             Buscar
             <span className="relative">
@@ -363,8 +371,8 @@ export function AdminProspecting() {
       {!loading && !error && prospects.length > 0 && visible.length === 0 && <EmptyState title="Sin resultados" text="No hay prospectos que coincidan con los filtros." />}
 
       {!loading && !error && visible.length > 0 && (
-        <section className="rounded-lg border border-slate-200 bg-white">
-          <div className="hidden max-w-full overflow-x-auto lg:block">
+      <section className="min-w-0 max-w-full rounded-lg border border-slate-200 bg-white">
+        <div className="hidden w-full min-w-0 max-w-full overflow-x-auto lg:block">
             <table className="min-w-[1180px] w-full table-fixed text-left text-sm">
               <thead className="bg-slate-50 text-xs uppercase text-slate-500">
                 <tr>{['Prospecto', 'Empresa', 'Teléfono', 'Correo', 'Origen', 'Estado', 'Prioridad', 'Último contacto', 'Próxima acción', 'Intentos', 'Acción'].map((head) => <th key={head} className="px-3 py-3">{head}</th>)}</tr>
@@ -384,7 +392,7 @@ export function AdminProspecting() {
                     <td className="px-3 py-4">{prospect.contact_attempts}</td>
                     <td className="px-3 py-4">
                       <div className="flex flex-wrap gap-2">
-                        <Link to={`/admin/prospeccion/${prospect.id}`} className="font-semibold text-[#235b3e]">Ver</Link>
+                        <button type="button" onClick={(event) => openDetail(prospect, event.currentTarget)} className="font-semibold text-[#235b3e]">Ver</button>
                         <button type="button" onClick={() => setActivityFor(prospect)} className="font-semibold text-[#17202d]">Registrar</button>
                       </div>
                     </td>
@@ -394,19 +402,21 @@ export function AdminProspecting() {
             </table>
           </div>
           <div className="grid gap-3 p-3 lg:hidden">
-            {visible.map((prospect) => <ProspectCard key={prospect.id} prospect={prospect} onActivity={() => setActivityFor(prospect)} onEdit={() => openEdit(prospect)} />)}
+            {visible.map((prospect) => <ProspectCard key={prospect.id} prospect={prospect} onActivity={() => setActivityFor(prospect)} onEdit={() => openEdit(prospect)} onView={(trigger) => openDetail(prospect, trigger)} />)}
           </div>
         </section>
       )}
 
       {showForm && <ProspectFormModal prospect={editing} onClose={closeModal} onSaved={onSaved} />}
       {activityFor && <ActivityModal prospect={activityFor} onClose={closeModal} onSaved={onActivitySaved} />}
+      {detailId && <AdminDetailModal title="Detalle de prospecto" size="large" onClose={() => setDetailId(null)} returnFocusRef={detailTriggerRef}><AdminProspectDetail detailId={detailId} embedded /></AdminDetailModal>}
     </div>
   )
 }
 
-export function AdminProspectDetail() {
-  const { id } = useParams()
+export function AdminProspectDetail({ detailId, embedded = false }: { detailId?: string; embedded?: boolean } = {}) {
+  const routeParams = useParams()
+  const id = detailId ?? routeParams.id
   const navigate = useNavigate()
   const [prospect, setProspect] = useState<ProspectRecord | null>(null)
   const [activities, setActivities] = useState<ProspectActivityRecord[]>([])
@@ -511,12 +521,12 @@ export function AdminProspectDetail() {
 
   return (
     <div className="grid gap-6">
-      <AdminPageHeader title={prospectName(prospect)} text="Detalle y trazabilidad de prospección." />
+      {!embedded && <AdminPageHeader title={prospectName(prospect)} text="Detalle y trazabilidad de prospección." />}
       <div className="flex flex-wrap gap-3">
         <button type="button" onClick={() => setShowActivity(true)} className="inline-flex items-center gap-2 rounded-md bg-[#17202d] px-4 py-3 text-sm font-semibold text-white"><Plus size={18} /> Registrar actividad</button>
         <button type="button" onClick={() => setShowEdit(true)} className="inline-flex items-center gap-2 rounded-md border border-slate-300 px-4 py-3 text-sm font-semibold text-[#17202d]"><Pencil size={18} /> Editar</button>
         {prospect.status !== 'archived' && prospect.status !== 'converted' && <button type="button" onClick={() => void archive()} className="rounded-md border border-slate-300 px-4 py-3 text-sm font-semibold text-[#17202d]">Archivar</button>}
-        <button type="button" onClick={() => navigate('/admin/prospeccion')} className="rounded-md border border-slate-300 px-4 py-3 text-sm font-semibold text-[#17202d]">Volver</button>
+        {!embedded && <button type="button" onClick={() => navigate('/admin/prospeccion')} className="rounded-md border border-slate-300 px-4 py-3 text-sm font-semibold text-[#17202d]">Volver</button>}
       </div>
       <div aria-live="polite" className="min-h-6 text-sm text-slate-700">{status}</div>
 
@@ -581,7 +591,7 @@ export function AdminProspectDetail() {
   )
 }
 
-function ProspectCard({ prospect, onActivity, onEdit }: { prospect: ProspectRecord; onActivity: () => void; onEdit: () => void }) {
+function ProspectCard({ prospect, onActivity, onEdit, onView }: { prospect: ProspectRecord; onActivity: () => void; onEdit: () => void; onView: (trigger: HTMLButtonElement) => void }) {
   return (
     <article className={`rounded-lg border border-slate-200 p-4 ${rowTone(prospect)}`}>
       <div className="flex items-start justify-between gap-3">
@@ -589,7 +599,7 @@ function ProspectCard({ prospect, onActivity, onEdit }: { prospect: ProspectReco
           <h2 className="font-semibold text-[#17202d]">{prospectName(prospect)}</h2>
           <p className="mt-1 text-sm text-slate-600">{prospect.company_name || prospect.source || 'Sin empresa'}</p>
         </div>
-        <Link to={`/admin/prospeccion/${prospect.id}`} className="rounded-md border border-slate-300 px-3 py-2 text-sm font-semibold text-[#17202d]">Ver</Link>
+        <button type="button" onClick={(event) => onView(event.currentTarget)} className="rounded-md border border-slate-300 px-3 py-2 text-sm font-semibold text-[#17202d]">Ver</button>
       </div>
       <dl className="mt-4 grid gap-2 text-sm text-slate-700">
         <Info label="Estado" value={`${prospectStatusLabels[prospect.status]} · ${priorityLabels[prospect.priority]}`} />

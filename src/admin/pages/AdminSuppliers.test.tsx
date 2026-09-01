@@ -2,7 +2,7 @@ import { cleanup, render, screen, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { MemoryRouter, Route, Routes } from 'react-router-dom'
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest'
-import { AdminSupplierDetail, AdminSupplierFormPage } from './AdminSuppliers'
+import { AdminSupplierDetail, AdminSupplierFormPage, AdminSuppliers } from './AdminSuppliers'
 import { adminRepository } from '../../repositories'
 import type { ContactSelectorRecord, OpportunityRecord, SupplierOpportunityRecord, SupplierRecord, SupplierWithContact } from '../../types/admin'
 
@@ -17,6 +17,7 @@ vi.mock('../../repositories', () => ({
     listAvailableBuyOpportunities: vi.fn(),
     linkSupplierToOpportunity: vi.fn(),
     updateOpportunitySupplier: vi.fn(),
+    listSuppliers: vi.fn(),
   },
 }))
 
@@ -135,6 +136,18 @@ describe('AdminSuppliers', () => {
     vi.mocked(adminRepository.listAvailableBuyOpportunities).mockResolvedValue({ data: [opportunity], error: null })
     vi.mocked(adminRepository.linkSupplierToOpportunity).mockResolvedValue({ data: relation, error: null })
     vi.mocked(adminRepository.updateOpportunitySupplier).mockResolvedValue({ data: relation, error: null })
+    vi.mocked(adminRepository.listSuppliers).mockResolvedValue({ data: [], error: null })
+  })
+
+  test('opens supplier detail in a modal without changing the list URL', async () => {
+    const user = userEvent.setup()
+    vi.mocked(adminRepository.listSuppliers).mockResolvedValue({ data: [supplierWithContact], error: null })
+    render(<MemoryRouter initialEntries={['/admin/proveedores?status=pending']}><AdminSuppliers /></MemoryRouter>)
+    await user.click((await screen.findAllByRole('button', { name: 'Ver' }))[0])
+    expect(screen.getByRole('dialog')).toHaveTextContent('Proveedor Norte')
+    expect(screen.queryByRole('link', { name: /Proveedor Norte/i })).not.toBeInTheDocument()
+    await user.keyboard('{Escape}')
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
   })
 
   test('creates supplier with contact and validates required category', async () => {

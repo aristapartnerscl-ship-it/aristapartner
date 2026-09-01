@@ -229,7 +229,7 @@ export function AdminCommercialAgreements() {
   }, [adminStatus, agreements, commission, counterpartyType, payer, query, status])
 
   return (
-    <div className="grid gap-6">
+    <div className="grid min-w-0 max-w-full gap-6">
       <AdminPageHeader
         title="Acuerdos comerciales"
         text="Condiciones comerciales asociadas a oportunidades gestionadas por Arista Partners."
@@ -275,8 +275,8 @@ export function AdminCommercialAgreements() {
 
 function AgreementsList({ agreements }: { agreements: CommercialAgreementWithOpportunity[] }) {
   return (
-    <section className="rounded-lg border border-slate-200 bg-white">
-      <div className="hidden overflow-x-auto md:block">
+      <section className="min-w-0 max-w-full rounded-lg border border-slate-200 bg-white">
+        <div className="hidden w-full max-w-full overflow-x-auto md:block">
         <table className="min-w-full divide-y divide-slate-200 text-sm">
           <thead className="bg-slate-50 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">
             <tr>

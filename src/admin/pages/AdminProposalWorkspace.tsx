@@ -11,8 +11,9 @@ import { generateProposalPdf } from '../proposal-pdf'
 import { opportunityTypeLabels, proposalStatusLabels } from '../opportunity-labels'
 import { generatePublicProposalToken, hashPublicProposalToken } from '../../public-proposal-token'
 
-export function AdminProposalWorkspace() {
-  const { id } = useParams()
+export function AdminProposalWorkspace({ detailId, embedded = false }: { detailId?: string; embedded?: boolean } = {}) {
+  const routeParams = useParams()
+  const id = detailId ?? routeParams.id
   const [proposal, setProposal] = useState<CommercialProposalWithOpportunity | null>(null)
   const [versions, setVersions] = useState<CommercialProposalVersionRecord[]>([])
   const [documents, setDocuments] = useState<CommercialProposalDocumentRecord[]>([])
@@ -105,8 +106,8 @@ export function AdminProposalWorkspace() {
   if (error && !proposal) return <section className="rounded-lg border border-red-200 bg-red-50 p-6"><h2 className="font-semibold">No fue posible cargar la propuesta</h2><p className="mt-2 text-sm">{error}</p></section>
   if (!proposal) return <EmptyState title="Propuesta no encontrada" text="La propuesta solicitada no está disponible." />
   return <div className="grid gap-6">
-    <AdminPageHeader title={proposal.proposal_code} text={proposal.title} />
-    <div className="flex flex-wrap gap-3"><Link to="/admin/propuestas" className="rounded-md border border-slate-300 px-4 py-3 text-sm font-semibold">Volver</Link><Link to={`/admin/propuestas/${proposal.id}/editar`} className="rounded-md border border-slate-300 px-4 py-3 text-sm font-semibold">Editar propuesta</Link>{proposal.status === 'accepted' && <Link to={`/admin/acuerdos/nuevo?opportunityId=${proposal.opportunity.id}`} className="rounded-md bg-[#235b3e] px-4 py-3 text-sm font-semibold text-white">Crear acuerdo comercial</Link>}{!proposal.archived_at && <button type="button" onClick={() => void archive()} disabled={processing} className="inline-flex items-center gap-2 rounded-md border border-slate-300 px-4 py-3 text-sm font-semibold disabled:opacity-50"><Archive size={17} />Archivar</button>}</div>
+    {!embedded && <AdminPageHeader title={proposal.proposal_code} text={proposal.title} />}
+    <div className="flex flex-wrap gap-3">{!embedded && <Link to="/admin/propuestas" className="rounded-md border border-slate-300 px-4 py-3 text-sm font-semibold">Volver</Link>}<Link to={`/admin/propuestas/${proposal.id}/editar`} className="rounded-md border border-slate-300 px-4 py-3 text-sm font-semibold">Editar propuesta</Link>{proposal.status === 'accepted' && <Link to={`/admin/acuerdos/nuevo?opportunityId=${proposal.opportunity.id}`} className="rounded-md bg-[#235b3e] px-4 py-3 text-sm font-semibold text-white">Crear acuerdo comercial</Link>}{!proposal.archived_at && <button type="button" onClick={() => void archive()} disabled={processing} className="inline-flex items-center gap-2 rounded-md border border-slate-300 px-4 py-3 text-sm font-semibold disabled:opacity-50"><Archive size={17} />Archivar</button>}</div>
     <div aria-live="polite" className="min-h-6 text-sm text-slate-700">{error || message}</div>
     <PublicLinkSummary links={publicLinks} versions={versions} acceptedVersionId={proposal.accepted_version_id} />
     <section className="grid gap-4 rounded-lg border border-slate-200 bg-white p-6 md:grid-cols-2"><Info label="Estado" value={proposalStatusLabels[proposal.status]} /><Info label="Oportunidad" value={`${proposal.opportunity.reference_code} · ${proposal.opportunity.title}`} /><Info label="Contraparte" value={proposal.contact?.company_name || proposal.contact?.full_name || 'Sin contacto asociado'} /><Info label="Tipo" value={opportunityTypeLabels[proposal.opportunity.opportunity_type]} /></section>

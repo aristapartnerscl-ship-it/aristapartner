@@ -65,8 +65,9 @@ function isUuid(value: string | undefined) {
   return Boolean(value && /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(value))
 }
 
-export function AdminOpportunityDetail() {
-  const { id } = useParams()
+export function AdminOpportunityDetail({ detailId, embedded = false }: { detailId?: string; embedded?: boolean } = {}) {
+  const routeParams = useParams()
+  const id = detailId ?? routeParams.id
   const location = useLocation()
   const auth = useAdminAuth()
   const [opportunity, setOpportunity] = useState<OpportunityRecord | null>(null)
@@ -262,11 +263,11 @@ export function AdminOpportunityDetail() {
 
   return (
     <div className="grid gap-6">
-      <AdminPageHeader
+      {!embedded && <AdminPageHeader
         eyebrow={opportunity.reference_code}
         title={opportunity.title}
         text={`${opportunityTypeLabels[opportunity.opportunity_type]} · ${opportunityStatusLabels[opportunity.status]} · ${priorityLabels[opportunity.priority]}`}
-      />
+      />}
       {(location.state as { savedReference?: string } | null)?.savedReference && (
         <div className="rounded-lg border border-[#235b3e]/25 bg-[#eef5f1] p-4 text-sm font-medium text-[#17202d]">
           Oportunidad guardada con código {(location.state as { savedReference: string }).savedReference}.

@@ -1,6 +1,8 @@
 import { Link, useSearchParams } from 'react-router-dom'
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { AdminPageHeader } from '../../components/admin/AdminPageHeader'
+import { AdminDetailModal } from '../../components/admin/AdminDetailModal'
+import { AdminOpportunityDetail } from './AdminOpportunityDetail'
 import { adminRepository } from '../../repositories'
 import type { ContactSelectorRecord, OpportunityRecord, OpportunityStatus, OpportunityType, Priority } from '../../types/admin'
 import {
@@ -31,6 +33,8 @@ export function AdminOpportunities() {
   const [priority, setPriority] = useState<Priority | 'all'>('all')
   const [contactId, setContactId] = useState('all')
   const [overdueOnly, setOverdueOnly] = useState(searchParams.get('followup') === 'overdue')
+  const [detailId, setDetailId] = useState<string | null>(null)
+  const detailTriggerRef = useRef<HTMLButtonElement | null>(null)
 
   async function load() {
     setLoading(true)
@@ -81,7 +85,7 @@ export function AdminOpportunities() {
   }, [contactId, contactMap, nextActions, now, opportunities, overdueOnly, priority, query, status, type])
 
   return (
-    <div className="grid gap-6">
+    <div className="grid min-w-0 max-w-full gap-6">
       <AdminPageHeader
         title="Oportunidades"
         text="Necesidades de compra y ofertas comerciales gestionadas por Arista Partners."
@@ -91,7 +95,7 @@ export function AdminOpportunities() {
         }}
       />
 
-      <section className="grid gap-4 rounded-lg border border-slate-200 bg-white p-4">
+      <section className="grid min-w-0 max-w-full gap-4 rounded-lg border border-slate-200 bg-white p-4">
         <label className="grid gap-2 text-sm font-medium text-slate-700">
           Buscar
           <input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Código, título, contacto o empresa" className="rounded-md border border-slate-300 px-3 py-3 text-base" />
@@ -131,8 +135,8 @@ export function AdminOpportunities() {
       )}
 
       {!loading && !error && visible.length > 0 && (
-        <section className="rounded-lg border border-slate-200 bg-white">
-          <div className="hidden max-w-full overflow-x-auto lg:block">
+      <section className="min-w-0 max-w-full rounded-lg border border-slate-200 bg-white">
+        <div className="hidden w-full min-w-0 max-w-full overflow-x-auto lg:block">
             <table className="min-w-[1100px] w-full table-fixed text-left text-sm">
               <thead className="bg-slate-50 text-xs uppercase tracking-wide text-slate-500">
                 <tr>
@@ -153,7 +157,7 @@ export function AdminOpportunities() {
                       <td className="px-3 py-4">{formatMoney(opportunity.estimated_value, opportunity.currency)}</td>
                       <td className="px-3 py-4">{formatDateTime(nextActionFor(opportunity.id, nextActions))}</td>
                       <td className="px-3 py-4">{formatDateTime(opportunity.updated_at)}</td>
-                      <td className="px-3 py-4"><Link to={`/admin/oportunidades/${opportunity.id}`} className="font-semibold text-[#235b3e]">Ver</Link></td>
+                      <td className="px-3 py-4"><button type="button" onClick={(event) => { detailTriggerRef.current = event.currentTarget; setDetailId(opportunity.id) }} className="font-semibold text-[#235b3e]">Ver</button></td>
                     </tr>
                   )
                 })}
@@ -170,13 +174,14 @@ export function AdminOpportunities() {
                   <p className="mt-2 text-sm text-slate-600">{opportunityTypeLabels[opportunity.opportunity_type]} · {opportunityStatusLabels[opportunity.status]} · {priorityLabels[opportunity.priority]}</p>
                   <p className="mt-2 text-sm text-slate-700">{contactName(contact)}</p>
                   <p className="mt-2 text-sm text-slate-600">Próxima acción: {formatDateTime(nextActionFor(opportunity.id, nextActions))}</p>
-                  <Link to={`/admin/oportunidades/${opportunity.id}`} className="mt-4 inline-flex rounded-md border border-slate-300 px-3 py-2 text-sm font-semibold text-[#17202d]">Ver</Link>
+                  <button type="button" onClick={(event) => { detailTriggerRef.current = event.currentTarget; setDetailId(opportunity.id) }} className="mt-4 inline-flex rounded-md border border-slate-300 px-3 py-2 text-sm font-semibold text-[#17202d]">Ver</button>
                 </article>
               )
             })}
           </div>
         </section>
       )}
+      {detailId && <AdminDetailModal title="Detalle de oportunidad" size="large" onClose={() => setDetailId(null)} returnFocusRef={detailTriggerRef}><AdminOpportunityDetail detailId={detailId} embedded /></AdminDetailModal>}
     </div>
   )
 }

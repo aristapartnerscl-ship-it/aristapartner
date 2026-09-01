@@ -162,7 +162,7 @@ function conversionData(entity: 'inquiry' | 'opportunity' | 'supplier' = 'opport
 function renderPage(submission = baseSubmission) {
   vi.mocked(adminRepository.listFormSubmissions).mockResolvedValue({ data: [submission], error: null })
   return render(
-    <MemoryRouter>
+    <MemoryRouter initialEntries={['/admin/recepciones']}>
       <AdminFormSubmissions />
     </MemoryRouter>,
   )
@@ -208,6 +208,34 @@ describe('AdminFormSubmissions', () => {
 
     const fields = labeledPayloadFields(baseSubmission)
     expect(fields.map((field) => field.label).slice(0, 3)).toEqual(['Nombre completo', 'Correo electrónico', 'Teléfono o WhatsApp'])
+  })
+
+  test('opens a same-page modal without navigation or a new window and restores focus on close', async () => {
+    const user = userEvent.setup()
+    renderPage()
+
+    const trigger = await screen.findByRole('button', { name: /^Ver$/i })
+    const originalPath = window.location.pathname
+    const openSpy = vi.spyOn(window, 'open')
+    await user.click(trigger)
+    expect(screen.getByRole('dialog')).toBeInTheDocument()
+    expect(screen.getByRole('dialog')).toHaveTextContent('Nombre completo')
+    expect(screen.getByRole('dialog')).toHaveAttribute('aria-modal', 'true')
+    expect(screen.getByRole('dialog').parentElement?.parentElement).toBe(document.body)
+    expect(screen.getByRole('button', { name: /^Ver$/i })).toBeInTheDocument()
+    expect(window.location.pathname).toBe(originalPath)
+    expect(openSpy).not.toHaveBeenCalled()
+    expect(document.body.style.overflow).toBe('hidden')
+
+    await user.click(screen.getByRole('button', { name: 'Cerrar detalle' }))
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
+    expect(trigger).toHaveFocus()
+
+    await user.click(trigger)
+    await user.keyboard('{Escape}')
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
+    expect(trigger).toHaveFocus()
+    openSpy.mockRestore()
   })
 
   test('renders Recepciones copy with valid Spanish accents and no question-mark mojibake', async () => {
@@ -298,7 +326,7 @@ describe('AdminFormSubmissions', () => {
     expect(screen.getByText('Consulta')).toBeInTheDocument()
     expect(screen.getAllByRole('link', { name: /Ver entidad/i }).length).toBeGreaterThan(0)
     const closeButton = screen.getByRole('button', { name: /Cerrar asistente/i })
-    expect(document.activeElement).toBe(closeButton.parentElement)
+    expect(screen.getByRole('dialog')).toContainElement(closeButton)
     await user.click(closeButton)
     expect(screen.queryByText('Conversión finalizada.')).not.toBeInTheDocument()
   })

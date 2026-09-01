@@ -163,14 +163,14 @@ export function AdminInquiries() {
   }, [contactFilter, date, items, preferred, query, reason, status])
 
   return (
-    <div className="grid gap-6">
+    <div className="grid min-w-0 max-w-full gap-6">
       <AdminPageHeader
         title="Consultas"
         text="Mensajes generales y solicitudes recibidas o registradas por Arista Partners."
         actionLabel="Nueva consulta"
         onAction={() => navigate('/admin/consultas/nueva')}
       />
-      <section className="grid gap-4 rounded-lg border border-slate-200 bg-white p-4">
+      <section className="grid min-w-0 max-w-full gap-4 rounded-lg border border-slate-200 bg-white p-4">
         <label className="grid gap-2 text-sm font-medium text-slate-700">Buscar<input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Asunto, contacto, correo o mensaje" className="rounded-md border border-slate-300 px-3 py-3 text-base" /></label>
         <div className="grid min-w-0 grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
           <Select label="Estado" value={status} onChange={(value) => setStatus(value as InquiryStatus | 'all')} options={[['all', 'Todos'], ...inquiryStatuses.map((item) => [item, inquiryStatusLabels[item]] as [string, string])]} />
@@ -211,9 +211,9 @@ function InquiryList({ items }: { items: InquiryWithContact[] }) {
   }
 
   return (
-    <section className="rounded-lg border border-slate-200 bg-white">
-      <div className="hidden overflow-hidden lg:block">
-        <table className="w-full table-fixed text-left text-sm">
+      <section className="min-w-0 max-w-full rounded-lg border border-slate-200 bg-white">
+      <div className="hidden w-full min-w-0 max-w-full overflow-x-auto lg:block">
+        <table className="min-w-[1080px] w-full table-fixed text-left text-sm">
           <thead className="bg-slate-50 text-xs uppercase tracking-wide text-slate-500">
             <tr>{['Asunto', 'Contacto', 'Motivo', 'Medio preferido', 'Estado', 'Conversión', 'Fecha de creación', 'Última actualización', 'Acción'].map((head) => <th key={head} className="px-3 py-3">{head}</th>)}</tr>
           </thead>

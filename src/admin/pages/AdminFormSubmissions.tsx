@@ -2,6 +2,7 @@ import { Archive, Ban, CheckCircle2, Eye, ShieldAlert } from 'lucide-react'
 import { useEffect, useMemo, useRef, useState, type ChangeEvent } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
 import { AdminPageHeader } from '../../components/admin/AdminPageHeader'
+import { AdminDetailModal } from '../../components/admin/AdminDetailModal'
 import { EmptyState } from '../../components/admin/EmptyState'
 import {
   buildContactInitialValues,
@@ -213,6 +214,7 @@ function finalDraftFields(submissionType: SubmissionType, draft: Record<string, 
 export function AdminFormSubmissions() {
   const [items, setItems] = useState<FormSubmissionRecord[]>([])
   const [selected, setSelected] = useState<FormSubmissionRecord | null>(null)
+  const selectedTriggerRef = useRef<HTMLButtonElement | null>(null)
   const [convertedEntity, setConvertedEntity] = useState<ConvertedSubmissionEntity>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
@@ -330,18 +332,25 @@ export function AdminFormSubmissions() {
       {!loading && !error && items.length > 0 && filtered.length === 0 && <EmptyState title="Sin resultados" text="No hay recepciones que coincidan con los filtros actuales." />}
 
       {!loading && !error && filtered.length > 0 && (
-        <SubmissionList items={filtered} selectedId={selected?.id ?? null} onSelect={setSelected} />
+        <SubmissionList items={filtered} selectedId={selected?.id ?? null} onSelect={(item, trigger) => { selectedTriggerRef.current = trigger; setSelected(item) }} />
       )}
 
       {selected && (
-        <SubmissionDetail
-          submission={selected}
-          entity={convertedEntity}
-          processing={processing}
+        <AdminDetailModal
+          title={`${typeLabels[selected.submission_type]} recibida`}
+          subtitle={`${statusLabels[selected.status]} · ${formatDate(selected.submitted_at)}`}
           onClose={() => setSelected(null)}
-          onStatusChange={changeStatus}
-          onConverted={handleConversionResult}
-        />
+          returnFocusRef={selectedTriggerRef}
+        >
+          <SubmissionDetail
+            submission={selected}
+            entity={convertedEntity}
+            processing={processing}
+            onClose={() => setSelected(null)}
+            onStatusChange={changeStatus}
+            onConverted={handleConversionResult}
+          />
+        </AdminDetailModal>
       )}
     </div>
   )
@@ -366,7 +375,7 @@ function ErrorState({ error, onRetry }: { error: string; onRetry: () => void }) 
   )
 }
 
-function SubmissionList({ items, selectedId, onSelect }: { items: FormSubmissionRecord[]; selectedId: string | null; onSelect: (item: FormSubmissionRecord) => void }) {
+function SubmissionList({ items, selectedId, onSelect }: { items: FormSubmissionRecord[]; selectedId: string | null; onSelect: (item: FormSubmissionRecord, trigger: HTMLButtonElement) => void }) {
   return (
     <section className="overflow-hidden rounded-lg border border-slate-200 bg-white">
       <div className="hidden grid-cols-[1fr_120px_150px_180px_80px] gap-4 border-b border-slate-200 bg-[#faf8f2] px-4 py-3 text-xs font-semibold uppercase text-slate-600 md:grid">
@@ -382,7 +391,7 @@ function SubmissionList({ items, selectedId, onSelect }: { items: FormSubmission
             <p className="text-sm text-slate-700">{typeLabels[item.submission_type]}</p>
             <p className="text-sm font-medium text-slate-800">{statusLabels[item.status]}</p>
             <p className="text-sm text-slate-600">{formatDate(item.submitted_at)}</p>
-            <button type="button" onClick={() => onSelect(item)} className="inline-flex w-fit items-center gap-2 rounded-md border border-slate-300 px-3 py-2 text-sm font-semibold text-[#17202d]">
+            <button type="button" onClick={(event) => onSelect(item, event.currentTarget)} className="inline-flex w-fit items-center gap-2 rounded-md border border-slate-300 px-3 py-2 text-sm font-semibold text-[#17202d]">
               <Eye size={16} aria-hidden="true" />Ver
             </button>
           </article>
@@ -412,8 +421,8 @@ function SubmissionDetail({
   const fields = labeledPayloadFields(submission, showEmpty)
 
   return (
-    <section className="rounded-lg border border-slate-200 bg-white p-6">
-      <div className="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
+    <section className="grid gap-5">
+      <div className="hidden">
         <div>
           <p className="text-sm font-semibold uppercase tracking-[0.18em] text-[#235b3e]">Detalle</p>
           <h2 className="mt-2 text-2xl font-semibold text-[#17202d]">{typeLabels[submission.submission_type]} recibida</h2>

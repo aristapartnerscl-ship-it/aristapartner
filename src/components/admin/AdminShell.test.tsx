@@ -17,3 +17,10 @@ describe('AdminShell', () => {
     expect(screen.queryByRole('link', { name: 'Contactar por WhatsApp' })).not.toBeInTheDocument()
   })
 })
+
+test('permite que el layout principal se contraiga sin crear overflow global', () => {
+  render(<MemoryRouter><AdminShell><div>Contenido</div></AdminShell></MemoryRouter>)
+  const main = screen.getAllByRole('main').at(-1)
+  expect(main).toHaveClass('min-w-0', 'max-w-full')
+  expect(main?.parentElement).toHaveClass('min-w-0')
+})

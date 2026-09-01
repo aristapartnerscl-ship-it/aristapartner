@@ -33,9 +33,9 @@ export function AdminShell({ children }: { children: ReactNode }) {
   }, [])
 
   return (
-    <div className="min-h-screen bg-[#f3f0ea] text-slate-800">
+    <div className="min-h-screen min-w-0 max-w-full bg-[#f3f0ea] text-slate-800">
       <header className="border-b border-[#17202d]/10 bg-white">
-        <div className="mx-auto flex max-w-7xl items-center justify-between gap-4 px-5 py-3 lg:px-8">
+        <div className="mx-auto flex min-w-0 max-w-7xl items-center justify-between gap-4 px-5 py-3 lg:px-8">
           <BrandLockup />
           <div className="flex items-center gap-3">
             {auth.status === 'ready' && (
@@ -64,8 +64,8 @@ export function AdminShell({ children }: { children: ReactNode }) {
         </div>
       </header>
 
-      <div className="mx-auto grid max-w-7xl gap-6 px-5 py-6 lg:grid-cols-[260px_1fr] lg:px-8">
-        <aside id="admin-nav" className={`${open ? 'block' : 'hidden'} lg:block`}>
+      <div className="mx-auto grid min-w-0 max-w-7xl gap-6 px-5 py-6 lg:grid-cols-[260px_minmax(0,1fr)] lg:px-8">
+        <aside id="admin-nav" className={`${open ? 'block' : 'hidden'} min-w-0 shrink-0 lg:block`}>
           <nav className="rounded-lg border border-slate-200 bg-white p-3" aria-label="Panel administrativo">
             <div className="grid gap-1">
               {adminNav.map((item) => (
@@ -86,7 +86,7 @@ export function AdminShell({ children }: { children: ReactNode }) {
             </div>
           </nav>
         </aside>
-        <main className="min-w-0">{children}</main>
+        <main className="min-w-0 max-w-full">{children}</main>
       </div>
     </div>
   )

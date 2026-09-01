@@ -2,6 +2,7 @@ import { Link, Navigate, useNavigate, useParams, useSearchParams } from 'react-r
 import { useCallback, useEffect, useMemo, useRef, useState, type FormEvent, type ReactNode } from 'react'
 import { Archive, LinkIcon, Pencil, Plus, X } from 'lucide-react'
 import { AdminPageHeader } from '../../components/admin/AdminPageHeader'
+import { AdminDetailModal } from '../../components/admin/AdminDetailModal'
 import { adminRepository } from '../../repositories'
 import type {
   ContactRecord,
@@ -147,6 +148,8 @@ export function AdminSuppliers() {
   const [invoice, setInvoice] = useState<'all' | 'yes' | 'no' | 'unknown'>('all')
   const [coverage, setCoverage] = useState('all')
   const [linked, setLinked] = useState<'all' | 'with' | 'without'>('all')
+  const [detailId, setDetailId] = useState<string | null>(null)
+  const detailTriggerRef = useRef<HTMLButtonElement | null>(null)
 
   async function load() {
     setLoading(true)
@@ -199,14 +202,14 @@ export function AdminSuppliers() {
   }, [category, coverage, invoice, linked, query, status, suppliers])
 
   return (
-    <div className="grid gap-6">
+    <div className="grid min-w-0 max-w-full gap-6">
       <AdminPageHeader
         title="Proveedores"
         text="Empresas y personas evaluadas para responder a necesidades de compra y oportunidades comerciales."
         actionLabel="Nuevo proveedor"
         onAction={() => navigate('/admin/proveedores/nuevo')}
       />
-      <section className="grid gap-4 rounded-lg border border-slate-200 bg-white p-4">
+      <section className="grid min-w-0 max-w-full gap-4 rounded-lg border border-slate-200 bg-white p-4">
         <label className="grid gap-2 text-sm font-medium text-slate-700">
           Buscar
           <input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Nombre, contacto, correo, categoría o ubicación" className="rounded-md border border-slate-300 px-3 py-3 text-base" />
@@ -232,16 +235,17 @@ export function AdminSuppliers() {
       {!loading && !error && suppliers.length > 0 && visible.length === 0 && (
         <section className="rounded-lg border border-slate-200 bg-white p-6 text-sm text-slate-600">No hay proveedores que coincidan con los filtros.</section>
       )}
-      {!loading && !error && visible.length > 0 && <SupplierList suppliers={visible} />}
+      {!loading && !error && visible.length > 0 && <SupplierList suppliers={visible} onView={(supplier, trigger) => { detailTriggerRef.current = trigger; setDetailId(supplier.id) }} />}
+      {detailId && <AdminDetailModal title="Detalle de proveedor" size="large" onClose={() => setDetailId(null)} returnFocusRef={detailTriggerRef}><AdminSupplierDetail detailId={detailId} embedded /></AdminDetailModal>}
     </div>
   )
 }
 
-function SupplierList({ suppliers }: { suppliers: SupplierWithContact[] }) {
+function SupplierList({ suppliers, onView }: { suppliers: SupplierWithContact[]; onView: (supplier: SupplierWithContact, trigger: HTMLButtonElement) => void }) {
   return (
-    <section className="rounded-lg border border-slate-200 bg-white">
-      <div className="hidden overflow-hidden lg:block">
-        <table className="w-full table-fixed text-left text-sm">
+      <section className="min-w-0 max-w-full rounded-lg border border-slate-200 bg-white">
+      <div className="hidden w-full min-w-0 max-w-full overflow-x-auto lg:block">
+        <table className="min-w-[1080px] w-full table-fixed text-left text-sm">
           <thead className="bg-slate-50 text-xs uppercase tracking-wide text-slate-500">
             <tr>
               {['Proveedor', 'Contacto', 'Categorías', 'Cobertura', 'Emite factura', 'Estado', 'Oportunidades', 'Última actualización', 'Acción'].map((head) => <th key={head} className="px-3 py-3">{head}</th>)}
@@ -258,7 +262,7 @@ function SupplierList({ suppliers }: { suppliers: SupplierWithContact[] }) {
                 <td className="px-3 py-4">{supplierStatusLabels[supplier.status]}</td>
                 <td className="px-3 py-4">{supplier.opportunityCount}</td>
                 <td className="px-3 py-4">{formatDateTime(supplier.updated_at)}</td>
-                <td className="px-3 py-4"><Link to={`/admin/proveedores/${supplier.id}`} className="font-semibold text-[#235b3e]">Ver</Link></td>
+                <td className="px-3 py-4"><button type="button" onClick={(event) => onView(supplier, event.currentTarget)} className="font-semibold text-[#235b3e]">Ver</button></td>
               </tr>
             ))}
           </tbody>
@@ -271,7 +275,7 @@ function SupplierList({ suppliers }: { suppliers: SupplierWithContact[] }) {
             <p className="mt-2 text-sm text-slate-700">{contactName(supplier.contact)}</p>
             <p className="mt-2 text-sm text-slate-600">{supplier.categories.join(', ') || 'Sin categorías'}</p>
             <p className="mt-2 text-sm text-slate-600">{supplierStatusLabels[supplier.status]} · {invoiceLabel(supplier.issues_invoice)}</p>
-            <Link to={`/admin/proveedores/${supplier.id}`} className="mt-4 inline-flex rounded-md border border-slate-300 px-3 py-2 text-sm font-semibold text-[#17202d]">Ver</Link>
+            <button type="button" onClick={(event) => onView(supplier, event.currentTarget)} className="mt-4 inline-flex rounded-md border border-slate-300 px-3 py-2 text-sm font-semibold text-[#17202d]">Ver</button>
           </article>
         ))}
       </div>
@@ -491,8 +495,9 @@ export function AdminSupplierFormPage({ mode }: { mode: 'create' | 'edit' }) {
   )
 }
 
-export function AdminSupplierDetail() {
-  const { id } = useParams()
+export function AdminSupplierDetail({ detailId, embedded = false }: { detailId?: string; embedded?: boolean } = {}) {
+  const routeParams = useParams()
+  const id = detailId ?? routeParams.id
   const [supplier, setSupplier] = useState<SupplierWithContact | null>(null)
   const [relations, setRelations] = useState<SupplierOpportunityRecord[]>([])
   const [available, setAvailable] = useState<OpportunityRecord[]>([])
@@ -612,7 +617,7 @@ export function AdminSupplierDetail() {
 
   return (
     <div className="grid gap-6">
-      <AdminPageHeader eyebrow={supplier.categories.join(', ')} title={supplier.business_name} text={supplierStatusLabels[supplier.status]} />
+      {!embedded && <AdminPageHeader eyebrow={supplier.categories.join(', ')} title={supplier.business_name} text={supplierStatusLabels[supplier.status]} />}
       <div className="flex flex-wrap gap-3">
         <Link to={`/admin/proveedores/${supplier.id}/editar`} className="inline-flex items-center gap-2 rounded-md bg-[#17202d] px-4 py-3 text-sm font-semibold text-white"><Pencil size={18} aria-hidden="true" />Editar</Link>
         {supplier.status !== 'archived' && <button type="button" disabled={processing} onClick={() => void archive()} className="inline-flex items-center gap-2 rounded-md border border-slate-300 px-4 py-3 text-sm font-semibold text-[#17202d] disabled:opacity-60"><Archive size={18} aria-hidden="true" />Archivar</button>}

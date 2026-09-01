@@ -9,6 +9,8 @@ import type { CommercialProposalWithOpportunity, OpportunityRecord } from '../..
 vi.mock('../../repositories', () => ({
   adminRepository: {
     listCommercialProposals: vi.fn(), listOpportunities: vi.fn(), createCommercialProposal: vi.fn(),
+    getCommercialProposalById: vi.fn(), listCommercialProposalVersions: vi.fn(), listCommercialProposalDocuments: vi.fn(),
+    getOrganizationSettings: vi.fn(), listCommercialProposalPublicLinks: vi.fn(),
   },
 }))
 
@@ -20,6 +22,11 @@ describe('AdminProposals', () => {
     vi.clearAllMocks()
     vi.mocked(adminRepository.listCommercialProposals).mockResolvedValue({ data: [proposal], error: null })
     vi.mocked(adminRepository.listOpportunities).mockResolvedValue({ data: [opportunity], error: null })
+    vi.mocked(adminRepository.getCommercialProposalById).mockResolvedValue({ data: proposal, error: null })
+    vi.mocked(adminRepository.listCommercialProposalVersions).mockResolvedValue({ data: [], error: null })
+    vi.mocked(adminRepository.listCommercialProposalDocuments).mockResolvedValue({ data: [], error: null })
+    vi.mocked(adminRepository.getOrganizationSettings).mockResolvedValue({ data: null, error: null })
+    vi.mocked(adminRepository.listCommercialProposalPublicLinks).mockResolvedValue({ data: [], error: null })
   })
   afterEach(() => cleanup())
 
@@ -42,5 +49,15 @@ describe('AdminProposals', () => {
     expect(screen.getAllByText(/1\.190\.000/).length).toBeGreaterThan(0)
     await user.click(screen.getByRole('button', { name: 'Guardar propuesta' }))
     expect(screen.getByText('Selecciona una oportunidad.')).toBeInTheDocument()
+  })
+
+  test('abre el workspace de propuesta en un modal sin cambiar la URL', async () => {
+    const user = userEvent.setup()
+    render(<MemoryRouter initialEntries={['/admin/propuestas?status=negotiation']}><AdminProposals /></MemoryRouter>)
+    await user.click((await screen.findAllByRole('button', { name: 'Ver' }))[0])
+    expect(await screen.findByRole('dialog')).toHaveTextContent('Detalle de propuesta')
+    expect(screen.queryByRole('link', { name: /PROP-2026-ABC12345/i })).not.toBeInTheDocument()
+    await user.keyboard('{Escape}')
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
   })
 })

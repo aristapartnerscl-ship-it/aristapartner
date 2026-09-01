@@ -3,6 +3,8 @@ import {
   BriefcaseBusiness,
   Factory,
   HelpCircle,
+  Mail,
+  MessageCircle,
   MessageSquareText,
   ShieldAlert,
   ShoppingCart,
@@ -12,8 +14,20 @@ import { Link } from 'react-router-dom'
 import { TurnstileWidget } from '../components/TurnstileWidget'
 import { FieldError } from '../components/opportunities/FieldError'
 import { SectionHeader } from '../components/SectionHeader'
-import { contactChannels } from '../data/contact'
+import { publicContact } from '../data/contact'
 import { currentPrivacyVersion, publicFormsEnabled, submitPublicForm, turnstileSiteKey } from '../lib/public-forms'
+
+function InstagramIcon({ className = 'h-4 w-4' }: { className?: string }) {
+  return <svg width="20" height="20" viewBox="0 0 24 24" aria-hidden="true" className={`${className} fill-none stroke-current`} strokeWidth="1.8"><rect x="3" y="3" width="18" height="18" rx="5" /><circle cx="12" cy="12" r="4" /><circle cx="17.5" cy="6.5" r="1" className="fill-current stroke-none" /></svg>
+}
+
+function FacebookIcon({ className = 'h-4 w-4' }: { className?: string }) {
+  return <svg width="20" height="20" viewBox="0 0 24 24" aria-hidden="true" className={`${className} fill-current`}><path d="M13.5 21v-8h2.7l.4-3h-3.1V8.1c0-.9.3-1.6 1.7-1.6h1.8V3.8c-.3 0-1.3-.1-2.4-.1-2.4 0-4 1.5-4 4.1V10H8v3h2.6v8h2.9Z" /></svg>
+}
+
+function LinkedInIcon({ className = 'h-4 w-4' }: { className?: string }) {
+  return <svg width="20" height="20" viewBox="0 0 24 24" aria-hidden="true" className={`${className} fill-current`}><path d="M5.2 7.4a1.7 1.7 0 1 0 0-3.4 1.7 1.7 0 0 0 0 3.4ZM3.8 20.1h2.8V9.2H3.8v10.9Zm4.6 0h2.8v-6.1c0-1.6.3-3.1 2.3-3.1 1.9 0 1.9 1.8 1.9 3.2v6h2.8v-6.7c0-3.3-.7-5.8-4.5-5.8-1.8 0-3 .9-3.5 1.8h-.1V9.2H8.4v10.9Z" /></svg>
+}
 
 type ContactFormData = {
   fullName: string
@@ -121,6 +135,14 @@ const faqs = [
   },
 ]
 
+const contactLinks = [
+  { label: 'Correo', value: publicContact.email, href: `mailto:${publicContact.email}`, ariaLabel: 'Enviar correo a Arista Partners', Icon: Mail, external: false },
+  { label: 'WhatsApp', value: publicContact.phone, href: `https://wa.me/${publicContact.whatsappNumber}`, ariaLabel: 'Contactar Arista Partners por WhatsApp', Icon: MessageCircle, external: true },
+  { label: 'Instagram', value: '@aristapartners', href: publicContact.instagram, ariaLabel: 'Instagram de Arista Partners', Icon: InstagramIcon, external: true },
+  { label: 'Facebook', value: 'Arista Partners', href: publicContact.facebook, ariaLabel: 'Facebook de Arista Partners', Icon: FacebookIcon, external: true },
+  { label: 'LinkedIn', value: 'Arista Partners', href: publicContact.linkedin, ariaLabel: 'LinkedIn de Arista Partners', Icon: LinkedInIcon, external: true },
+]
+
 export function Contact() {
   const [form, setForm] = useState<ContactFormData>(initialForm)
   const [consent, setConsent] = useState<ConsentState>({ accuracy: false, marketing: false })
@@ -130,7 +152,6 @@ export function Contact() {
   const [turnstileReset, setTurnstileReset] = useState(0)
   const [submitting, setSubmitting] = useState(false)
   const statusRef = useRef<HTMLDivElement>(null)
-  const visibleChannels = contactChannels.filter((channel) => channel.value)
   const isErrorStatus = status.startsWith('Revisa')
 
   function updateField(name: keyof ContactFormData, value: string) {
@@ -242,12 +263,11 @@ export function Contact() {
         <div className="mx-auto max-w-7xl">
           <p className="text-sm font-semibold uppercase tracking-[0.22em] text-brand">Contacto</p>
           <h1 className="mt-5 max-w-4xl text-4xl font-semibold tracking-tight text-graphite md:text-5xl">
-            Conversemos sobre tu consulta
+            Hablemos de su próxima oportunidad comercial
           </h1>
           <p className="mt-6 max-w-3xl text-lg leading-8 text-text-muted">
-            Si tienes una consulta general sobre Arista Partners, nuestros servicios o la forma de trabajo, puedes
-            completar el formulario. Para presentar una necesidad de compra, una oferta o un perfil de proveedor, utiliza
-            el formulario de oportunidades correspondiente.
+            Ya sea que necesites comprar, vender, encontrar proveedores o desarrollar una oportunidad comercial, cuéntanos
+            qué necesitas y revisaremos cómo podemos ayudarte.
           </p>
         </div>
       </section>
@@ -292,13 +312,14 @@ export function Contact() {
       </section>
 
       <section id="formulario-general" className="scroll-mt-28 bg-white px-5 py-16 lg:px-8" tabIndex={-1}>
-        <div className="mx-auto grid max-w-7xl gap-10 lg:grid-cols-[0.8fr_1.2fr]">
+        <div className="mx-auto grid max-w-7xl gap-6 lg:grid-cols-[minmax(0,1.2fr)_minmax(320px,0.8fr)] lg:items-start">
+          <div className="order-2 min-w-0 lg:order-1">
           <SectionHeader
             eyebrow="Formulario general"
             title="Envíanos una consulta"
             text="Completa los siguientes datos. Los campos marcados con asterisco son obligatorios."
           />
-          <form className="card-elevated rounded-lg border bg-white p-5 sm:p-7" onSubmit={handleSubmit} noValidate>
+          <form id="contact-form-card" className="card-elevated mt-8 rounded-lg border bg-white p-5 sm:p-7" tabIndex={-1} onSubmit={handleSubmit} noValidate>
             <div className="grid gap-5 md:grid-cols-2">
               <TextField label="Nombre completo" name="fullName" value={form.fullName} error={errors.fullName} required onChange={updateField} />
               <TextField label="Empresa, marca u organización" name="organization" value={form.organization} error={errors.organization} onChange={updateField} />
@@ -390,6 +411,62 @@ export function Contact() {
               </button>
             </div>
           </form>
+          </div>
+          <aside className="order-1 grid min-w-0 gap-6 lg:order-2">
+            <article className="rounded-lg border border-graphite bg-graphite p-6 text-white shadow-sm">
+              <h2 className="mt-4 text-2xl font-semibold">Diagnóstico inicial</h2>
+              <p className="mt-3 text-sm leading-6 text-white/75">
+                Conversemos sobre lo que necesitas comprar, vender o desarrollar. Podemos revisar tu contexto y definir el siguiente paso comercial.
+              </p>
+              <div className="mt-6 grid gap-3 sm:grid-cols-2 lg:grid-cols-1">
+                <a
+                  href={`https://wa.me/${publicContact.whatsappNumber}?text=${encodeURIComponent('Hola Arista Partners, quisiera conversar sobre una oportunidad comercial.')}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center justify-center gap-2 rounded-md bg-white px-4 py-3 text-sm font-semibold text-graphite transition hover:bg-surface-muted focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white"
+                  aria-label="Escribir por WhatsApp a Arista Partners"
+                >
+                  <MessageCircle size={18} aria-hidden="true" />
+                  Escribir por WhatsApp
+                </a>
+                <a
+                  href="#formulario-general"
+                  onClick={() => window.setTimeout(() => document.getElementById('contact-form-card')?.focus(), 0)}
+                  className="inline-flex items-center justify-center gap-2 rounded-md border border-white/30 px-4 py-3 text-sm font-semibold text-white transition hover:bg-white/10 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white"
+                >
+                  Completar formulario <ArrowRight size={17} aria-hidden="true" />
+                </a>
+              </div>
+            </article>
+            <section className="rounded-lg border border-border bg-surface-muted p-6 shadow-sm">
+              <h2 className="text-xl font-semibold text-graphite">Contacto directo</h2>
+              <div className="mt-5 grid gap-1">
+                {contactLinks.map((link) => {
+                  const Icon = link.Icon
+                  return (
+                    <a
+                      key={link.label}
+                      href={link.href}
+                      target={link.external ? '_blank' : undefined}
+                      rel={link.external ? 'noopener noreferrer' : undefined}
+                      aria-label={link.ariaLabel}
+                      className="group flex min-w-0 items-center gap-3 rounded-md px-2 py-3 text-sm transition hover:bg-white"
+                    >
+                      <Icon size={20} className="h-5 w-5 shrink-0 text-brand" aria-hidden="true" />
+                      <span className="min-w-0">
+                        <span className="block font-semibold text-graphite">{link.label}</span>
+                        <span className="block break-words text-text-muted">{link.value}</span>
+                      </span>
+                    </a>
+                  )
+                })}
+              </div>
+              <div className="mt-5 border-t border-border pt-5">
+                <p className="text-sm font-semibold text-graphite">¿Prefieres conversar primero?</p>
+                <p className="mt-2 text-sm leading-6 text-text-muted">Escríbenos y coordinamos la mejor forma de avanzar.</p>
+              </div>
+            </section>
+          </aside>
         </div>
       </section>
 
@@ -407,30 +484,6 @@ export function Contact() {
           </div>
         </div>
       </section>
-
-      {visibleChannels.length > 0 && (
-      <section className="bg-white px-5 py-16 lg:px-8">
-        <div className="mx-auto grid max-w-7xl gap-10 lg:grid-cols-[0.8fr_1.2fr]">
-          <SectionHeader eyebrow="Canales directos" title="Canales oficiales" />
-          <div className="card-elevated rounded-lg border bg-surface-muted p-6">
-            <div className="grid gap-4 md:grid-cols-2">
-              {visibleChannels.map((channel) => (
-                <div key={channel.label} className="rounded-md bg-white p-4">
-                  <p className="text-sm font-semibold text-graphite">{channel.label}</p>
-                  {channel.href ? (
-                    <a className="mt-1 block text-sm text-brand" href={channel.href} target="_blank" rel="noopener noreferrer">
-                      {channel.value}
-                    </a>
-                  ) : (
-                    <p className="mt-1 text-sm text-text-muted">{channel.value}</p>
-                  )}
-                </div>
-              ))}
-            </div>
-          </div>
-        </div>
-      </section>
-      )}
 
       <section className="section-brand-depth bg-brand-dark px-5 py-16 text-on-brand lg:px-8">
         <div className="mx-auto grid max-w-7xl gap-10 lg:grid-cols-[0.85fr_1.15fr]">

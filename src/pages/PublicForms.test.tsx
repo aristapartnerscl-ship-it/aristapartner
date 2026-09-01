@@ -87,11 +87,25 @@ describe('public forms', () => {
     expect(screen.getByRole('link', { name: /Ir a Oportunidades/i })).toHaveAttribute('href', '/oportunidades')
     expect(screen.getAllByRole('link', { name: /Ver política de privacidad/i })[0]).toHaveAttribute('href', '/privacidad')
     expect(screen.getByRole('link', { name: /Revisar Política de Privacidad/i })).toHaveAttribute('href', '/privacidad')
-    expect(screen.getByText(/Canales oficiales/i)).toBeInTheDocument()
-    expect(screen.getByRole('link', { name: 'contacto@aristapartners.cl' })).toHaveAttribute(
+    expect(screen.getByRole('link', { name: 'Enviar correo a Arista Partners' })).toHaveAttribute(
       'href',
       'mailto:contacto@aristapartners.cl',
     )
+    expect(screen.getByRole('link', { name: /Escribir por WhatsApp/i })).toHaveAttribute(
+      'href',
+      expect.stringContaining('https://wa.me/56982891168?text='),
+    )
+    expect(screen.getByRole('link', { name: /Completar formulario/i })).toHaveAttribute('href', '#formulario-general')
+    expect(screen.getByRole('link', { name: 'Instagram de Arista Partners' })).toHaveAttribute('href', 'https://www.instagram.com/aristapartners/')
+    expect(screen.getByRole('link', { name: 'Facebook de Arista Partners' })).toHaveAttribute('href', 'https://www.facebook.com/profile.php?id=61593622778886')
+    expect(screen.getByRole('link', { name: 'LinkedIn de Arista Partners' })).toHaveAttribute('href', 'https://www.linkedin.com/company/arista-partners/?viewAsMember=true')
+    expect(screen.queryByText(/Oficina/i)).not.toBeInTheDocument()
+    for (const label of ['Enviar correo a Arista Partners', 'Contactar Arista Partners por WhatsApp', 'Instagram de Arista Partners', 'Facebook de Arista Partners', 'LinkedIn de Arista Partners']) {
+      const icon = screen.getByRole('link', { name: label }).querySelector('svg')
+      expect(icon).toHaveClass('h-5', 'w-5', 'shrink-0')
+      expect(icon).toHaveAttribute('width', '20')
+      expect(icon).toHaveAttribute('height', '20')
+    }
     expect(screen.getByRole('checkbox', { name: /información proporcionada es correcta/i })).not.toBeChecked()
     expect(screen.getByRole('checkbox', { name: /recibir información relacionada/i })).not.toBeChecked()
   })
