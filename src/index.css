@@ -120,6 +120,31 @@ select {
       linear-gradient(180deg, rgba(30, 77, 58, 0.08) 0%, var(--color-surface-muted) 48%, var(--color-surface) 100%);
   }
 
+  .contact-workspace {
+    background:
+      radial-gradient(circle at 94% 10%, rgba(30, 77, 58, 0.28) 0, rgba(30, 77, 58, 0.11) 24%, transparent 48%),
+      radial-gradient(circle at 4% 72%, rgba(194, 174, 140, 0.24) 0, transparent 42%),
+      linear-gradient(135deg, #f1ece3 0%, #eef1ec 48%, #e4ece5 100%);
+  }
+
+  .contact-channels-card {
+    border-color: rgba(255, 255, 255, 0.18);
+    background:
+      radial-gradient(circle at 100% 0%, rgba(255, 255, 255, 0.12) 0, transparent 32%),
+      linear-gradient(145deg, var(--color-brand-dark) 0%, #1e5943 100%);
+    box-shadow: 0 16px 34px rgba(22, 57, 44, 0.2);
+  }
+
+  .contact-channels-card h2,
+  .contact-channels-card .contact-direct-note .text-graphite {
+    color: var(--color-surface);
+  }
+
+  .contact-channels-card > div:first-child .text-text-muted,
+  .contact-channels-card .contact-direct-note .text-text-muted {
+    color: rgba(255, 255, 255, 0.72);
+  }
+
   .section-green-wash {
     background:
       radial-gradient(circle at 50% 28%, var(--surface-green-medium) 0, transparent 34%),

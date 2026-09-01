@@ -1,5 +1,6 @@
 import {
   ArrowRight,
+  ArrowUpRight,
   BriefcaseBusiness,
   Factory,
   HelpCircle,
@@ -136,8 +137,8 @@ const faqs = [
 ]
 
 const contactLinks = [
-  { label: 'Correo', value: publicContact.email, href: `mailto:${publicContact.email}`, ariaLabel: 'Enviar correo a Arista Partners', Icon: Mail, external: false },
   { label: 'WhatsApp', value: publicContact.phone, href: `https://wa.me/${publicContact.whatsappNumber}`, ariaLabel: 'Contactar Arista Partners por WhatsApp', Icon: MessageCircle, external: true },
+  { label: 'Correo', value: publicContact.email, href: `mailto:${publicContact.email}`, ariaLabel: 'Enviar correo a Arista Partners', Icon: Mail, external: false },
   { label: 'Instagram', value: '@aristapartners', href: publicContact.instagram, ariaLabel: 'Instagram de Arista Partners', Icon: InstagramIcon, external: true },
   { label: 'Facebook', value: 'Arista Partners', href: publicContact.facebook, ariaLabel: 'Facebook de Arista Partners', Icon: FacebookIcon, external: true },
   { label: 'LinkedIn', value: 'Arista Partners', href: publicContact.linkedin, ariaLabel: 'LinkedIn de Arista Partners', Icon: LinkedInIcon, external: true },
@@ -259,16 +260,23 @@ export function Contact() {
 
   return (
     <>
-      <section className="section-muted-depth border-b border-border bg-surface-muted px-5 py-16 lg:px-8 lg:py-20">
-        <div className="mx-auto max-w-7xl">
-          <p className="text-sm font-semibold uppercase tracking-[0.22em] text-brand">Contacto</p>
-          <h1 className="mt-5 max-w-4xl text-4xl font-semibold tracking-tight text-graphite md:text-5xl">
+      <section className="page-hero-dark px-5 py-14 sm:py-16 lg:px-8 lg:py-20">
+        <div className="relative z-10 mx-auto grid max-w-7xl gap-10 lg:grid-cols-[minmax(0,1fr)_minmax(240px,0.45fr)] lg:items-center">
+          <div>
+          <p className="text-sm font-semibold uppercase tracking-[0.22em] text-white/78">Contacto</p>
+          <h1 className="mt-5 max-w-4xl text-4xl font-semibold tracking-tight text-white md:text-5xl">
             Hablemos de su próxima oportunidad comercial
           </h1>
-          <p className="mt-6 max-w-3xl text-lg leading-8 text-text-muted">
+          <p className="mt-6 max-w-3xl text-lg leading-8 text-white/80">
             Ya sea que necesites comprar, vender, encontrar proveedores o desarrollar una oportunidad comercial, cuéntanos
             qué necesitas y revisaremos cómo podemos ayudarte.
           </p>
+          <div className="mt-8 flex flex-wrap gap-3">
+            <a href={`https://wa.me/${publicContact.whatsappNumber}?text=${encodeURIComponent('Hola Arista Partners, quisiera conversar sobre una oportunidad comercial.')}`} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-2 rounded-md bg-brand px-5 py-3 text-sm font-semibold text-white transition hover:bg-brand-dark" aria-label="Escribir por WhatsApp a Arista Partners"><MessageCircle size={18} aria-hidden="true" />Escribir por WhatsApp</a>
+            <a href="#formulario-general" onClick={() => window.setTimeout(() => document.getElementById('contact-form-card')?.focus(), 0)} className="inline-flex items-center gap-2 rounded-md border border-white/30 px-5 py-3 text-sm font-semibold text-white transition hover:bg-white/10">Completar formulario <ArrowRight size={17} aria-hidden="true" /></a>
+          </div>
+          </div>
+          <div className="hidden justify-self-end lg:grid lg:h-56 lg:w-56 lg:place-items-center lg:rounded-full lg:border lg:border-white/20 lg:bg-white/5" aria-hidden="true"><div className="h-32 w-32 rotate-45 border border-brand/70 bg-brand/10" /></div>
         </div>
       </section>
 
@@ -311,7 +319,7 @@ export function Contact() {
         </div>
       </section>
 
-      <section id="formulario-general" className="scroll-mt-28 bg-white px-5 py-16 lg:px-8" tabIndex={-1}>
+      <section id="formulario-general" className="contact-workspace scroll-mt-28 px-5 py-16 lg:px-8" tabIndex={-1}>
         <div className="mx-auto grid max-w-7xl gap-6 lg:grid-cols-[minmax(0,1.2fr)_minmax(320px,0.8fr)] lg:items-start">
           <div className="order-2 min-w-0 lg:order-1">
           <SectionHeader
@@ -438,11 +446,20 @@ export function Contact() {
                 </a>
               </div>
             </article>
-            <section className="rounded-lg border border-border bg-surface-muted p-6 shadow-sm">
-              <h2 className="text-xl font-semibold text-graphite">Contacto directo</h2>
-              <div className="mt-5 grid gap-1">
+            <section className="contact-channels-card card-accent-top rounded-lg border p-6 shadow-sm text-white">
+              <div className="flex items-start justify-between gap-4">
+                <div>
+                  <p className="text-xs font-semibold uppercase tracking-[0.12em] text-white/70">Canales de contacto</p>
+                  <h2 className="mt-2 text-xl font-semibold text-white">Contacto directo</h2>
+                  <p className="mt-2 max-w-sm text-sm leading-6 text-text-muted">Elige el canal que te resulte más cómodo para conversar con Arista Partners.</p>
+                </div>
+                <MessageSquareText className="mt-1 h-6 w-6 shrink-0 text-white/65" aria-hidden="true" />
+              </div>
+              <div className="mt-6 grid gap-2">
                 {contactLinks.map((link) => {
                   const Icon = link.Icon
+                  const isWhatsApp = link.label === 'WhatsApp'
+                  const isEmail = link.label === 'Correo'
                   return (
                     <a
                       key={link.label}
@@ -450,18 +467,29 @@ export function Contact() {
                       target={link.external ? '_blank' : undefined}
                       rel={link.external ? 'noopener noreferrer' : undefined}
                       aria-label={link.ariaLabel}
-                      className="group flex min-w-0 items-center gap-3 rounded-md px-2 py-3 text-sm transition hover:bg-white"
+                      className={`group flex min-w-0 items-center gap-3 rounded-md border px-3 py-3.5 text-sm transition duration-200 hover:-translate-y-px focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand ${
+                        isWhatsApp
+                          ? 'border-brand/25 bg-white shadow-sm hover:border-brand hover:bg-white'
+                          : isEmail
+                            ? 'border-brand/15 bg-white hover:border-brand/40 hover:bg-white'
+                            : 'border-border bg-white/95 hover:border-brand/30 hover:bg-white'
+                      }`}
                     >
-                      <Icon size={20} className="h-5 w-5 shrink-0 text-brand" aria-hidden="true" />
-                      <span className="min-w-0">
+                      <span className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-md ${isWhatsApp ? 'bg-brand/20 text-brand' : isEmail ? 'bg-brand/5 text-brand/80' : 'bg-surface-muted text-brand-dark'}`}>
+                        <Icon size={20} className="h-5 w-5 shrink-0" aria-hidden="true" />
+                      </span>
+                      <span className="min-w-0 flex-1">
                         <span className="block font-semibold text-graphite">{link.label}</span>
                         <span className="block break-words text-text-muted">{link.value}</span>
+                      </span>
+                      <span className="inline-flex shrink-0 items-center gap-1 text-xs font-medium text-brand transition group-hover:text-graphite">
+                        Abrir <ArrowUpRight className="h-3.5 w-3.5" aria-hidden="true" />
                       </span>
                     </a>
                   )
                 })}
               </div>
-              <div className="mt-5 border-t border-border pt-5">
+              <div className="contact-direct-note mt-6 border-t border-white/20 pt-5">
                 <p className="text-sm font-semibold text-graphite">¿Prefieres conversar primero?</p>
                 <p className="mt-2 text-sm leading-6 text-text-muted">Escríbenos y coordinamos la mejor forma de avanzar.</p>
               </div>

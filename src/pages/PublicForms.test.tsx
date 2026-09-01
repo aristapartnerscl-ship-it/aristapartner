@@ -91,11 +91,8 @@ describe('public forms', () => {
       'href',
       'mailto:contacto@aristapartners.cl',
     )
-    expect(screen.getByRole('link', { name: /Escribir por WhatsApp/i })).toHaveAttribute(
-      'href',
-      expect.stringContaining('https://wa.me/56982891168?text='),
-    )
-    expect(screen.getByRole('link', { name: /Completar formulario/i })).toHaveAttribute('href', '#formulario-general')
+    expect(screen.getAllByRole('link', { name: /Escribir por WhatsApp/i }).some((link) => link.getAttribute('href')?.includes('https://wa.me/56982891168?text='))).toBe(true)
+    expect(screen.getAllByRole('link', { name: /Completar formulario/i }).every((link) => link.getAttribute('href') === '#formulario-general')).toBe(true)
     expect(screen.getByRole('link', { name: 'Instagram de Arista Partners' })).toHaveAttribute('href', 'https://www.instagram.com/aristapartners/')
     expect(screen.getByRole('link', { name: 'Facebook de Arista Partners' })).toHaveAttribute('href', 'https://www.facebook.com/profile.php?id=61593622778886')
     expect(screen.getByRole('link', { name: 'LinkedIn de Arista Partners' })).toHaveAttribute('href', 'https://www.linkedin.com/company/arista-partners/?viewAsMember=true')
