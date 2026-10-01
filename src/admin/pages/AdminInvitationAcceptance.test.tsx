@@ -1,28 +1,18 @@
-import { act, cleanup, render, screen, waitFor } from '@testing-library/react'
+import { cleanup, render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
-import type { AuthChangeEvent, Session } from '@supabase/supabase-js'
+import type { Session } from '@supabase/supabase-js'
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest'
 import { MemoryRouter, Route, Routes } from 'react-router-dom'
 import AdminRoutes from '../AdminRoutes'
 import { AdminInvitationAcceptance } from './AdminInvitationAcceptance'
 
 const authMocks = vi.hoisted(() => {
-  let authStateHandler: ((event: AuthChangeEvent, session: Session | null) => void) | null = null
-
   return {
-    get authStateHandler() {
-      return authStateHandler
-    },
-    setAuthStateHandler(handler: ((event: AuthChangeEvent, session: Session | null) => void) | null) {
-      authStateHandler = handler
-    },
+    verifyOtp: vi.fn(),
     updateUser: vi.fn(),
     invoke: vi.fn(),
     getSession: vi.fn(),
-    onAuthStateChange: vi.fn((callback: (event: AuthChangeEvent, session: Session | null) => void) => {
-      authStateHandler = callback
-      return { data: { subscription: { unsubscribe: vi.fn() } } }
-    }),
+    onAuthStateChange: vi.fn(() => ({ data: { subscription: { unsubscribe: vi.fn() } } })),
   }
 })
 
@@ -34,9 +24,10 @@ vi.mock('../../lib/supabase-config', () => ({ isSupabaseConfigured: true }))
 vi.mock('../../lib/supabase', () => ({
   supabase: {
     auth: {
-    updateUser: authMocks.updateUser,
+      verifyOtp: authMocks.verifyOtp,
+      updateUser: authMocks.updateUser,
       getSession: authMocks.getSession,
-    onAuthStateChange: authMocks.onAuthStateChange,
+      onAuthStateChange: authMocks.onAuthStateChange,
     },
     functions: {
       invoke: authMocks.invoke,
@@ -74,7 +65,7 @@ const collaboratorProfile = {
   invitation_status: 'pending',
 }
 
-function renderInvitation(initialPath = '/admin/aceptar-invitacion#access_token=token&type=invite') {
+function renderInvitation(initialPath = '/admin/aceptar-invitacion?token_hash=token-hash&type=invite') {
   return render(
     <MemoryRouter initialEntries={[initialPath]}>
       <Routes>
@@ -89,8 +80,8 @@ function renderInvitation(initialPath = '/admin/aceptar-invitacion#access_token=
 describe('admin invitation acceptance', () => {
   beforeEach(() => {
     vi.clearAllMocks()
-    authMocks.setAuthStateHandler(null)
-    authMocks.getSession.mockResolvedValue({ data: { session: invitationSession }, error: null })
+    authMocks.verifyOtp.mockResolvedValue({ data: { session: invitationSession }, error: null })
+    authMocks.getSession.mockResolvedValue({ data: { session: null }, error: null })
     authMocks.updateUser.mockResolvedValue({ data: { user: invitationSession.user }, error: null })
     authMocks.invoke.mockResolvedValue({ data: { ok: true }, error: null })
     dbMocks.maybeSingle.mockResolvedValue({ data: collaboratorProfile, error: null })
@@ -103,23 +94,37 @@ describe('admin invitation acceptance', () => {
     vi.restoreAllMocks()
   })
 
-  test('muestra invitacion invalida cuando no hay sesion valida', async () => {
-    vi.useFakeTimers()
-    authMocks.getSession.mockResolvedValueOnce({ data: { session: null }, error: null })
+  test('muestra invitacion invalida cuando faltan parametros validos', () => {
     renderInvitation('/admin/aceptar-invitacion')
-
-    await act(async () => {
-      vi.advanceTimersByTime(1700)
-    })
 
     expect(screen.getByRole('alert')).toHaveTextContent('La invitacion no es valida o ha expirado.')
     expect(screen.getByRole('link', { name: 'Volver al acceso' })).toHaveAttribute('href', '/admin/login')
     expect(screen.queryByRole('button', { name: 'Activar mi cuenta' })).not.toBeInTheDocument()
+    expect(authMocks.verifyOtp).not.toHaveBeenCalled()
   })
 
-  test('muestra correo y nombre del perfil collaborator invitado', async () => {
+  test('abrir pagina con token no consume el token automaticamente', () => {
     renderInvitation()
 
+    expect(screen.getByRole('button', { name: 'Aceptar invitacion' })).toBeInTheDocument()
+    expect(screen.getByRole('status')).toHaveTextContent('Has sido invitado a Red Comercial Arista.')
+    expect(authMocks.verifyOtp).not.toHaveBeenCalled()
+  })
+
+  test('solo acepta type invite', () => {
+    renderInvitation('/admin/aceptar-invitacion?token_hash=token-hash&type=email')
+
+    expect(screen.getByRole('alert')).toHaveTextContent('La invitacion no es valida o ha expirado.')
+    expect(authMocks.verifyOtp).not.toHaveBeenCalled()
+  })
+
+  test('click aceptar ejecuta verifyOtp y muestra correo y nombre', async () => {
+    const user = userEvent.setup()
+    renderInvitation()
+
+    await user.click(screen.getByRole('button', { name: 'Aceptar invitacion' }))
+
+    expect(authMocks.verifyOtp).toHaveBeenCalledWith({ token_hash: 'token-hash', type: 'invite' })
     expect(await screen.findByRole('button', { name: 'Activar mi cuenta' })).toBeInTheDocument()
     expect(screen.getByLabelText('Correo')).toHaveValue('camila@example.com')
     expect(screen.getByLabelText('Correo')).toHaveAttribute('readonly')
@@ -127,10 +132,22 @@ describe('admin invitation acceptance', () => {
     expect(screen.getByLabelText('Nombre')).toHaveAttribute('readonly')
   })
 
+  test('token invalido muestra error', async () => {
+    const user = userEvent.setup()
+    authMocks.verifyOtp.mockResolvedValueOnce({ data: { session: null }, error: new Error('expired') })
+    renderInvitation()
+
+    await user.click(screen.getByRole('button', { name: 'Aceptar invitacion' }))
+
+    expect(await screen.findByRole('alert')).toHaveTextContent('La invitacion no es valida o ha expirado.')
+    expect(screen.getByRole('link', { name: 'Volver al acceso' })).toHaveAttribute('href', '/admin/login')
+  })
+
   test('valida coincidencia de contrasena antes de activar', async () => {
     const user = userEvent.setup()
     renderInvitation()
 
+    await user.click(screen.getByRole('button', { name: 'Aceptar invitacion' }))
     await user.type(await screen.findByLabelText('Nueva contrasena'), 'Password123!')
     await user.type(screen.getByLabelText('Confirmar contrasena'), 'Password123?')
     await user.click(screen.getByRole('button', { name: 'Activar mi cuenta' }))
@@ -143,6 +160,7 @@ describe('admin invitation acceptance', () => {
     const user = userEvent.setup()
     renderInvitation()
 
+    await user.click(screen.getByRole('button', { name: 'Aceptar invitacion' }))
     await user.type(await screen.findByLabelText('Nueva contrasena'), 'Password123!')
     await user.type(screen.getByLabelText('Confirmar contrasena'), 'Password123!')
     await user.click(screen.getByRole('button', { name: 'Activar mi cuenta' }))
@@ -153,7 +171,6 @@ describe('admin invitation acceptance', () => {
   })
 
   test('la ruta aceptar invitacion no queda bloqueada por AdminGuard', async () => {
-    authMocks.getSession.mockResolvedValue({ data: { session: null }, error: null })
     render(
       <MemoryRouter initialEntries={['/admin/aceptar-invitacion']}>
         <Routes>

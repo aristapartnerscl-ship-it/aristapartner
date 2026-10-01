@@ -1,7 +1,7 @@
 import { Eye, EyeOff } from 'lucide-react'
-import { useEffect, useRef, useState, type FormEvent } from 'react'
-import type { AuthChangeEvent, Session } from '@supabase/supabase-js'
-import { Link, useNavigate } from 'react-router-dom'
+import { useMemo, useRef, useState, type FormEvent } from 'react'
+import type { Session } from '@supabase/supabase-js'
+import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { BrandLockup } from '../../components/BrandLockup'
 import { supabase } from '../../lib/supabase'
 import { isSupabaseConfigured } from '../../lib/supabase-config'
@@ -16,7 +16,7 @@ const passwordRequirements = [
   { id: 'symbol', label: 'Un simbolo', test: (value: string) => /[^A-Za-z0-9]/.test(value) },
 ]
 
-type InvitationStatus = 'checking' | 'ready' | 'invalid' | 'activating' | 'activated'
+type InvitationStatus = 'awaiting-confirmation' | 'verifying' | 'ready' | 'invalid' | 'activating' | 'activated'
 
 type InvitationProfile = {
   id: string
@@ -34,31 +34,28 @@ function getUrlParams(value: string) {
   }
 }
 
-function invitationUrlIndicatesInvalidLink() {
-  const hash = getUrlParams(window.location.hash)
-  const query = getUrlParams(window.location.search)
-  const error = hash.get('error') || query.get('error')
-  const errorCode = hash.get('error_code') || query.get('error_code')
-
-  return error === 'access_denied' || errorCode === 'otp_expired'
-}
-
-function invitationUrlIndicatesSession() {
-  const hash = getUrlParams(window.location.hash)
-  const query = getUrlParams(window.location.search)
-  return Boolean(hash.get('access_token') || query.get('access_token') || hash.get('type') === 'invite' || query.get('type') === 'invite')
-}
-
 function passwordMeetsRequirements(value: string) {
   return passwordRequirements.every((requirement) => requirement.test(value))
 }
 
 export function AdminInvitationAcceptance() {
   const navigate = useNavigate()
+  const location = useLocation()
   const feedbackRef = useRef<HTMLDivElement>(null)
-  const resolvedRef = useRef(false)
-  const [status, setStatus] = useState<InvitationStatus>('checking')
-  const [message, setMessage] = useState('Validando invitacion...')
+  const invitationParams = useMemo(() => {
+    const query = getUrlParams(location.search)
+    return {
+      tokenHash: query.get('token_hash') ?? '',
+      type: query.get('type') ?? '',
+    }
+  }, [location.search])
+  const hasValidInviteParams = Boolean(invitationParams.tokenHash && invitationParams.type === 'invite')
+  const [status, setStatus] = useState<InvitationStatus>(hasValidInviteParams ? 'awaiting-confirmation' : 'invalid')
+  const [message, setMessage] = useState(
+    hasValidInviteParams
+      ? 'Has sido invitado a Red Comercial Arista. Acepta la invitacion para continuar.'
+      : invalidInvitationMessage,
+  )
   const [email, setEmail] = useState('')
   const [fullName, setFullName] = useState('')
   const [newPassword, setNewPassword] = useState('')
@@ -66,75 +63,69 @@ export function AdminInvitationAcceptance() {
   const [showNewPassword, setShowNewPassword] = useState(false)
   const [showConfirmPassword, setShowConfirmPassword] = useState(false)
 
-  useEffect(() => {
+  async function resolveInvitation(session: Session | null) {
+    if (!session?.user || !supabase) {
+      setStatus('invalid')
+      setMessage(invalidInvitationMessage)
+      window.setTimeout(() => feedbackRef.current?.focus(), 0)
+      return
+    }
+
+    const { data, error } = await supabase
+      .from('admin_profiles')
+      .select('id, email, full_name, role, is_active')
+      .eq('id', session.user.id)
+      .eq('role', 'collaborator')
+      .eq('is_active', true)
+      .in('invitation_status', ['pending', 'accepted'])
+      .maybeSingle()
+
+    const profile = data as InvitationProfile | null
+    if (error || !profile) {
+      setStatus('invalid')
+      setMessage(invalidInvitationMessage)
+      window.setTimeout(() => feedbackRef.current?.focus(), 0)
+      return
+    }
+
+    setEmail(profile.email || session.user.email || '')
+    setFullName(profile.full_name || '')
+    setStatus('ready')
+    setMessage('Define una contrasena para activar tu acceso a Red Comercial Arista.')
+    window.history.replaceState(null, '', '/admin/aceptar-invitacion')
+  }
+
+  async function verifyInvitation() {
     if (!isSupabaseConfigured || !supabase) {
       setStatus('invalid')
       setMessage(invalidInvitationMessage)
-      return undefined
+      window.setTimeout(() => feedbackRef.current?.focus(), 0)
+      return
     }
 
-    if (invitationUrlIndicatesInvalidLink()) {
+    if (!hasValidInviteParams) {
       setStatus('invalid')
       setMessage(invalidInvitationMessage)
       window.setTimeout(() => feedbackRef.current?.focus(), 0)
-      return undefined
+      return
     }
 
-    async function resolveInvitation(session: Session | null) {
-      if (!session?.user || resolvedRef.current || !supabase) return
-      resolvedRef.current = true
-
-      const { data, error } = await supabase
-        .from('admin_profiles')
-        .select('id, email, full_name, role, is_active')
-        .eq('id', session.user.id)
-        .eq('role', 'collaborator')
-        .eq('is_active', true)
-        .in('invitation_status', ['pending', 'accepted'])
-        .maybeSingle()
-
-      const profile = data as InvitationProfile | null
-      if (error || !profile) {
-        setStatus('invalid')
-        setMessage(invalidInvitationMessage)
-        window.setTimeout(() => feedbackRef.current?.focus(), 0)
-        return
-      }
-
-      setEmail(profile.email || session.user.email || '')
-      setFullName(profile.full_name || '')
-      setStatus('ready')
-      setMessage('Define una contrasena para activar tu acceso a Red Comercial Arista.')
-
-      if (window.location.hash || window.location.search) {
-        window.history.replaceState(null, '', '/admin/aceptar-invitacion')
-      }
-    }
-
-    function handleAuthEvent(event: AuthChangeEvent, session: Session | null) {
-      if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED' || event === 'USER_UPDATED' || event === 'INITIAL_SESSION') {
-        void resolveInvitation(session)
-      }
-    }
-
-    const { data: listener } = supabase.auth.onAuthStateChange(handleAuthEvent)
-
-    void supabase.auth.getSession().then(({ data }) => {
-      if (invitationUrlIndicatesSession() || data.session?.user) void resolveInvitation(data.session)
+    setStatus('verifying')
+    setMessage('Validando invitacion...')
+    const { data, error } = await supabase.auth.verifyOtp({
+      token_hash: invitationParams.tokenHash,
+      type: 'invite',
     })
 
-    const timeoutId = window.setTimeout(() => {
-      if (resolvedRef.current) return
+    if (error) {
       setStatus('invalid')
       setMessage(invalidInvitationMessage)
       window.setTimeout(() => feedbackRef.current?.focus(), 0)
-    }, 1600)
-
-    return () => {
-      window.clearTimeout(timeoutId)
-      listener.subscription.unsubscribe()
+      return
     }
-  }, [])
+
+    await resolveInvitation(data.session)
+  }
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
@@ -200,7 +191,19 @@ export function AdminInvitationAcceptance() {
             {message}
           </div>
 
-          {status === 'checking' && <p className="mt-5 text-sm text-slate-600">Espera un momento mientras se valida la invitacion.</p>}
+          {status === 'awaiting-confirmation' && (
+            <div className="mt-6 grid gap-3">
+              <button
+                type="button"
+                onClick={() => void verifyInvitation()}
+                className="rounded-md bg-[#17202d] px-5 py-3 text-sm font-semibold text-white shadow-sm"
+              >
+                Aceptar invitacion
+              </button>
+            </div>
+          )}
+
+          {status === 'verifying' && <p className="mt-5 text-sm text-slate-600">Espera un momento mientras se valida la invitacion.</p>}
 
           {status === 'invalid' && (
             <div className="mt-6 grid gap-3">
