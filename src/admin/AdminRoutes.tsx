@@ -1,6 +1,7 @@
 import { Route, Routes } from 'react-router-dom'
 import { AdminAuthProvider } from './AdminAuthContext'
 import { AdminGuard } from './AdminGuard'
+import { AdminRoleGuard } from './AdminRoleGuard'
 import { AdminContacts } from './pages/AdminContacts'
 import { AdminDashboard } from './pages/AdminDashboard'
 import { AdminFollowUps } from './pages/AdminFollowUps'
@@ -16,45 +17,56 @@ import { AdminProposalFormPage, AdminProposals } from './pages/AdminProposals'
 import { AdminProposalWorkspace } from './pages/AdminProposalWorkspace'
 import { AdminSupplierDetail, AdminSupplierFormPage, AdminSuppliers } from './pages/AdminSuppliers'
 import { AdminSettings } from './pages/AdminSettings'
+import { AdminInvitationAcceptance } from './pages/AdminInvitationAcceptance'
 import { AdminLogin } from './pages/AdminLogin'
 import { AdminPasswordRecoveryRequest, AdminPasswordUpdate } from './pages/AdminPasswordRecovery'
+import { AdminCompaniesPage, AssignmentsPage, CollaboratorsPage, CompanyDetailPage, MyPortfoliosPage, RedComercialHome } from './pages/RedComercialPages'
 
 export default function AdminRoutes() {
   return (
     <AdminAuthProvider>
       <Routes>
         <Route path="login" element={<AdminLogin />} />
+        <Route path="aceptar-invitacion" element={<AdminInvitationAcceptance />} />
         <Route path="recuperar-contrasena" element={<AdminPasswordRecoveryRequest />} />
         <Route path="actualizar-contrasena" element={<AdminPasswordUpdate />} />
         <Route element={<AdminGuard />}>
-          <Route index element={<AdminDashboard />} />
-          <Route path="prospeccion" element={<AdminProspecting />} />
-          <Route path="prospeccion/:id" element={<AdminProspectDetail />} />
-          <Route path="pipeline" element={<AdminPipeline />} />
-          <Route path="propuestas" element={<AdminProposals />} />
-          <Route path="propuestas/nueva" element={<AdminProposalFormPage mode="create" />} />
-          <Route path="propuestas/:id" element={<AdminProposalWorkspace />} />
-          <Route path="propuestas/:id/editar" element={<AdminProposalFormPage mode="edit" />} />
-          <Route path="oportunidades" element={<AdminOpportunities />} />
-          <Route path="oportunidades/nueva" element={<AdminOpportunityFormPage mode="create" />} />
-          <Route path="oportunidades/:id" element={<AdminOpportunityDetail />} />
-          <Route path="oportunidades/:id/editar" element={<AdminOpportunityFormPage mode="edit" />} />
-          <Route path="proveedores" element={<AdminSuppliers />} />
-          <Route path="proveedores/nuevo" element={<AdminSupplierFormPage mode="create" />} />
-          <Route path="proveedores/:id" element={<AdminSupplierDetail />} />
-          <Route path="proveedores/:id/editar" element={<AdminSupplierFormPage mode="edit" />} />
-          <Route path="contactos" element={<AdminContacts />} />
-          <Route path="consultas" element={<AdminInquiries />} />
-          <Route path="consultas/nueva" element={<AdminInquiryFormPage mode="create" />} />
-          <Route path="consultas/:id" element={<AdminInquiryDetail />} />
-          <Route path="consultas/:id/editar" element={<AdminInquiryFormPage mode="edit" />} />
-          <Route path="recepciones" element={<AdminFormSubmissions />} />
-          <Route path="seguimiento" element={<AdminFollowUps />} />
-          <Route path="acuerdos" element={<AdminCommercialAgreements />} />
-          <Route path="acuerdos/nuevo" element={<AdminCommercialAgreementFormPage mode="create" />} />
-          <Route path="acuerdos/:id" element={<AdminCommercialAgreementDetail />} />
-          <Route path="acuerdos/:id/editar" element={<AdminCommercialAgreementFormPage mode="edit" />} />
-          <Route path="configuracion" element={<AdminSettings />} />
+          <Route index element={<RedComercialHome />} />
+          <Route path="empresas" element={<AdminCompaniesPage />} />
+          <Route path="empresas/:id" element={<CompanyDetailPage />} />
+          <Route path="mis-carteras" element={<MyPortfoliosPage />} />
+          <Route element={<AdminRoleGuard />}>
+            <Route path="colaboradores" element={<CollaboratorsPage />} />
+            <Route path="asignaciones" element={<AssignmentsPage />} />
+            <Route path="dashboard-anterior" element={<AdminDashboard />} />
+            <Route path="prospeccion" element={<AdminProspecting />} />
+            <Route path="prospeccion/:id" element={<AdminProspectDetail />} />
+            <Route path="pipeline" element={<AdminPipeline />} />
+            <Route path="propuestas" element={<AdminProposals />} />
+            <Route path="propuestas/nueva" element={<AdminProposalFormPage mode="create" />} />
+            <Route path="propuestas/:id" element={<AdminProposalWorkspace />} />
+            <Route path="propuestas/:id/editar" element={<AdminProposalFormPage mode="edit" />} />
+            <Route path="oportunidades" element={<AdminOpportunities />} />
+            <Route path="oportunidades/nueva" element={<AdminOpportunityFormPage mode="create" />} />
+            <Route path="oportunidades/:id" element={<AdminOpportunityDetail />} />
+            <Route path="oportunidades/:id/editar" element={<AdminOpportunityFormPage mode="edit" />} />
+            <Route path="proveedores" element={<AdminSuppliers />} />
+            <Route path="proveedores/nuevo" element={<AdminSupplierFormPage mode="create" />} />
+            <Route path="proveedores/:id" element={<AdminSupplierDetail />} />
+            <Route path="proveedores/:id/editar" element={<AdminSupplierFormPage mode="edit" />} />
+            <Route path="contactos" element={<AdminContacts />} />
+            <Route path="consultas" element={<AdminInquiries />} />
+            <Route path="consultas/nueva" element={<AdminInquiryFormPage mode="create" />} />
+            <Route path="consultas/:id" element={<AdminInquiryDetail />} />
+            <Route path="consultas/:id/editar" element={<AdminInquiryFormPage mode="edit" />} />
+            <Route path="recepciones" element={<AdminFormSubmissions />} />
+            <Route path="seguimiento" element={<AdminFollowUps />} />
+            <Route path="acuerdos" element={<AdminCommercialAgreements />} />
+            <Route path="acuerdos/nuevo" element={<AdminCommercialAgreementFormPage mode="create" />} />
+            <Route path="acuerdos/:id" element={<AdminCommercialAgreementDetail />} />
+            <Route path="acuerdos/:id/editar" element={<AdminCommercialAgreementFormPage mode="edit" />} />
+            <Route path="configuracion" element={<AdminSettings />} />
+          </Route>
         </Route>
       </Routes>
     </AdminAuthProvider>

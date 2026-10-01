@@ -15,7 +15,11 @@ type FunctionReturns<FunctionName extends keyof PublicFunctions> = PublicFunctio
 type Override<Base, Fields> = Omit<Base, keyof Fields> & Fields
 
 export type ContactType = 'person' | 'company'
-export type AdminRole = 'owner'
+export type AdminRole = 'owner' | 'collaborator'
+export type AdminInvitationStatus = 'pending' | 'accepted' | 'revoked'
+export type RepresentedCompanyStatus = 'active' | 'inactive'
+export type CompanyLogoSource = 'manual' | 'detected' | 'fallback'
+export type RepresentedCompanyMembershipStatus = 'active' | 'inactive'
 export type OpportunityType = 'buy' | 'sell'
 export type OpportunityStatus =
   | 'new'
@@ -78,7 +82,68 @@ export type ProspectActivityOutcome =
   | 'not_interested'
   | 'other'
 
-export type AdminProfileRow = Override<TableRow<'admin_profiles'>, { role: AdminRole }>
+export type AdminProfileRow = Override<TableRow<'admin_profiles'>, {
+  role: AdminRole
+  email?: string | null
+  last_activity_at?: string | null
+  invitation_status?: AdminInvitationStatus
+  invited_at?: string | null
+  invitation_sent_at?: string | null
+  invitation_revoked_at?: string | null
+  onboarding_completed_at?: string | null
+  invited_by?: string | null
+}>
+
+export type RepresentedCompanyRow = {
+  id: string
+  name: string
+  slug: string
+  description: string | null
+  website_url: string | null
+  logo_storage_path: string | null
+  logo_source: CompanyLogoSource
+  status: RepresentedCompanyStatus
+  offer_summary: string | null
+  problem_solved: string | null
+  ideal_customer: string | null
+  target_industries: string[]
+  territory: string | null
+  keywords: string[]
+  opportunity_examples: string[]
+  what_not_to_promise: string | null
+  internal_owner_id: string | null
+  created_at: string
+  updated_at: string
+}
+
+export type RepresentedCompanyInsert = Omit<RepresentedCompanyRow, 'id' | 'created_at' | 'updated_at'> & {
+  id?: string
+  created_at?: string
+  updated_at?: string
+}
+
+export type RepresentedCompanyUpdate = Partial<RepresentedCompanyInsert>
+
+export type RepresentedCompanyPrivateDetailsRow = {
+  represented_company_id: string
+  agreed_commission: string | null
+  contract_notes: string | null
+  economic_terms: string | null
+  sensitive_notes: string | null
+  created_at: string
+  updated_at: string
+}
+
+export type RepresentedCompanyMembershipRow = {
+  id: string
+  represented_company_id: string
+  user_id: string
+  status: RepresentedCompanyMembershipStatus
+  assigned_at: string
+  assigned_by: string | null
+  created_at: string
+  updated_at: string
+}
 
 export type ContactRow = Override<TableRow<'contacts'>, { contact_type: ContactType }>
 

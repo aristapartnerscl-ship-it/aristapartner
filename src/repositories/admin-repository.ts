@@ -37,6 +37,11 @@ import type {
   ProspectInsert,
   ProspectRecord,
   ProspectUpdate,
+  CollaboratorRecord,
+  RedComercialHomeData,
+  RepresentedCompanyFormValues,
+  RepresentedCompanyMembershipRecord,
+  RepresentedCompanyRecord,
   OpportunitySupplierFormValues,
   OpportunitySupplierInsert,
   OpportunitySupplierRecord,
@@ -56,6 +61,24 @@ import type {
 
 export type AdminRepository = {
   getCurrentAdminProfile(userId: string): Promise<RepositoryResult<AdminProfile | null>>
+  getRedComercialHomeData(): Promise<RepositoryResult<RedComercialHomeData>>
+  listRepresentedCompanies(): Promise<RepositoryResult<RepresentedCompanyRecord[]>>
+  listMyRepresentedCompanies(): Promise<RepositoryResult<RepresentedCompanyRecord[]>>
+  getRepresentedCompanyById(id: string): Promise<RepositoryResult<RepresentedCompanyRecord | null>>
+  createRepresentedCompany(values: RepresentedCompanyFormValues): Promise<RepositoryResult<RepresentedCompanyRecord | null>>
+  updateRepresentedCompany(id: string, values: RepresentedCompanyFormValues): Promise<RepositoryResult<RepresentedCompanyRecord | null>>
+  uploadCompanyLogo(companyId: string, file: File): Promise<RepositoryResult<string | null>>
+  detectCompanyLogos(websiteUrl: string): Promise<RepositoryResult<Array<{ url: string; source: string; label: string }>>>
+  importDetectedCompanyLogo(companyId: string, imageUrl: string): Promise<RepositoryResult<string | null>>
+  listCollaborators(): Promise<RepositoryResult<CollaboratorRecord[]>>
+  inviteCollaborator(email: string, fullName?: string): Promise<RepositoryResult<CollaboratorRecord | null>>
+  reissueCollaboratorInvitation(userId: string): Promise<RepositoryResult<CollaboratorRecord | null>>
+  revokeCollaboratorInvitation(userId: string): Promise<RepositoryResult<CollaboratorRecord | null>>
+  removeCollaboratorInvitation(userId: string): Promise<RepositoryResult<boolean>>
+  updateCollaboratorStatus(userId: string, isActive: boolean): Promise<RepositoryResult<CollaboratorRecord | null>>
+  listCompanyMemberships(): Promise<RepositoryResult<RepresentedCompanyMembershipRecord[]>>
+  upsertCompanyMembership(companyId: string, userId: string): Promise<RepositoryResult<RepresentedCompanyMembershipRecord | null>>
+  deactivateCompanyMembership(companyId: string, userId: string): Promise<RepositoryResult<RepresentedCompanyMembershipRecord | null>>
   listAdminNotifications(limit?: number): Promise<RepositoryResult<AdminNotificationRecord[]>>
   getUnreadAdminNotificationCount(): Promise<RepositoryResult<number>>
   markAdminNotificationRead(id: string): Promise<RepositoryResult<AdminNotificationRecord | null>>

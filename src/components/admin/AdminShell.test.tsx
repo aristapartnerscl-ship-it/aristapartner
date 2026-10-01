@@ -1,20 +1,46 @@
-import { render, screen } from '@testing-library/react'
+import { cleanup, fireEvent, render, screen } from '@testing-library/react'
 import { MemoryRouter } from 'react-router-dom'
-import { describe, expect, test, vi } from 'vitest'
+import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest'
 import { AdminShell } from './AdminShell'
 
+let profileRole: 'owner' | 'collaborator' = 'owner'
+
 vi.mock('../../admin/useAdminAuth', () => ({
-  useAdminAuth: () => ({ status: 'ready', signOut: vi.fn() }),
+  useAdminAuth: () => ({
+    status: 'ready',
+    profile: { id: 'user-1', full_name: 'Admin', role: profileRole, is_active: true, created_at: '', updated_at: '' },
+    signOut: vi.fn(),
+  }),
 }))
 vi.mock('./AdminNotificationsCenter', () => ({ AdminNotificationsCenter: () => null }))
 vi.mock('../BrandLockup', () => ({ BrandLockup: () => <div>Arista Partners</div> }))
 
 describe('AdminShell', () => {
-  test('incluye el acceso al Pipeline comercial en el menú privado', () => {
+  afterEach(() => cleanup())
+
+  beforeEach(() => {
+    profileRole = 'owner'
+  })
+
+  test('muestra la navegacion principal y modulos anteriores para admin', () => {
     render(<MemoryRouter><AdminShell><div>Contenido</div></AdminShell></MemoryRouter>)
+
+    expect(screen.getByRole('link', { name: 'Inicio' })).toHaveAttribute('href', '/admin')
+    expect(screen.getByRole('link', { name: 'Empresas Arista' })).toHaveAttribute('href', '/admin/empresas')
+    expect(screen.getByRole('link', { name: 'Colaboradores' })).toHaveAttribute('href', '/admin/colaboradores')
+
+    fireEvent.click(screen.getByRole('button', { name: 'Modulos anteriores' }))
     expect(screen.getByRole('link', { name: 'Pipeline comercial' })).toHaveAttribute('href', '/admin/pipeline')
     expect(screen.getByRole('link', { name: 'Propuestas' })).toHaveAttribute('href', '/admin/propuestas')
-    expect(screen.queryByRole('link', { name: 'Contactar por WhatsApp' })).not.toBeInTheDocument()
+  })
+
+  test('oculta administracion y modulos anteriores para colaborador', () => {
+    profileRole = 'collaborator'
+    render(<MemoryRouter><AdminShell><div>Contenido</div></AdminShell></MemoryRouter>)
+
+    expect(screen.getAllByRole('link', { name: 'Inicio' }).length).toBeGreaterThan(0)
+    expect(screen.queryByRole('link', { name: 'Colaboradores' })).not.toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: 'Modulos anteriores' })).not.toBeInTheDocument()
   })
 })
 

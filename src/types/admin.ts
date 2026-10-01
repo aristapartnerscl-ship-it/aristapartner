@@ -64,6 +64,11 @@ import type {
   ProspectTemperature,
   ProspectType,
   ProspectUpdate,
+  RepresentedCompanyInsert,
+  RepresentedCompanyMembershipRow,
+  RepresentedCompanyPrivateDetailsRow,
+  RepresentedCompanyRow,
+  RepresentedCompanyUpdate,
   SupplierRow,
   SupplierStatus,
   SubmissionType,
@@ -111,6 +116,11 @@ export type {
   ProspectTemperature,
   ProspectType,
   ProspectUpdate,
+  RepresentedCompanyInsert,
+  RepresentedCompanyMembershipRow,
+  RepresentedCompanyPrivateDetailsRow,
+  RepresentedCompanyRow,
+  RepresentedCompanyUpdate,
   Priority,
   SupplierStatus,
   SubmissionType,
@@ -118,6 +128,40 @@ export type {
 }
 
 export type AdminProfile = AdminProfileRow
+
+export type RedComercialRole = 'admin' | 'collaborator'
+
+export type RepresentedCompanyRecord = RepresentedCompanyRow
+
+export type RepresentedCompanyFormValues = {
+  name: string
+  slug: string
+  description: string
+  website_url: string
+  status: RepresentedCompanyRow['status']
+  offer_summary: string
+  problem_solved: string
+  ideal_customer: string
+  target_industries: string
+  territory: string
+  keywords: string
+  opportunity_examples: string
+  what_not_to_promise: string
+  logo_storage_path: string
+  logo_source: RepresentedCompanyRow['logo_source']
+}
+
+export type RepresentedCompanyMembershipRecord = RepresentedCompanyMembershipRow
+export type RepresentedCompanyPrivateDetailsRecord = RepresentedCompanyPrivateDetailsRow
+export type CollaboratorRecord = Pick<AdminProfileRow, 'id' | 'full_name' | 'email' | 'role' | 'is_active' | 'created_at' | 'updated_at' | 'last_activity_at' | 'invitation_status' | 'invited_at' | 'invitation_sent_at' | 'invitation_revoked_at' | 'onboarding_completed_at'>
+
+export type RedComercialHomeData = {
+  representedCompanies: number
+  activeCollaborators: number
+  activeMemberships: number
+  myMemberships: RepresentedCompanyMembershipRecord[]
+  myCompanies: RepresentedCompanyRecord[]
+}
 
 export type AdminNotificationRecord = AdminNotificationRow
 

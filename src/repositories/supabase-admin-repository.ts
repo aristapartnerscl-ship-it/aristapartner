@@ -19,6 +19,7 @@ import type {
   ContactInsert,
   ContactRecord,
   ContactSelectorRecord,
+  CollaboratorRecord,
   DashboardActivity,
   DashboardData,
   FormSubmissionListItem,
@@ -50,6 +51,10 @@ import type {
   ProspectUpdate,
   RepositoryErrorKind,
   RepositoryResult,
+  RedComercialHomeData,
+  RepresentedCompanyFormValues,
+  RepresentedCompanyMembershipRecord,
+  RepresentedCompanyRecord,
   SupplierOpportunityRecord,
   SupplierRecord,
   SupplierWithContact,
@@ -128,6 +133,14 @@ const commercialProposalPublicLinkColumns = 'id, proposal_id, version_id, token_
 
 const organizationSettingsColumns =
   'singleton_key, display_name, legal_name, tax_identifier, public_email, public_phone, website_url, address_line, city_region, country_code, timezone, locale, default_currency, default_opportunity_priority, default_follow_up_days, default_attribution_days, default_commission_type, default_commission_value, created_at, updated_at, created_by, updated_by'
+
+const representedCompanyColumns =
+  'id, name, slug, description, website_url, logo_storage_path, logo_source, status, offer_summary, problem_solved, ideal_customer, target_industries, territory, keywords, opportunity_examples, what_not_to_promise, internal_owner_id, created_at, updated_at'
+
+const representedCompanyMembershipColumns =
+  'id, represented_company_id, user_id, status, assigned_at, assigned_by, created_at, updated_at'
+
+const collaboratorColumns = 'id, full_name, email, role, is_active, created_at, updated_at, last_activity_at, invitation_status, invited_at, invitation_sent_at, invitation_revoked_at, onboarding_completed_at'
 
 const prospectEditableFields = [
   'prospect_type',
@@ -226,6 +239,24 @@ function fail<T>(data: T, error: PostgrestError | Error | null, context: string)
   return { data, error: messageFor(kind), errorKind: kind }
 }
 
+function functionErrorKind(status?: number): RepositoryErrorKind {
+  if (status === 401 || status === 403) return 'authorization'
+  if (status === 404) return 'not_found'
+  if (status === 400 || status === 409 || status === 422) return 'validation'
+  return 'unknown'
+}
+
+async function failFunction<T>(data: T, error: Error | null, context: string): Promise<RepositoryResult<T>> {
+  logSafeError(context, error)
+  const response = (error as (Error & { context?: Response }) | null)?.context
+  const payload = response
+    ? await response.clone().json().catch(() => null) as { message?: unknown } | null
+    : null
+  const message = typeof payload?.message === 'string' ? payload.message : null
+  if (message) return { data, error: message, errorKind: functionErrorKind(response?.status) }
+  return fail(data, error, context)
+}
+
 const rpcErrorMessages: Record<string, string> = {
   AP_AUTH_REQUIRED: 'Tu sesión ya no está activa. Vuelve a iniciar sesión.',
   AP_OWNER_REQUIRED: 'Tu usuario no tiene permisos para realizar esta conversión.',
@@ -293,6 +324,64 @@ function optionalText(value: string | null | undefined) {
   return trimmed || undefined
 }
 
+function nullableText(value: string | null | undefined) {
+  return optionalText(value) ?? null
+}
+
+function textList(value: string) {
+  return value
+    .split(/\r?\n|,/)
+    .map((entry) => entry.trim())
+    .filter(Boolean)
+    .slice(0, 30)
+}
+
+function slugify(value: string) {
+  return value
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '')
+}
+
+function representedCompanyPayload(values: RepresentedCompanyFormValues) {
+  const name = values.name.trim()
+  const slug = slugify(values.slug || values.name)
+  if (!name || !slug) return { error: 'Ingresa nombre y slug de la empresa.' as const }
+  let website_url: string | null = null
+  if (values.website_url.trim()) {
+    try {
+      const url = new URL(values.website_url.trim())
+      if (!['http:', 'https:'].includes(url.protocol)) throw new Error('invalid')
+      website_url = url.toString()
+    } catch {
+      return { error: 'Ingresa una URL web válida.' as const }
+    }
+  }
+
+  return {
+    data: {
+      name,
+      slug,
+      description: nullableText(values.description),
+      website_url,
+      logo_storage_path: nullableText(values.logo_storage_path),
+      logo_source: values.logo_storage_path.trim() ? values.logo_source : 'fallback',
+      status: values.status,
+      offer_summary: nullableText(values.offer_summary),
+      problem_solved: nullableText(values.problem_solved),
+      ideal_customer: nullableText(values.ideal_customer),
+      target_industries: textList(values.target_industries),
+      territory: nullableText(values.territory),
+      keywords: textList(values.keywords),
+      opportunity_examples: textList(values.opportunity_examples),
+      what_not_to_promise: nullableText(values.what_not_to_promise),
+      internal_owner_id: null,
+    },
+  }
+}
+
 function optionalUpperText(value: string | null | undefined) {
   const trimmed = optionalText(value)
   return trimmed ? trimmed.toUpperCase() : undefined
@@ -348,14 +437,216 @@ export class SupabaseAdminRepository implements AdminRepository {
   async getCurrentAdminProfile(userId: string) {
     const { data, error } = await this.client
       .from('admin_profiles')
-      .select('id, full_name, role, is_active, created_at, updated_at')
+      .select('id, full_name, email, role, is_active, created_at, updated_at, last_activity_at, invitation_status, invited_at, invitation_sent_at, invitation_revoked_at, onboarding_completed_at')
       .eq('id', userId)
       .eq('is_active', true)
-      .eq('role', 'owner')
+      .in('role', ['owner', 'collaborator'])
       .maybeSingle()
 
     if (error) return fail<AdminProfile | null>(null, error, 'admin_profile.read')
-    return ok(data as AdminProfile | null)
+    const profile = data as AdminProfile | null
+    if (profile?.role === 'collaborator' && (profile.invitation_status !== 'accepted' || !profile.onboarding_completed_at)) {
+      return ok(null)
+    }
+    return ok(profile)
+  }
+
+  async getRedComercialHomeData(): Promise<RepositoryResult<RedComercialHomeData>> {
+    const client = this.client as SupabaseClient
+    const [companies, collaborators, memberships, myCompanies] = await Promise.all([
+      client.from('represented_companies').select('id', { count: 'exact', head: true }).eq('status', 'active'),
+      client.from('admin_profiles').select('id', { count: 'exact', head: true }).eq('role', 'collaborator').eq('is_active', true).eq('invitation_status', 'accepted').not('onboarding_completed_at', 'is', null),
+      client.from('represented_company_memberships').select('id', { count: 'exact', head: true }).eq('status', 'active'),
+      this.listMyRepresentedCompanies(),
+    ])
+
+    const error = companies.error ?? collaborators.error ?? memberships.error ?? (myCompanies.error ? new Error(myCompanies.error) : null)
+    if (error) return fail<RedComercialHomeData>({ representedCompanies: 0, activeCollaborators: 0, activeMemberships: 0, myMemberships: [], myCompanies: [] }, error, 'red_comercial.home')
+
+    const { data: userData } = await this.client.auth.getUser()
+    let myMemberships: RepresentedCompanyMembershipRecord[] = []
+    if (userData.user) {
+      const { data } = await client
+        .from('represented_company_memberships')
+        .select(representedCompanyMembershipColumns)
+        .eq('user_id', userData.user.id)
+        .eq('status', 'active')
+      myMemberships = (data ?? []) as RepresentedCompanyMembershipRecord[]
+    }
+
+    return ok({
+      representedCompanies: companies.count ?? 0,
+      activeCollaborators: collaborators.count ?? 0,
+      activeMemberships: memberships.count ?? 0,
+      myMemberships,
+      myCompanies: myCompanies.data,
+    })
+  }
+
+  async listRepresentedCompanies() {
+    const client = this.client as SupabaseClient
+    const { data, error } = await client.from('represented_companies').select(representedCompanyColumns).order('name')
+    if (error) return fail<RepresentedCompanyRecord[]>([], error, 'represented_companies.list')
+    return ok((data ?? []) as RepresentedCompanyRecord[])
+  }
+
+  async listMyRepresentedCompanies() {
+    const { data: userData, error: userError } = await this.client.auth.getUser()
+    if (userError || !userData.user) return fail<RepresentedCompanyRecord[]>([], userError, 'represented_companies.my.auth')
+    const profile = await this.getCurrentAdminProfile(userData.user.id)
+    if (profile.data?.role === 'owner') return this.listRepresentedCompanies()
+
+    const client = this.client as SupabaseClient
+    const { data: memberships, error } = await client
+      .from('represented_company_memberships')
+      .select(representedCompanyMembershipColumns)
+      .eq('user_id', userData.user.id)
+      .eq('status', 'active')
+    if (error) return fail<RepresentedCompanyRecord[]>([], error, 'represented_companies.my.memberships')
+    const ids = ((memberships ?? []) as RepresentedCompanyMembershipRecord[]).map((membership) => membership.represented_company_id)
+    if (ids.length === 0) return ok([])
+    const { data, error: companyError } = await client.from('represented_companies').select(representedCompanyColumns).in('id', ids).eq('status', 'active').order('name')
+    if (companyError) return fail<RepresentedCompanyRecord[]>([], companyError, 'represented_companies.my.companies')
+    return ok((data ?? []) as RepresentedCompanyRecord[])
+  }
+
+  async getRepresentedCompanyById(id: string) {
+    const client = this.client as SupabaseClient
+    const { data, error } = await client.from('represented_companies').select(representedCompanyColumns).eq('id', id).maybeSingle()
+    if (error) return fail<RepresentedCompanyRecord | null>(null, error, 'represented_companies.get')
+    return ok(data as RepresentedCompanyRecord | null)
+  }
+
+  async createRepresentedCompany(values: RepresentedCompanyFormValues) {
+    const admin = await this.ensureActiveOwner()
+    if (!admin.userId) return { data: null, error: admin.error, errorKind: admin.errorKind }
+    const payload = representedCompanyPayload(values)
+    if ('error' in payload) return { data: null, error: payload.error ?? 'Revisa los datos ingresados antes de guardar.', errorKind: 'validation' as const }
+    const client = this.client as SupabaseClient
+    const { data, error } = await client.from('represented_companies').insert(payload.data).select(representedCompanyColumns).single()
+    if (error) return fail<RepresentedCompanyRecord | null>(null, error, 'represented_companies.create')
+    return ok(data as RepresentedCompanyRecord)
+  }
+
+  async updateRepresentedCompany(id: string, values: RepresentedCompanyFormValues) {
+    const admin = await this.ensureActiveOwner()
+    if (!admin.userId) return { data: null, error: admin.error, errorKind: admin.errorKind }
+    const payload = representedCompanyPayload(values)
+    if ('error' in payload) return { data: null, error: payload.error ?? 'Revisa los datos ingresados antes de guardar.', errorKind: 'validation' as const }
+    const client = this.client as SupabaseClient
+    const { data, error } = await client.from('represented_companies').update(payload.data).eq('id', id).select(representedCompanyColumns).single()
+    if (error) return fail<RepresentedCompanyRecord | null>(null, error, 'represented_companies.update')
+    return ok(data as RepresentedCompanyRecord)
+  }
+
+  async uploadCompanyLogo(companyId: string, file: File) {
+    const admin = await this.ensureActiveOwner()
+    if (!admin.userId) return { data: null, error: admin.error, errorKind: admin.errorKind }
+    const allowed = new Map([['image/png', 'png'], ['image/jpeg', 'jpg'], ['image/webp', 'webp']])
+    const extension = allowed.get(file.type)
+    const fileExtension = file.name.split('.').pop()?.toLowerCase()
+    if (!extension || !fileExtension || !['png', 'jpg', 'jpeg', 'webp'].includes(fileExtension)) {
+      return { data: null, error: 'Sube un logo PNG, JPG, JPEG o WEBP.', errorKind: 'validation' as const }
+    }
+    if (file.size > 2_097_152) return { data: null, error: 'El logo no debe superar 2 MB.', errorKind: 'validation' as const }
+    const path = `${companyId}/manual-${crypto.randomUUID()}.${extension}`
+    const { error } = await this.client.storage.from('company-logos').upload(path, file, { contentType: file.type, upsert: true })
+    if (error) return fail<string | null>(null, error, 'company_logos.upload')
+    return ok(path)
+  }
+
+  async detectCompanyLogos(websiteUrl: string) {
+    const { data, error } = await this.client.functions.invoke('detect-company-logo', { body: { action: 'detect', websiteUrl } })
+    if (error) return fail<Array<{ url: string; source: string; label: string }>>([], error, 'company_logos.detect')
+    return ok(((data as { candidates?: Array<{ url: string; source: string; label: string }> })?.candidates ?? []))
+  }
+
+  async importDetectedCompanyLogo(companyId: string, imageUrl: string) {
+    const { data, error } = await this.client.functions.invoke('detect-company-logo', { body: { action: 'import', companyId, imageUrl } })
+    if (error) return fail<string | null>(null, error, 'company_logos.import')
+    return ok((data as { path?: string })?.path ?? null)
+  }
+
+  async listCollaborators() {
+    const client = this.client as SupabaseClient
+    const { data, error } = await client.from('admin_profiles').select(collaboratorColumns).in('role', ['owner', 'collaborator']).order('created_at', { ascending: false })
+    if (error) return fail<CollaboratorRecord[]>([], error, 'collaborators.list')
+    return ok((data ?? []) as CollaboratorRecord[])
+  }
+
+  async inviteCollaborator(email: string, fullName = '') {
+    const { data, error } = await this.client.functions.invoke('invite-collaborator', { body: { action: 'invite', email, fullName } })
+    if (error) return failFunction<CollaboratorRecord | null>(null, error, 'collaborators.invite')
+    return ok((data as { collaborator?: CollaboratorRecord })?.collaborator ?? null)
+  }
+
+  async reissueCollaboratorInvitation(userId: string) {
+    const { data, error } = await this.client.functions.invoke('invite-collaborator', { body: { action: 'reissue', userId } })
+    if (error) return failFunction<CollaboratorRecord | null>(null, error, 'collaborators.reissue')
+    return ok((data as { collaborator?: CollaboratorRecord })?.collaborator ?? null)
+  }
+
+  async revokeCollaboratorInvitation(userId: string) {
+    const { data, error } = await this.client.functions.invoke('invite-collaborator', { body: { action: 'revoke', userId } })
+    if (error) return failFunction<CollaboratorRecord | null>(null, error, 'collaborators.revoke')
+    return ok((data as { collaborator?: CollaboratorRecord })?.collaborator ?? null)
+  }
+
+  async removeCollaboratorInvitation(userId: string) {
+    const { data, error } = await this.client.functions.invoke('invite-collaborator', { body: { action: 'remove', userId } })
+    if (error) return failFunction<boolean>(false, error, 'collaborators.remove')
+    return ok(Boolean((data as { removed?: boolean })?.removed))
+  }
+
+  async updateCollaboratorStatus(userId: string, isActive: boolean) {
+    const admin = await this.ensureActiveOwner()
+    if (!admin.userId) return { data: null, error: admin.error, errorKind: admin.errorKind }
+    const client = this.client as SupabaseClient
+    const { data, error } = await client
+      .from('admin_profiles')
+      .update({ is_active: isActive })
+      .eq('id', userId)
+      .eq('role', 'collaborator')
+      .eq('invitation_status', 'accepted')
+      .select(collaboratorColumns)
+      .single()
+    if (error) return fail<CollaboratorRecord | null>(null, error, 'collaborators.status')
+    return ok(data as CollaboratorRecord)
+  }
+
+  async listCompanyMemberships() {
+    const client = this.client as SupabaseClient
+    const { data, error } = await client.from('represented_company_memberships').select(representedCompanyMembershipColumns).order('assigned_at', { ascending: false })
+    if (error) return fail<RepresentedCompanyMembershipRecord[]>([], error, 'memberships.list')
+    return ok((data ?? []) as RepresentedCompanyMembershipRecord[])
+  }
+
+  async upsertCompanyMembership(companyId: string, userId: string) {
+    const admin = await this.ensureActiveOwner()
+    if (!admin.userId) return { data: null, error: admin.error, errorKind: admin.errorKind }
+    const client = this.client as SupabaseClient
+    const { data, error } = await client
+      .from('represented_company_memberships')
+      .upsert({ represented_company_id: companyId, user_id: userId, status: 'active', assigned_by: admin.userId, assigned_at: new Date().toISOString() }, { onConflict: 'represented_company_id,user_id' })
+      .select(representedCompanyMembershipColumns)
+      .single()
+    if (error) return fail<RepresentedCompanyMembershipRecord | null>(null, error, 'memberships.upsert')
+    return ok(data as RepresentedCompanyMembershipRecord)
+  }
+
+  async deactivateCompanyMembership(companyId: string, userId: string) {
+    const admin = await this.ensureActiveOwner()
+    if (!admin.userId) return { data: null, error: admin.error, errorKind: admin.errorKind }
+    const client = this.client as SupabaseClient
+    const { data, error } = await client
+      .from('represented_company_memberships')
+      .update({ status: 'inactive' })
+      .eq('represented_company_id', companyId)
+      .eq('user_id', userId)
+      .select(representedCompanyMembershipColumns)
+      .single()
+    if (error) return fail<RepresentedCompanyMembershipRecord | null>(null, error, 'memberships.deactivate')
+    return ok(data as RepresentedCompanyMembershipRecord)
   }
 
   async listAdminNotifications(limit = 10) {

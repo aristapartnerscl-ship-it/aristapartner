@@ -23,6 +23,60 @@ export const emptyAdminRepository: AdminRepository = {
   async getCurrentAdminProfile() {
     return { data: null, error: null }
   },
+  async getRedComercialHomeData() {
+    return { data: { representedCompanies: 0, activeCollaborators: 0, activeMemberships: 0, myMemberships: [], myCompanies: [] }, error: null }
+  },
+  async listRepresentedCompanies() {
+    return { data: [], error: null }
+  },
+  async listMyRepresentedCompanies() {
+    return { data: [], error: null }
+  },
+  async getRepresentedCompanyById() {
+    return { data: null, error: null }
+  },
+  async createRepresentedCompany() {
+    return { data: null, error: 'La conexión del panel administrativo aún no está disponible.', errorKind: 'auth' }
+  },
+  async updateRepresentedCompany() {
+    return { data: null, error: 'La conexión del panel administrativo aún no está disponible.', errorKind: 'auth' }
+  },
+  async uploadCompanyLogo() {
+    return { data: null, error: 'La conexión del panel administrativo aún no está disponible.', errorKind: 'auth' }
+  },
+  async detectCompanyLogos() {
+    return { data: [], error: 'La conexión del panel administrativo aún no está disponible.', errorKind: 'auth' }
+  },
+  async importDetectedCompanyLogo() {
+    return { data: null, error: 'La conexión del panel administrativo aún no está disponible.', errorKind: 'auth' }
+  },
+  async listCollaborators() {
+    return { data: [], error: null }
+  },
+  async inviteCollaborator() {
+    return { data: null, error: 'La conexión del panel administrativo aún no está disponible.', errorKind: 'auth' }
+  },
+  async reissueCollaboratorInvitation() {
+    return { data: null, error: 'La conexion del panel administrativo aun no esta disponible.', errorKind: 'auth' }
+  },
+  async revokeCollaboratorInvitation() {
+    return { data: null, error: 'La conexion del panel administrativo aun no esta disponible.', errorKind: 'auth' }
+  },
+  async removeCollaboratorInvitation() {
+    return { data: false, error: 'La conexion del panel administrativo aun no esta disponible.', errorKind: 'auth' }
+  },
+  async updateCollaboratorStatus() {
+    return { data: null, error: 'La conexión del panel administrativo aún no está disponible.', errorKind: 'auth' }
+  },
+  async listCompanyMemberships() {
+    return { data: [], error: null }
+  },
+  async upsertCompanyMembership() {
+    return { data: null, error: 'La conexión del panel administrativo aún no está disponible.', errorKind: 'auth' }
+  },
+  async deactivateCompanyMembership() {
+    return { data: null, error: 'La conexión del panel administrativo aún no está disponible.', errorKind: 'auth' }
+  },
   async listAdminNotifications() {
     return { data: [], error: null }
   },
