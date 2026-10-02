@@ -64,6 +64,22 @@ import type {
   ProspectTemperature,
   ProspectType,
   ProspectUpdate,
+  RedComercialProspectActivity,
+  RedComercialProspectActivityType,
+  RedComercialProspectChannel,
+  RedComercialProspectDetail,
+  RedComercialProspectDuplicate,
+  RedComercialProspectListRow,
+  RedComercialProspectMetrics,
+  RedComercialProspectPanel,
+  RedComercialOpportunity,
+  RedComercialCrossOpportunity,
+  RedComercialProspectNote,
+  RedComercialProspectFile,
+  RedComercialProspectStatus,
+  RedComercialFollowupListRow,
+  RedComercialFollowupMetrics,
+  RedComercialFollowupView,
   RepresentedCompanyInsert,
   RepresentedCompanyMembershipRow,
   RepresentedCompanyPrivateDetailsRow,
@@ -116,6 +132,9 @@ export type {
   ProspectTemperature,
   ProspectType,
   ProspectUpdate,
+  RedComercialProspectActivityType,
+  RedComercialProspectChannel,
+  RedComercialProspectStatus,
   RepresentedCompanyInsert,
   RepresentedCompanyMembershipRow,
   RepresentedCompanyPrivateDetailsRow,
@@ -161,6 +180,72 @@ export type RedComercialHomeData = {
   activeMemberships: number
   myMemberships: RepresentedCompanyMembershipRecord[]
   myCompanies: RepresentedCompanyRecord[]
+}
+
+export type RedComercialProspectListItem = RedComercialProspectListRow
+export type RedComercialProspectDetailRecord = RedComercialProspectDetail
+export type RedComercialProspectMetricsRecord = RedComercialProspectMetrics
+export type RedComercialProspectPanelRecord = RedComercialProspectPanel
+export type RedComercialOpportunityRecord = RedComercialOpportunity
+export type RedComercialCrossOpportunityRecord = RedComercialCrossOpportunity
+export type RedComercialProspectNoteRecord = RedComercialProspectNote
+export type RedComercialProspectFileRecord = RedComercialProspectFile
+export type RedComercialFollowupListItem = RedComercialFollowupListRow
+export type RedComercialFollowupMetricsRecord = RedComercialFollowupMetrics
+export type RedComercialProspectDuplicateRecord = RedComercialProspectDuplicate
+export type RedComercialProspectActivityRecord = RedComercialProspectActivity
+
+export type RedComercialProspectFilters = {
+  search?: string
+  status?: RedComercialProspectStatus | ''
+  channel?: RedComercialProspectChannel | ''
+  ownerUserId?: string
+  followupFilter?: 'today' | 'overdue' | ''
+  mine?: boolean
+  quickFilter?: 'all' | 'today' | 'overdue' | 'no_response' | 'interested'
+  includeArchived?: boolean
+  pageSize?: number
+  page?: number
+}
+
+export type RedComercialFollowupFilters = {
+  search?: string
+  companyId?: string
+  responsibleId?: string
+  status?: RedComercialProspectStatus | ''
+  channel?: RedComercialProspectChannel | ''
+  view?: RedComercialFollowupView
+  mine?: boolean
+  pageSize?: number
+  page?: number
+}
+
+export type RedComercialProspectFormValues = {
+  represented_company_id: string
+  company_name: string
+  website_url: string
+  rut: string
+  contact_name: string
+  contact_role: string
+  contact_email: string
+  contact_phone: string
+  channel: RedComercialProspectChannel | ''
+  status: RedComercialProspectStatus
+  first_contact_at: string
+  last_contact_at: string
+  next_followup_at: string
+  owner_user_id: string
+  collaborator_ids: string[]
+  internal_notes: string
+}
+
+export type RedComercialProspectActivityFormValues = {
+  activity_type: RedComercialProspectActivityType
+  title: string
+  description: string
+  activity_at: string
+  next_followup_at: string
+  status: RedComercialProspectStatus | ''
 }
 
 export type AdminNotificationRecord = AdminNotificationRow

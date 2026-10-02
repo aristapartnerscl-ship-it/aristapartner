@@ -3,6 +3,7 @@ import userEvent from '@testing-library/user-event'
 import type { Session } from '@supabase/supabase-js'
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest'
 import { MemoryRouter, Route, Routes } from 'react-router-dom'
+import { AdminAuthContext, type AdminAuthContextValue } from '../admin-auth-context'
 import AdminRoutes from '../AdminRoutes'
 import { AdminInvitationAcceptance } from './AdminInvitationAcceptance'
 
@@ -65,14 +66,18 @@ const collaboratorProfile = {
   invitation_status: 'pending',
 }
 
-function renderInvitation(initialPath = '/admin/aceptar-invitacion?token_hash=token-hash&type=invite') {
+function renderInvitation(initialPath = '/admin/aceptar-invitacion?token_hash=token-hash&type=invite', authValue?: AdminAuthContextValue) {
+  const routes = (
+    <Routes>
+      <Route path="/admin/aceptar-invitacion" element={<AdminInvitationAcceptance />} />
+      <Route path="/admin" element={<p>Red Comercial Arista</p>} />
+      <Route path="/admin/login" element={<p>Acceso administrativo</p>} />
+    </Routes>
+  )
+
   return render(
     <MemoryRouter initialEntries={[initialPath]}>
-      <Routes>
-        <Route path="/admin/aceptar-invitacion" element={<AdminInvitationAcceptance />} />
-        <Route path="/admin" element={<p>Red Comercial Arista</p>} />
-        <Route path="/admin/login" element={<p>Acceso administrativo</p>} />
-      </Routes>
+      {authValue ? <AdminAuthContext.Provider value={authValue}>{routes}</AdminAuthContext.Provider> : routes}
     </MemoryRouter>,
   )
 }
@@ -158,7 +163,16 @@ describe('admin invitation acceptance', () => {
 
   test('activa la cuenta con updateUser y redirige a /admin', async () => {
     const user = userEvent.setup()
-    renderInvitation()
+    const refreshProfile = vi.fn().mockResolvedValue(undefined)
+    renderInvitation('/admin/aceptar-invitacion?token_hash=token-hash&type=invite', {
+      status: 'unauthorized',
+      session: invitationSession,
+      user: invitationSession.user,
+      profile: null,
+      signIn: vi.fn(),
+      signOut: vi.fn(),
+      refreshProfile,
+    })
 
     await user.click(screen.getByRole('button', { name: 'Aceptar invitacion' }))
     await user.type(await screen.findByLabelText('Nueva contrasena'), 'Password123!')
@@ -167,7 +181,22 @@ describe('admin invitation acceptance', () => {
 
     expect(authMocks.updateUser).toHaveBeenCalledWith({ password: 'Password123!' })
     expect(authMocks.invoke).toHaveBeenCalledWith('invite-collaborator', { body: { action: 'complete-onboarding' } })
+    expect(refreshProfile).toHaveBeenCalled()
     expect(await screen.findByText('Red Comercial Arista')).toBeInTheDocument()
+  })
+
+  test('si complete-onboarding falla no redirige a /admin', async () => {
+    const user = userEvent.setup()
+    authMocks.invoke.mockResolvedValueOnce({ data: null, error: new Error('profile missing') })
+    renderInvitation()
+
+    await user.click(screen.getByRole('button', { name: 'Aceptar invitacion' }))
+    await user.type(await screen.findByLabelText('Nueva contrasena'), 'Password123!')
+    await user.type(screen.getByLabelText('Confirmar contrasena'), 'Password123!')
+    await user.click(screen.getByRole('button', { name: 'Activar mi cuenta' }))
+
+    expect(await screen.findByRole('status')).toHaveTextContent('No fue posible completar la activacion de tu cuenta.')
+    expect(screen.queryByText('Red Comercial Arista')).not.toBeInTheDocument()
   })
 
   test('la ruta aceptar invitacion no queda bloqueada por AdminGuard', async () => {

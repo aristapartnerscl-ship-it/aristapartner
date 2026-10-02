@@ -175,23 +175,54 @@ async function parseCandidates(html: string, baseUrl: URL) {
   return candidates.slice(0, 8)
 }
 
-async function requireAdmin(request: Request) {
+type Actor = { id: string; role: 'owner' | 'collaborator' }
+
+async function getActor(request: Request): Promise<{ actor: Actor; supabase: ReturnType<typeof createClient> } | null> {
   const supabaseUrl = Deno.env.get('SUPABASE_URL')
   const serviceRoleKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')
-  if (!supabaseUrl || !serviceRoleKey) return false
+  if (!supabaseUrl || !serviceRoleKey) return null
   const token = request.headers.get('Authorization')?.replace(/^Bearer\s+/i, '')
-  if (!token) return false
+  if (!token) return null
   const supabase = createClient(supabaseUrl, serviceRoleKey, { auth: { persistSession: false, autoRefreshToken: false } })
   const { data: userData, error: userError } = await supabase.auth.getUser(token)
-  if (userError || !userData.user) return false
+  if (userError || !userData.user) return null
   const { data } = await supabase
     .from('admin_profiles')
-    .select('id')
+    .select('id, role, is_active, invitation_status, onboarding_completed_at')
     .eq('id', userData.user.id)
     .eq('is_active', true)
-    .eq('role', 'owner')
     .maybeSingle()
-  return Boolean(data)
+  if (!data || (data.role !== 'owner' && (data.invitation_status !== 'accepted' || !data.onboarding_completed_at))) return null
+  return { actor: { id: data.id, role: data.role }, supabase }
+}
+
+async function canManageProspect(supabase: ReturnType<typeof createClient>, actor: Actor, prospectId: string) {
+  const { data: prospect } = await supabase
+    .from('represented_company_prospects')
+    .select('id, represented_company_id, owner_user_id')
+    .eq('id', prospectId)
+    .maybeSingle()
+  if (!prospect) return false
+  if (actor.role === 'owner') return true
+
+  const { data: membership } = await supabase
+    .from('represented_company_memberships')
+    .select('id')
+    .eq('represented_company_id', prospect.represented_company_id)
+    .eq('user_id', actor.id)
+    .eq('status', 'active')
+    .maybeSingle()
+  if (!membership) return false
+  if (prospect.owner_user_id === actor.id) return true
+
+  const { data: assignment } = await supabase
+    .from('represented_company_prospect_collaborators')
+    .select('id')
+    .eq('prospect_id', prospectId)
+    .eq('user_id', actor.id)
+    .eq('status', 'active')
+    .maybeSingle()
+  return Boolean(assignment)
 }
 
 Deno.serve(async (request) => {
@@ -202,10 +233,16 @@ Deno.serve(async (request) => {
   if (!isAllowedOrigin(origin, allowedOrigins)) return safeError('Solicitud no permitida.', 403, headers)
   if (request.method === 'OPTIONS') return json({ ok: true }, { status: 200, headers })
   if (request.method !== 'POST') return safeError('Metodo no permitido.', 405, headers)
-  if (!(await requireAdmin(request))) return safeError('No autorizado.', 403, headers)
-
-  const body = await request.json().catch(() => null) as { action?: string; websiteUrl?: string; imageUrl?: string; companyId?: string } | null
+  const body = await request.json().catch(() => null) as { action?: string; websiteUrl?: string; imageUrl?: string; companyId?: string; prospectId?: string } | null
   if (!body) return safeError('Solicitud invalida.', 400, headers)
+  const auth = await getActor(request)
+  if (!auth) return safeError('No autorizado.', 403, headers)
+  const prospectId = body.prospectId
+  if (prospectId) {
+    if (!await canManageProspect(auth.supabase, auth.actor, prospectId)) return safeError('No autorizado para este prospecto.', 403, headers)
+  } else if (auth.actor.role !== 'owner') {
+    return safeError('No autorizado.', 403, headers)
+  }
 
   if (body.action === 'detect') {
     const websiteUrl = await assertSafeHttpUrl(body.websiteUrl)
@@ -219,16 +256,25 @@ Deno.serve(async (request) => {
 
   if (body.action === 'import') {
     const imageUrl = await assertSafeHttpUrl(body.imageUrl)
-    if (!imageUrl || !body.companyId) return safeError('Selecciona una imagen valida.', 400, headers)
+    if (!imageUrl || (!body.companyId && !prospectId)) return safeError('Selecciona una imagen valida.', 400, headers)
     const fetched = await fetchWithLimit(imageUrl, 'image/png,image/jpeg,image/webp', maxImageBytes)
     const contentType = fetched?.response.headers.get('content-type')?.split(';')[0].toLowerCase() ?? ''
     if (!fetched || !allowedImageTypes.has(contentType)) return safeError('La imagen detectada no tiene un formato permitido.', 400, headers)
 
     const extension = contentType === 'image/png' ? 'png' : contentType === 'image/webp' ? 'webp' : 'jpg'
-    const path = `${body.companyId}/detected-${crypto.randomUUID()}.${extension}`
-    const supabase = createClient(Deno.env.get('SUPABASE_URL')!, Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!, { auth: { persistSession: false, autoRefreshToken: false } })
+    const path = prospectId
+      ? `prospects/${prospectId}/detected-${crypto.randomUUID()}.${extension}`
+      : `${body.companyId}/detected-${crypto.randomUUID()}.${extension}`
+    const supabase = auth.supabase
     const { error } = await supabase.storage.from('company-logos').upload(path, fetched.buffer, { contentType, upsert: true })
     if (error) return safeError('No fue posible guardar el logo detectado.', 503, headers)
+    if (prospectId) {
+      const { error: updateError } = await supabase
+        .from('represented_company_prospects')
+        .update({ logo_storage_path: path, logo_source: 'detected', logo_updated_at: new Date().toISOString() })
+        .eq('id', prospectId)
+      if (updateError) return safeError('El logo se guardo, pero no fue posible asociarlo al prospecto.', 503, headers)
+    }
     return json({ ok: true, path }, { status: 201, headers })
   }
 

@@ -1,10 +1,11 @@
 import { Eye, EyeOff } from 'lucide-react'
-import { useMemo, useRef, useState, type FormEvent } from 'react'
+import { useContext, useMemo, useRef, useState, type FormEvent } from 'react'
 import type { Session } from '@supabase/supabase-js'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { BrandLockup } from '../../components/BrandLockup'
 import { supabase } from '../../lib/supabase'
 import { isSupabaseConfigured } from '../../lib/supabase-config'
+import { AdminAuthContext } from '../admin-auth-context'
 
 const invalidInvitationMessage = 'La invitacion no es valida o ha expirado.'
 
@@ -41,6 +42,7 @@ function passwordMeetsRequirements(value: string) {
 export function AdminInvitationAcceptance() {
   const navigate = useNavigate()
   const location = useLocation()
+  const auth = useContext(AdminAuthContext)
   const feedbackRef = useRef<HTMLDivElement>(null)
   const invitationParams = useMemo(() => {
     const query = getUrlParams(location.search)
@@ -156,11 +158,12 @@ export function AdminInvitationAcceptance() {
     const { error: completeError } = await supabase.functions.invoke('invite-collaborator', { body: { action: 'complete-onboarding' } })
     if (completeError) {
       setStatus('ready')
-      setMessage('La contrasena fue actualizada, pero no fue posible completar la activacion. Vuelve a intentarlo.')
+      setMessage('No fue posible completar la activacion de tu cuenta.')
       window.setTimeout(() => feedbackRef.current?.focus(), 0)
       return
     }
 
+    await auth?.refreshProfile?.()
     setNewPassword('')
     setConfirmPassword('')
     setStatus('activated')

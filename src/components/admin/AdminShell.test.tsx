@@ -27,6 +27,7 @@ describe('AdminShell', () => {
 
     expect(screen.getByRole('link', { name: 'Inicio' })).toHaveAttribute('href', '/admin')
     expect(screen.getByRole('link', { name: 'Empresas Arista' })).toHaveAttribute('href', '/admin/empresas')
+    expect(screen.getByRole('link', { name: 'Prospectos' })).toHaveAttribute('href', '/admin/prospectos')
     expect(screen.getByRole('link', { name: 'Colaboradores' })).toHaveAttribute('href', '/admin/colaboradores')
 
     fireEvent.click(screen.getByRole('button', { name: 'Modulos anteriores' }))
@@ -39,6 +40,7 @@ describe('AdminShell', () => {
     render(<MemoryRouter><AdminShell><div>Contenido</div></AdminShell></MemoryRouter>)
 
     expect(screen.getAllByRole('link', { name: 'Inicio' }).length).toBeGreaterThan(0)
+    expect(screen.getByRole('link', { name: 'Prospectos' })).toHaveAttribute('href', '/admin/prospectos')
     expect(screen.queryByRole('link', { name: 'Colaboradores' })).not.toBeInTheDocument()
     expect(screen.queryByRole('button', { name: 'Modulos anteriores' })).not.toBeInTheDocument()
   })

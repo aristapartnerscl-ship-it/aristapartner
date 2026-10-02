@@ -1,4 +1,4 @@
-import type { AdminProfile, RedComercialRole, RepresentedCompanyRecord } from '../types/admin'
+import type { AdminProfile, RedComercialRole } from '../types/admin'
 import { supabase } from '../lib/supabase'
 
 export function redComercialRole(profile: AdminProfile | null): RedComercialRole | null {
@@ -19,7 +19,7 @@ export function companyInitials(name: string) {
     .join('')
 }
 
-export function companyLogoUrl(company: Pick<RepresentedCompanyRecord, 'logo_storage_path'>) {
+export function companyLogoUrl(company: { logo_storage_path?: string | null }) {
   if (!company.logo_storage_path || !supabase) return null
   return supabase.storage.from('company-logos').getPublicUrl(company.logo_storage_path).data.publicUrl
 }

@@ -49,6 +49,17 @@ import type {
   ProspectInsert,
   ProspectRecord,
   ProspectUpdate,
+  RedComercialProspectActivityFormValues,
+  RedComercialProspectDetailRecord,
+  RedComercialProspectDuplicateRecord,
+  RedComercialProspectFilters,
+  RedComercialProspectFormValues,
+  RedComercialProspectListItem,
+  RedComercialProspectMetricsRecord,
+  RedComercialProspectPanelRecord,
+  RedComercialFollowupFilters,
+  RedComercialFollowupListItem,
+  RedComercialFollowupMetricsRecord,
   RepositoryErrorKind,
   RepositoryResult,
   RedComercialHomeData,
@@ -382,6 +393,59 @@ function representedCompanyPayload(values: RepresentedCompanyFormValues) {
   }
 }
 
+function domainFromUrl(value: string) {
+  const trimmed = value.trim()
+  if (!trimmed) return null
+  try {
+    const url = new URL(trimmed)
+    return url.hostname.toLowerCase().replace(/^www\./, '') || null
+  } catch {
+    return null
+  }
+}
+
+function timestampOrNull(value: string | null | undefined) {
+  return optionalText(value) ?? null
+}
+
+function redComercialProspectPayload(values: Partial<RedComercialProspectFormValues & { is_archived: boolean }>) {
+  return {
+    ...values,
+    company_name: values.company_name?.trim(),
+    website_url: nullableText(values.website_url),
+    rut: nullableText(values.rut),
+    contact_name: nullableText(values.contact_name),
+    contact_role: nullableText(values.contact_role),
+    contact_email: optionalText(values.contact_email)?.toLowerCase() ?? null,
+    contact_phone: nullableText(values.contact_phone),
+    channel: values.channel || null,
+    first_contact_at: timestampOrNull(values.first_contact_at),
+    last_contact_at: timestampOrNull(values.last_contact_at),
+    next_followup_at: timestampOrNull(values.next_followup_at),
+    owner_user_id: nullableText(values.owner_user_id),
+    internal_notes: nullableText(values.internal_notes),
+    collaborator_ids: values.collaborator_ids ?? undefined,
+  }
+}
+
+function prospectRpcErrorMessage(error: PostgrestError | Error | null) {
+  const message = error?.message ?? ''
+  if (message.includes('AP_DUPLICATE_PROSPECT')) return 'Este prospecto ya existe en esta cartera.'
+  if (message.includes('AP_ACCESS_DENIED')) return 'Tu usuario no tiene permisos para gestionar este prospecto.'
+  if (message.includes('AP_INVALID_OWNER')) return 'El responsable debe pertenecer a la cartera seleccionada.'
+  if (message.includes('AP_COMPANY_NAME_REQUIRED')) return 'Ingresa la empresa prospecto.'
+  return null
+}
+
+function failProspectRpc<T>(data: T, error: PostgrestError | Error | null, context: string): RepositoryResult<T> {
+  const message = prospectRpcErrorMessage(error)
+  if (message) {
+    logSafeError(context, error)
+    return { data, error: message, errorKind: message.includes('permisos') ? 'authorization' : 'validation' }
+  }
+  return fail(data, error, context)
+}
+
 function optionalUpperText(value: string | null | undefined) {
   const trimmed = optionalText(value)
   return trimmed ? trimmed.toUpperCase() : undefined
@@ -432,6 +496,34 @@ export class SupabaseAdminRepository implements AdminRepository {
 
   constructor(client: SupabaseClient<Database>) {
     this.client = client
+  }
+
+  private async prospectLogoMap(ids: string[]) {
+    if (ids.length === 0) return new Map<string, { logo_storage_path: string | null; logo_source: 'manual' | 'detected' | 'fallback'; logo_updated_at: string | null }>()
+    const { data } = await (this.client as SupabaseClient).rpc('get_red_comercial_prospect_logos', { p_prospect_ids: ids })
+    const items = (data ?? []) as Array<{ id: string; logo_storage_path: string | null; logo_source: 'manual' | 'detected' | 'fallback'; logo_updated_at: string | null }>
+    return new Map(items.map((item) => [item.id, item]))
+  }
+
+  private async enrichProspectLogo<T extends { id: string }>(rows: T[]) {
+    const logos = await this.prospectLogoMap(rows.map((row) => row.id))
+    return rows.map((row) => ({
+      ...row,
+      logo_storage_path: logos.get(row.id)?.logo_storage_path ?? null,
+      logo_source: logos.get(row.id)?.logo_source ?? 'fallback',
+      logo_updated_at: logos.get(row.id)?.logo_updated_at ?? null,
+    }))
+  }
+
+  private async autoImportRedComercialProspectLogo(prospectId: string, websiteUrl: string) {
+    if (!websiteUrl.trim()) return null
+    const detected = await this.client.functions.invoke('detect-company-logo', { body: { action: 'detect', prospectId, websiteUrl } })
+    if (detected.error) return null
+    const candidate = (detected.data as { candidates?: Array<{ url?: string }> } | null)?.candidates?.find((item) => item.url)
+    if (!candidate?.url) return null
+    const imported = await this.client.functions.invoke('detect-company-logo', { body: { action: 'import', prospectId, imageUrl: candidate.url } })
+    if (imported.error) return null
+    return (imported.data as { path?: string } | null)?.path ?? null
   }
 
   async getCurrentAdminProfile(userId: string) {
@@ -647,6 +739,210 @@ export class SupabaseAdminRepository implements AdminRepository {
       .single()
     if (error) return fail<RepresentedCompanyMembershipRecord | null>(null, error, 'memberships.deactivate')
     return ok(data as RepresentedCompanyMembershipRecord)
+  }
+
+  async listRedComercialProspects(companyId: string, filters: RedComercialProspectFilters = {}) {
+    const pageSize = filters.pageSize ?? 25
+    const page = filters.page ?? 1
+    const { data, error } = await (this.client as SupabaseClient).rpc('list_red_comercial_prospects', {
+      p_company_id: companyId,
+      p_search: optionalText(filters.search),
+      p_status: filters.status || null,
+      p_channel: filters.channel || null,
+      p_owner_user_id: optionalText(filters.ownerUserId),
+      p_followup_filter: filters.followupFilter || null,
+      p_mine: Boolean(filters.mine),
+      p_quick_filter: filters.quickFilter || null,
+      p_include_archived: Boolean(filters.includeArchived),
+      p_limit: pageSize,
+      p_offset: Math.max(0, page - 1) * pageSize,
+    })
+    if (error) return failProspectRpc<{ rows: RedComercialProspectListItem[]; total: number }>({ rows: [], total: 0 }, error, 'red_comercial.prospects.list')
+    const rows = await this.enrichProspectLogo((data ?? []) as RedComercialProspectListItem[])
+    return ok({ rows, total: rows[0]?.total_count ?? 0 })
+  }
+
+  async getRedComercialProspectMetrics(companyId: string) {
+    const { data, error } = await (this.client as SupabaseClient).rpc('get_red_comercial_prospect_metrics', { p_company_id: companyId })
+    if (error) return failProspectRpc<RedComercialProspectMetricsRecord>({ total_prospects: 0, to_contact: 0, contacted_no_response: 0, follow_up: 0, agreed: 0, overdue: 0, today: 0, interested: 0 }, error, 'red_comercial.prospects.metrics')
+    return ok(((data as RedComercialProspectMetricsRecord[] | null)?.[0] ?? { total_prospects: 0, to_contact: 0, contacted_no_response: 0, follow_up: 0, agreed: 0, overdue: 0, today: 0, interested: 0 }))
+  }
+
+  async getRedComercialProspectDetail(id: string) {
+    const { data, error } = await (this.client as SupabaseClient).rpc('get_red_comercial_prospect_detail', { p_prospect_id: id })
+    if (error) return failProspectRpc<RedComercialProspectDetailRecord | null>(null, error, 'red_comercial.prospects.detail')
+    const detail = (data ?? null) as RedComercialProspectDetailRecord | null
+    if (!detail) return ok(null)
+    const logos = await this.prospectLogoMap([id])
+    return ok({ ...detail, ...(logos.get(id) ?? { logo_storage_path: null, logo_source: 'fallback', logo_updated_at: null }) } as RedComercialProspectDetailRecord)
+  }
+
+  async getRedComercialProspectPanel(id: string) {
+    const { data, error } = await (this.client as SupabaseClient).rpc('get_red_comercial_prospect_panel', { p_prospect_id: id })
+    if (error) {
+      const missingPanelRpc = error.code === 'PGRST202' || /get_red_comercial_prospect_panel|function .* does not exist/i.test(error.message)
+      if (missingPanelRpc) {
+        const legacy = await this.getRedComercialProspectDetail(id)
+        if (legacy.data) return ok<RedComercialProspectPanelRecord>({ prospect: legacy.data, opportunities: [], cross_opportunities: [], notes: [], files: [] })
+      }
+      return failProspectRpc<RedComercialProspectPanelRecord | null>(null, error, 'red_comercial.prospects.panel')
+    }
+    return ok((data ?? null) as RedComercialProspectPanelRecord | null)
+  }
+
+  async createRedComercialOpportunity(prospectId: string, payload: Record<string, unknown>) {
+    const { data, error } = await (this.client as SupabaseClient).rpc('create_red_comercial_opportunity', { p_prospect_id: prospectId, p_payload: payload })
+    if (error) return failProspectRpc<RedComercialProspectPanelRecord | null>(null, error, 'red_comercial.opportunity.create')
+    return ok((data ?? null) as RedComercialProspectPanelRecord | null)
+  }
+
+  async updateRedComercialOpportunity(opportunityId: string, payload: Record<string, unknown>) {
+    const { data, error } = await (this.client as SupabaseClient).rpc('update_red_comercial_opportunity', { p_opportunity_id: opportunityId, p_payload: payload })
+    if (error) return failProspectRpc<RedComercialProspectPanelRecord | null>(null, error, 'red_comercial.opportunity.update')
+    return ok((data ?? null) as RedComercialProspectPanelRecord | null)
+  }
+
+  async createRedComercialCrossOpportunity(prospectId: string, targetCompanyId: string, reason: string) {
+    const { data, error } = await (this.client as SupabaseClient).rpc('create_red_comercial_cross_opportunity', { p_prospect_id: prospectId, p_target_company_id: targetCompanyId, p_reason: reason })
+    if (error) return failProspectRpc<RedComercialProspectPanelRecord | null>(null, error, 'red_comercial.cross_opportunity.create')
+    return ok((data ?? null) as RedComercialProspectPanelRecord | null)
+  }
+
+  async createRedComercialProspectNote(prospectId: string, body: string) {
+    const { data, error } = await (this.client as SupabaseClient).rpc('create_red_comercial_prospect_note', { p_prospect_id: prospectId, p_body: body })
+    if (error) return failProspectRpc<RedComercialProspectPanelRecord | null>(null, error, 'red_comercial.notes.create')
+    return ok((data ?? null) as RedComercialProspectPanelRecord | null)
+  }
+
+  async updateRedComercialProspectNote(noteId: string, body: string, archived = false) {
+    const { data, error } = await (this.client as SupabaseClient).rpc('update_red_comercial_prospect_note', { p_note_id: noteId, p_body: body, p_archived: archived })
+    if (error) return failProspectRpc<RedComercialProspectPanelRecord | null>(null, error, 'red_comercial.notes.update')
+    return ok((data ?? null) as RedComercialProspectPanelRecord | null)
+  }
+
+  async uploadRedComercialProspectFile(prospectId: string, file: File, category = 'general') {
+    const allowed = new Set(['application/pdf', 'image/png', 'image/jpeg', 'image/webp', 'text/plain', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'])
+    if (!allowed.has(file.type)) return { data: null, error: 'Formato de archivo no permitido.', errorKind: 'validation' as const }
+    if (file.size <= 0 || file.size > 10_485_760) return { data: null, error: 'El archivo no debe superar 10 MB.', errorKind: 'validation' as const }
+    const safeName = file.name.replace(/[^a-zA-Z0-9._-]+/g, '-').slice(-120) || 'archivo'
+    const path = `prospects/${prospectId}/${crypto.randomUUID()}-${safeName}`
+    const uploaded = await this.client.storage.from('prospect-files').upload(path, file, { contentType: file.type, upsert: false })
+    if (uploaded.error) return failProspectRpc<RedComercialProspectPanelRecord | null>(null, uploaded.error, 'red_comercial.files.upload')
+    const { data, error } = await (this.client as SupabaseClient).rpc('create_red_comercial_prospect_file', { p_prospect_id: prospectId, p_storage_path: path, p_file_name: file.name, p_mime_type: file.type, p_size_bytes: file.size, p_category: category })
+    if (error) return failProspectRpc<RedComercialProspectPanelRecord | null>(null, error, 'red_comercial.files.metadata')
+    return ok((data ?? null) as RedComercialProspectPanelRecord | null)
+  }
+
+  async archiveRedComercialProspectFile(fileId: string) {
+    const { data, error } = await (this.client as SupabaseClient).rpc('archive_red_comercial_prospect_file', { p_file_id: fileId })
+    if (error) return failProspectRpc<RedComercialProspectPanelRecord | null>(null, error, 'red_comercial.files.archive')
+    return ok((data ?? null) as RedComercialProspectPanelRecord | null)
+  }
+
+  async createRedComercialProspectFileSignedUrl(path: string) {
+    const { data, error } = await this.client.storage.from('prospect-files').createSignedUrl(path, 3600)
+    if (error) return fail<string | null>(null, error, 'red_comercial.files.signed_url')
+    return ok(data?.signedUrl ?? null)
+  }
+
+  async detectRedComercialProspectDuplicates(values: Pick<RedComercialProspectFormValues, 'represented_company_id' | 'company_name' | 'website_url' | 'contact_email' | 'contact_phone'>, excludeProspectId?: string) {
+    const { data, error } = await (this.client as SupabaseClient).rpc('detect_red_comercial_prospect_duplicates', {
+      p_company_id: values.represented_company_id,
+      p_company_name: values.company_name,
+      p_domain: domainFromUrl(values.website_url),
+      p_contact_email: optionalText(values.contact_email),
+      p_contact_phone: optionalText(values.contact_phone),
+      p_exclude_prospect_id: excludeProspectId ?? null,
+    })
+    if (error) return failProspectRpc<RedComercialProspectDuplicateRecord[]>([], error, 'red_comercial.prospects.duplicates')
+    return ok((data ?? []) as RedComercialProspectDuplicateRecord[])
+  }
+
+  async createRedComercialProspect(values: RedComercialProspectFormValues) {
+    if (!values.company_name.trim()) return { data: null, error: 'Ingresa la empresa prospecto.', errorKind: 'validation' as const }
+    const { data, error } = await (this.client as SupabaseClient).rpc('create_red_comercial_prospect', {
+      p_payload: redComercialProspectPayload(values),
+    })
+    if (error) return failProspectRpc<RedComercialProspectDetailRecord | null>(null, error, 'red_comercial.prospects.create')
+    let prospect = (data ?? null) as RedComercialProspectDetailRecord | null
+    if (!prospect) return ok(null)
+    const websiteUrl = values.website_url?.trim() ?? ''
+    const shouldDetect = Boolean(websiteUrl) && (!prospect.logo_storage_path || (await this.getRedComercialProspectDetail(prospect.id)).data?.website_url !== websiteUrl)
+    if (shouldDetect) {
+      await this.autoImportRedComercialProspectLogo(prospect.id, websiteUrl)
+      const refreshed = await this.getRedComercialProspectDetail(prospect.id)
+      prospect = refreshed.data ?? prospect
+    }
+    return ok(prospect)
+  }
+
+  async updateRedComercialProspect(id: string, values: Partial<RedComercialProspectFormValues & { is_archived: boolean }>) {
+    const previous = values.website_url !== undefined ? await this.getRedComercialProspectDetail(id) : null
+    const { data, error } = await (this.client as SupabaseClient).rpc('update_red_comercial_prospect', {
+      p_prospect_id: id,
+      p_payload: redComercialProspectPayload(values),
+    })
+    if (error) return failProspectRpc<RedComercialProspectDetailRecord | null>(null, error, 'red_comercial.prospects.update')
+    let prospect = (data ?? null) as RedComercialProspectDetailRecord | null
+    if (!prospect) return ok(null)
+    const websiteUrl = values.website_url?.trim() ?? ''
+    if (websiteUrl) {
+      const changedWebsite = previous?.data?.website_url !== websiteUrl
+      if (!prospect.logo_storage_path || changedWebsite) {
+        await this.autoImportRedComercialProspectLogo(id, websiteUrl)
+        const refreshed = await this.getRedComercialProspectDetail(id)
+        prospect = refreshed.data ?? prospect
+      }
+    }
+    return ok(prospect)
+  }
+
+  async createRedComercialProspectActivity(prospectId: string, values: RedComercialProspectActivityFormValues) {
+    if (!values.title.trim()) return { data: null, error: 'Ingresa un titulo para la actividad.', errorKind: 'validation' as const }
+    const { data, error } = await (this.client as SupabaseClient).rpc('create_red_comercial_prospect_activity', {
+      p_prospect_id: prospectId,
+      p_activity_type: values.activity_type,
+      p_title: values.title.trim(),
+      p_description: nullableText(values.description),
+      p_activity_at: timestampOrNull(values.activity_at),
+      p_next_followup_at: timestampOrNull(values.next_followup_at),
+      p_status: values.status || null,
+    })
+    if (error) return failProspectRpc<RedComercialProspectDetailRecord | null>(null, error, 'red_comercial.prospects.activity')
+    return ok((data ?? null) as RedComercialProspectDetailRecord | null)
+  }
+
+  async listRedComercialFollowups(filters: RedComercialFollowupFilters = {}) {
+    const pageSize = filters.pageSize ?? 25
+    const page = filters.page ?? 1
+    const { data, error } = await (this.client as SupabaseClient).rpc('list_red_comercial_followups', {
+      p_search: optionalText(filters.search),
+      p_company_id: optionalText(filters.companyId),
+      p_responsible_id: optionalText(filters.responsibleId),
+      p_status: filters.status || null,
+      p_channel: filters.channel || null,
+      p_view: filters.view || 'all',
+      p_mine: Boolean(filters.mine),
+      p_limit: pageSize,
+      p_offset: Math.max(0, page - 1) * pageSize,
+    })
+    if (error) return failProspectRpc<{ rows: RedComercialFollowupListItem[]; total: number }>({ rows: [], total: 0 }, error, 'red_comercial.followups.list')
+    const rows = await this.enrichProspectLogo((data ?? []) as RedComercialFollowupListItem[])
+    return ok({ rows, total: rows[0]?.total_count ?? 0 })
+  }
+
+  async getRedComercialFollowupMetrics(filters: Omit<RedComercialFollowupFilters, 'page' | 'pageSize' | 'view'> = {}) {
+    const { data, error } = await (this.client as SupabaseClient).rpc('get_red_comercial_followup_metrics', {
+      p_search: optionalText(filters.search),
+      p_company_id: optionalText(filters.companyId),
+      p_responsible_id: optionalText(filters.responsibleId),
+      p_status: filters.status || null,
+      p_channel: filters.channel || null,
+      p_mine: Boolean(filters.mine),
+    })
+    const empty: RedComercialFollowupMetricsRecord = { today: 0, overdue: 0, upcoming: 0, no_followup: 0, no_movement: 0, total: 0 }
+    if (error) return failProspectRpc<RedComercialFollowupMetricsRecord>(empty, error, 'red_comercial.followups.metrics')
+    return ok(((data as RedComercialFollowupMetricsRecord[] | null)?.[0] ?? empty))
   }
 
   async listAdminNotifications(limit = 10) {

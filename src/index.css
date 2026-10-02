@@ -24,6 +24,116 @@
   --color-dark-text-muted: rgba(255, 255, 255, 0.76);
 }
 
+/* Compact CRM detail/table surfaces shared by Prospectos and Seguimientos. */
+aside[class*="xl:fixed"][class*="xl:right-0"] section.border-b {
+  padding-block: 0.5rem;
+}
+
+aside[class*="xl:fixed"][class*="xl:right-0"] > div:first-child {
+  padding-block: 0.5rem;
+}
+
+aside[class*="xl:fixed"][class*="xl:right-0"] section.border-b > div:first-child {
+  margin-bottom: 0.375rem;
+}
+
+aside[class*="xl:fixed"][class*="xl:right-0"] section.border-b h3 {
+  font-size: 12.5px;
+  line-height: 1.15;
+}
+
+aside[class*="xl:fixed"][class*="xl:right-0"] [class*="grid-cols-[118px"] {
+  grid-template-columns: 110px minmax(0, 1fr);
+  min-height: 28px;
+  line-height: 1.2;
+}
+
+aside[class*="xl:fixed"][class*="xl:right-0"] [class*="grid-cols-[118px"] > span:last-child {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+aside[class*="xl:fixed"][class*="xl:right-0"] [class*="grid-cols-4"] button {
+  padding-block: 0.375rem;
+  font-size: 11px;
+  line-height: 1.1;
+}
+
+aside[class*="xl:fixed"][class*="xl:right-0"] [class*="mt-2"][class*="items-center"] button {
+  white-space: nowrap;
+  padding-inline: 0.375rem;
+}
+
+/* Header keeps only the status control, secondary menu and close affordance. */
+aside[class*="xl:fixed"][class*="xl:right-0"] > div:first-child > div:nth-child(2) > button:not(:last-child) {
+  display: none;
+}
+
+aside[class*="xl:fixed"][class*="xl:right-0"] > div:first-child > div:nth-child(2) > select {
+  max-width: 100%;
+  white-space: nowrap;
+}
+
+table[class*="min-w-[1298px]"] thead th,
+table[class*="min-w-[980px]"] thead th {
+  padding: 0.5rem 0.5rem;
+  line-height: 1.15;
+  white-space: normal;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  vertical-align: middle;
+}
+
+table[class*="min-w-[1298px]"] thead th:nth-child(1) { width: 130px; }
+table[class*="min-w-[1298px]"] thead th:nth-child(2) { width: 115px; }
+table[class*="min-w-[1298px]"] thead th:nth-child(3) { width: 105px; }
+table[class*="min-w-[1298px]"] thead th:nth-child(5) { width: 80px; white-space: nowrap; }
+table[class*="min-w-[1298px]"] thead th:nth-child(6) { width: 115px; }
+table[class*="min-w-[1298px]"] thead th:nth-child(7) { width: 145px; white-space: nowrap; }
+table[class*="min-w-[1298px]"] thead th:nth-child(8) { width: 105px; }
+table[class*="min-w-[1298px]"] thead th:nth-child(9) { width: 125px; }
+table[class*="min-w-[1298px]"] thead th:nth-child(10) { width: 115px; white-space: nowrap; }
+table[class*="min-w-[1298px]"] thead th:nth-child(11) { width: 50px; white-space: nowrap; }
+
+/* Email and phone remain available in the detail panel, but stay out of the dense grid. */
+table[class*="min-w-[1298px]"] col:nth-child(4),
+table[class*="min-w-[1298px]"] th:nth-child(4),
+table[class*="min-w-[1298px]"] td:nth-child(4) { display: none; }
+
+table[class*="min-w-[1298px]"] tbody td,
+table[class*="min-w-[980px]"] tbody td {
+  padding-block: 0.375rem;
+  line-height: 1.2;
+}
+
+table[class*="min-w-[980px]"] {
+  table-layout: fixed;
+  min-width: 1080px;
+}
+
+table[class*="min-w-[980px]"] th:nth-child(1) { width: 130px; }
+table[class*="min-w-[980px]"] th:nth-child(2) { width: 125px; }
+table[class*="min-w-[980px]"] th:nth-child(3) { width: 145px; white-space: nowrap; }
+table[class*="min-w-[980px]"] th:nth-child(4) { width: 80px; white-space: nowrap; }
+table[class*="min-w-[980px]"] th:nth-child(5) { width: 105px; }
+table[class*="min-w-[980px]"] th:nth-child(6) { width: 125px; }
+table[class*="min-w-[980px]"] th:nth-child(7) { width: 115px; white-space: nowrap; }
+table[class*="min-w-[980px]"] th:nth-child(9) { width: 50px; white-space: nowrap; }
+
+/* State accents are intentionally restrained and yield to the selected-row background. */
+table[class*="min-w-[1298px]"] tbody tr:has(td:nth-child(7) .bg-amber-50) > td:first-child,
+table[class*="min-w-[980px]"] tbody tr:has(td:nth-child(3) .bg-amber-50) > td:first-child { border-left: 3px solid #f2c879; }
+table[class*="min-w-[1298px]"] tbody tr:has(td:nth-child(7) .bg-blue-50) > td:first-child,
+table[class*="min-w-[980px]"] tbody tr:has(td:nth-child(3) .bg-blue-50) > td:first-child { border-left: 3px solid #93b9e8; }
+table[class*="min-w-[1298px]"] tbody tr:has(td:nth-child(7) .bg-emerald-50) > td:first-child,
+table[class*="min-w-[980px]"] tbody tr:has(td:nth-child(3) .bg-emerald-50) > td:first-child { border-left: 3px solid #8bc9a2; }
+table[class*="min-w-[1298px]"] tbody tr:has(td:nth-child(7) .bg-rose-50) > td:first-child,
+table[class*="min-w-[980px]"] tbody tr:has(td:nth-child(3) .bg-rose-50) > td:first-child { border-left: 3px solid #e5a5ad; }
+table[class*="min-w-[1298px]"] tbody tr:has(td:nth-child(7) .bg-stone-100) > td:first-child,
+table[class*="min-w-[980px]"] tbody tr:has(td:nth-child(3) .bg-stone-100) > td:first-child { border-left: 3px solid #cbd0d1; }
+
 :root {
   --color-brand: #1E4D3A;
   --color-brand-dark: #16392C;

@@ -81,6 +81,28 @@ export type ProspectActivityOutcome =
   | 'meeting_scheduled'
   | 'not_interested'
   | 'other'
+export type RedComercialProspectStatus =
+  | 'to_contact'
+  | 'contacted_no_response'
+  | 'responded'
+  | 'follow_up'
+  | 'interested'
+  | 'meeting_scheduled'
+  | 'agreed'
+  | 'not_interested'
+  | 'archived'
+export type RedComercialProspectChannel = 'email' | 'whatsapp' | 'linkedin' | 'phone' | 'website' | 'referral' | 'other'
+export type RedComercialProspectActivityType =
+  | 'call'
+  | 'email'
+  | 'whatsapp'
+  | 'linkedin'
+  | 'meeting'
+  | 'note'
+  | 'followup'
+  | 'status_change'
+  | 'assignment_change'
+  | 'archive_change'
 
 export type AdminProfileRow = Override<TableRow<'admin_profiles'>, {
   role: AdminRole
@@ -143,6 +165,197 @@ export type RepresentedCompanyMembershipRow = {
   assigned_by: string | null
   created_at: string
   updated_at: string
+}
+
+export type RedComercialProspectListRow = {
+  id: string
+  represented_company_id: string
+  company_name: string
+  logo_storage_path?: string | null
+  logo_source?: CompanyLogoSource
+  logo_updated_at?: string | null
+  contact_name: string | null
+  contact_role: string | null
+  contact_email: string | null
+  contact_phone: string | null
+  channel: RedComercialProspectChannel | null
+  status: RedComercialProspectStatus
+  first_contact_at: string | null
+  last_contact_at: string | null
+  next_followup_at: string | null
+  owner_user_id: string | null
+  owner_name: string | null
+  is_archived: boolean
+  can_view_detail: boolean
+  total_count: number
+}
+
+export type RedComercialProspectMetrics = {
+  total_prospects: number
+  to_contact: number
+  contacted_no_response: number
+  follow_up: number
+  agreed: number
+  overdue: number
+  today: number
+  interested: number
+}
+
+export type RedComercialProspectAssignee = {
+  id: string
+  full_name: string | null
+  email: string | null
+}
+
+export type RedComercialProspectActivity = {
+  id: string
+  activity_type: RedComercialProspectActivityType
+  title: string
+  description: string | null
+  activity_at: string
+  created_at: string
+  created_by: string
+  created_by_name: string | null
+}
+
+export type RedComercialProspectDetail = {
+  id: string
+  represented_company_id: string
+  company_name: string
+  logo_storage_path?: string | null
+  logo_source?: CompanyLogoSource
+  logo_updated_at?: string | null
+  website_url: string | null
+  domain: string | null
+  rut: string | null
+  contact_name: string | null
+  contact_role: string | null
+  contact_email: string | null
+  contact_phone: string | null
+  channel: RedComercialProspectChannel | null
+  status: RedComercialProspectStatus
+  first_contact_at: string | null
+  last_contact_at: string | null
+  next_followup_at: string | null
+  owner_user_id: string | null
+  owner: RedComercialProspectAssignee | null
+  collaborators: RedComercialProspectAssignee[]
+  internal_notes: string | null
+  is_archived: boolean
+  can_view_detail: boolean
+  activities: RedComercialProspectActivity[]
+  created_at: string
+  updated_at: string
+}
+
+export type RedComercialFollowupView = 'all' | 'today' | 'overdue' | 'upcoming' | 'no_followup' | 'stale'
+
+export type RedComercialFollowupListRow = {
+  id: string
+  represented_company_id: string
+  represented_company_name: string
+  represented_company_logo_storage_path: string | null
+  company_name: string
+  logo_storage_path?: string | null
+  logo_source?: CompanyLogoSource
+  logo_updated_at?: string | null
+  status: RedComercialProspectStatus
+  channel: RedComercialProspectChannel | null
+  last_contact_at: string | null
+  next_followup_at: string | null
+  owner_user_id: string | null
+  owner_name: string | null
+  latest_activity_title: string | null
+  latest_activity_type: RedComercialProspectActivityType | null
+  latest_activity_at: string | null
+  is_no_movement: boolean
+  days_overdue: number
+  total_count: number
+}
+
+export type RedComercialFollowupMetrics = {
+  today: number
+  overdue: number
+  upcoming: number
+  no_followup: number
+  no_movement: number
+  total: number
+}
+
+export type RedComercialProspectDuplicate = {
+  id: string
+  company_name: string
+  status: RedComercialProspectStatus
+  owner_name: string | null
+  duplicate_reason: string
+  same_company: boolean
+}
+
+export type RedComercialOpportunity = {
+  id: string
+  prospect_id: string
+  status: 'in_process' | 'won' | 'lost' | 'cancelled'
+  control_mode: 'collaborator' | 'arista' | 'shared'
+  contract_status: string
+  payment_status: string
+  commission_status: string
+  result_status: 'in_process' | 'won' | 'lost' | 'cancelled'
+  attributed_collaborator_id: string | null
+  collaborator_compensation_type: 'percentage' | 'fixed_amount' | null
+  collaborator_compensation_rate: number | null
+  collaborator_compensation_amount: number | null
+  sale_net_amount: number | null
+  currency: string
+  handed_off_at: string | null
+  closed_at: string | null
+  created_by: string
+  created_at: string
+  updated_at: string
+}
+
+export type RedComercialCrossOpportunity = {
+  id: string
+  source_prospect_id: string
+  target_represented_company_id: string
+  target_company_name: string
+  target_company_logo_storage_path: string | null
+  detected_by: string
+  reason: string
+  status: 'detected' | 'under_review' | 'assigned' | 'converted' | 'discarded'
+  assigned_to: string | null
+  created_at: string
+  updated_at: string
+}
+
+export type RedComercialProspectNote = {
+  id: string
+  prospect_id: string
+  body: string
+  created_by: string
+  updated_by: string | null
+  created_at: string
+  updated_at: string
+}
+
+export type RedComercialProspectFile = {
+  id: string
+  prospect_id: string
+  opportunity_id: string | null
+  storage_path: string
+  file_name: string
+  mime_type: string
+  size_bytes: number
+  category: 'general' | 'proposal' | 'contract' | 'commercial' | 'other'
+  uploaded_by: string
+  created_at: string
+}
+
+export type RedComercialProspectPanel = {
+  prospect: RedComercialProspectDetail
+  opportunities: RedComercialOpportunity[]
+  cross_opportunities: RedComercialCrossOpportunity[]
+  notes: RedComercialProspectNote[]
+  files: RedComercialProspectFile[]
 }
 
 export type ContactRow = Override<TableRow<'contacts'>, { contact_type: ContactType }>

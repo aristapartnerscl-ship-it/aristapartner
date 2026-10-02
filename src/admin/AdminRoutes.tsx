@@ -21,6 +21,8 @@ import { AdminInvitationAcceptance } from './pages/AdminInvitationAcceptance'
 import { AdminLogin } from './pages/AdminLogin'
 import { AdminPasswordRecoveryRequest, AdminPasswordUpdate } from './pages/AdminPasswordRecovery'
 import { AdminCompaniesPage, AssignmentsPage, CollaboratorsPage, CompanyDetailPage, MyPortfoliosPage, RedComercialHome } from './pages/RedComercialPages'
+import { RedComercialProspectsPage } from './pages/RedComercialProspectsPage'
+import { RedComercialFollowupsPage } from './pages/RedComercialFollowupsPage'
 
 export default function AdminRoutes() {
   return (
@@ -35,6 +37,8 @@ export default function AdminRoutes() {
           <Route path="empresas" element={<AdminCompaniesPage />} />
           <Route path="empresas/:id" element={<CompanyDetailPage />} />
           <Route path="mis-carteras" element={<MyPortfoliosPage />} />
+          <Route path="prospectos" element={<RedComercialProspectsPage />} />
+          <Route path="seguimientos" element={<RedComercialFollowupsPage />} />
           <Route element={<AdminRoleGuard />}>
             <Route path="colaboradores" element={<CollaboratorsPage />} />
             <Route path="asignaciones" element={<AssignmentsPage />} />

@@ -82,6 +82,20 @@ export function AdminAuthProvider({ children }: { children: ReactNode }) {
     setStatus('signed_out')
   }
 
+  async function refreshProfile() {
+    if (!isSupabaseConfigured || !supabase) return
+    const { data } = await supabase.auth.getSession()
+    setSession(data.session)
+    if (!data.session?.user) {
+      setProfile(null)
+      setStatus('signed_out')
+      return
+    }
+    const result = await adminRepository.getCurrentAdminProfile(data.session.user.id)
+    setProfile(result.data)
+    setStatus(result.data ? 'ready' : 'unauthorized')
+  }
+
   const value = useMemo<AdminAuthContextValue>(
     () => ({
       status,
@@ -90,6 +104,7 @@ export function AdminAuthProvider({ children }: { children: ReactNode }) {
       profile,
       signIn,
       signOut,
+      refreshProfile,
     }),
     [profile, session, status],
   )

@@ -1,5 +1,5 @@
-import { BriefcaseBusiness, Building2, ChevronDown, Home, Menu, Settings, Users, X } from 'lucide-react'
-import { useEffect, useState, type ReactNode } from 'react'
+import { BriefcaseBusiness, Building2, CalendarClock, ChevronDown, Home, Menu, PanelLeftClose, PanelLeftOpen, Settings, Target, Users, X } from 'lucide-react'
+import { useEffect, useState, type CSSProperties, type ReactNode } from 'react'
 import { NavLink } from 'react-router-dom'
 import { isRedComercialAdmin } from '../../admin/red-comercial-utils'
 import { useAdminAuth } from '../../admin/useAdminAuth'
@@ -9,6 +9,8 @@ const primaryNav = [
   { label: 'Inicio', href: '/admin', icon: Home },
   { label: 'Empresas Arista', href: '/admin/empresas', icon: Building2 },
   { label: 'Mis carteras', href: '/admin/mis-carteras', icon: BriefcaseBusiness },
+  { label: 'Prospectos', href: '/admin/prospectos', icon: Target },
+  { label: 'Seguimientos', href: '/admin/seguimientos', icon: CalendarClock },
 ]
 
 const adminOnlyNav = [
@@ -49,8 +51,31 @@ function UserInitials({ name }: { name?: string | null }) {
 export function AdminShell({ children }: { children: ReactNode }) {
   const [open, setOpen] = useState(false)
   const [legacyOpen, setLegacyOpen] = useState(false)
+  const [collapsed, setCollapsed] = useState(() => window.localStorage.getItem('arista-admin-sidebar-collapsed') === 'true')
+  const [compactByLayout, setCompactByLayout] = useState(false)
+  const [detailOpen, setDetailOpen] = useState(false)
   const auth = useAdminAuth()
   const admin = isRedComercialAdmin(auth.profile)
+  const effectiveCollapsed = collapsed || compactByLayout
+
+  useEffect(() => {
+    window.localStorage.setItem('arista-admin-sidebar-collapsed', String(collapsed))
+  }, [collapsed])
+
+  useEffect(() => {
+    function syncLayout() {
+      const detailOpen = document.documentElement.dataset.redProspectDetail === 'open'
+      setDetailOpen(detailOpen)
+      setCompactByLayout(detailOpen && window.innerWidth <= 1440)
+    }
+    syncLayout()
+    window.addEventListener('resize', syncLayout)
+    window.addEventListener('arista-red-prospect-detail', syncLayout)
+    return () => {
+      window.removeEventListener('resize', syncLayout)
+      window.removeEventListener('arista-red-prospect-detail', syncLayout)
+    }
+  }, [])
 
   useEffect(() => {
     function onKeyDown(event: KeyboardEvent) {
@@ -61,60 +86,63 @@ export function AdminShell({ children }: { children: ReactNode }) {
   }, [])
 
   return (
-    <div className="min-h-screen min-w-0 max-w-full bg-[#f4f0e8] text-slate-800 lg:grid lg:grid-cols-[236px_minmax(0,1fr)]">
-      <aside id="admin-nav" className={`${open ? 'fixed inset-0 z-50 block bg-[#0f241b] p-4' : 'hidden'} min-w-0 shrink-0 overflow-y-auto border-r border-white/10 bg-[#0f241b] text-white shadow-[inset_-1px_0_rgba(255,255,255,0.05)] lg:sticky lg:top-0 lg:block lg:h-screen lg:p-4`}>
-        <div className="flex items-start justify-between gap-3 rounded-xl border border-white/10 bg-white/[0.03] px-3 py-3">
+    <div style={{ '--admin-topbar-height': '48px', '--detail-panel-width': '390px' } as CSSProperties} className={`min-h-screen min-w-0 max-w-full bg-[#f4f0e8] text-slate-800 lg:grid ${effectiveCollapsed ? 'lg:grid-cols-[60px_minmax(0,1fr)]' : 'lg:grid-cols-[188px_minmax(0,1fr)]'}`}>
+      <aside id="admin-nav" className={`${open ? 'fixed inset-0 z-50 block bg-[#0f241b] p-3' : 'hidden'} min-w-0 shrink-0 flex-col overflow-y-auto border-r border-white/10 bg-[#0f241b] text-white shadow-[inset_-1px_0_rgba(255,255,255,0.05)] lg:sticky lg:top-0 lg:flex lg:h-screen lg:p-3`}>
+        <div className={`flex items-center rounded-xl border border-white/10 bg-white/[0.03] ${effectiveCollapsed ? 'justify-center px-1.5 py-2' : 'justify-between gap-2 px-2.5 py-3'}`}>
           <div>
-            <p className="text-lg font-semibold leading-none tracking-tight">ARISTA</p>
-            <p className="mt-1.5 text-xs font-medium text-[#b8d2c4]">Red Comercial</p>
+            {effectiveCollapsed ? <p className="text-base font-bold tracking-tight" title="Arista · Red Comercial">A</p> : <><p className="text-lg font-semibold leading-none tracking-tight">ARISTA</p><p className="mt-1.5 text-xs font-medium text-[#b8d2c4]">Red Comercial</p></>}
           </div>
-          <button type="button" onClick={() => setOpen(false)} aria-label="Cerrar navegacion administrativa" className="rounded-lg border border-white/15 p-2 text-white lg:hidden">
-            <X size={18} />
-          </button>
+          <div className="flex items-center gap-1">
+            <button type="button" onClick={() => setOpen(false)} aria-label="Cerrar navegacion administrativa" className="rounded-lg border border-white/15 p-2 text-white lg:hidden">
+              <X size={18} />
+            </button>
+          </div>
         </div>
 
-        <nav className="mt-5 grid gap-5" aria-label="Red Comercial Arista">
-          <div className="grid gap-1.5">
+        <nav className="mt-4 grid gap-4" aria-label="Red Comercial Arista">
+          <div className="grid gap-1">
             {primaryNav.map((item) => {
               const Icon = item.icon
               return (
                 <NavLink
                   key={item.href}
                   to={item.href}
+                  title={item.label}
                   end={item.href === '/admin'}
                   onClick={() => setOpen(false)}
                   className={({ isActive }) =>
-                    `flex min-w-0 items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-semibold transition ${
+                    `flex min-w-0 items-center rounded-lg text-sm font-semibold transition ${effectiveCollapsed ? 'justify-center px-2 py-2.5' : 'gap-2 px-2.5 py-2'} ${
                       isActive ? 'bg-[#244534] text-white shadow-[inset_0_0_0_1px_rgba(255,255,255,0.08)]' : 'text-[#d7e3da] hover:bg-white/[0.08] hover:text-white'
                     }`
                   }
                 >
                   <Icon size={17} aria-hidden="true" />
-                  <span className="truncate">{item.label}</span>
+                  {!effectiveCollapsed && <span className="truncate text-[13px]">{item.label}</span>}
                 </NavLink>
               )
             })}
           </div>
 
           {admin && (
-            <div className="border-t border-white/10 pt-4">
-              <p className="px-3 pb-2 text-[11px] font-semibold uppercase tracking-[0.16em] text-[#8fb09c]">Administracion</p>
-              <div className="grid gap-1.5">
+            <div className="border-t border-white/10 pt-3">
+              {!effectiveCollapsed && <p className="px-2.5 pb-1.5 text-[10px] font-semibold uppercase tracking-[0.16em] text-[#8fb09c]">Administracion</p>}
+              <div className="grid gap-1">
                 {adminOnlyNav.map((item) => {
                   const Icon = item.icon
                   return (
                     <NavLink
                       key={item.href}
                       to={item.href}
+                      title={item.label}
                       onClick={() => setOpen(false)}
                       className={({ isActive }) =>
-                        `flex min-w-0 items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-semibold transition ${
+                      `flex min-w-0 items-center rounded-lg text-sm font-semibold transition ${effectiveCollapsed ? 'justify-center px-2 py-2.5' : 'gap-2 px-2.5 py-2'} ${
                           isActive ? 'bg-[#244534] text-white shadow-[inset_0_0_0_1px_rgba(255,255,255,0.08)]' : 'text-[#d7e3da] hover:bg-white/[0.08] hover:text-white'
                         }`
                       }
                     >
                       <Icon size={17} aria-hidden="true" />
-                      <span className="truncate">{item.label}</span>
+                    {!effectiveCollapsed && <span className="truncate text-[13px]">{item.label}</span>}
                     </NavLink>
                   )
                 })}
@@ -123,16 +151,16 @@ export function AdminShell({ children }: { children: ReactNode }) {
           )}
 
           {admin && (
-            <div className="border-t border-white/10 pt-4">
-              <button type="button" onClick={() => setLegacyOpen((value) => !value)} className="flex w-full items-center justify-between gap-3 rounded-lg px-3 py-2 text-sm font-semibold text-[#b8d2c4] transition hover:bg-white/[0.08] hover:text-white">
-                Modulos anteriores
+            <div className="border-t border-white/10 pt-3">
+              <button type="button" onClick={() => setLegacyOpen((value) => !value)} title="Módulos anteriores" className={`flex w-full items-center rounded-lg py-2 text-sm font-semibold text-[#b8d2c4] transition hover:bg-white/[0.08] hover:text-white ${effectiveCollapsed ? 'justify-center px-2' : 'justify-between gap-3 px-2.5'}`}>
+                {!effectiveCollapsed && 'Modulos anteriores'}
                 <ChevronDown size={16} className={legacyOpen ? 'rotate-180 transition' : 'transition'} aria-hidden="true" />
               </button>
               {legacyOpen && (
-                <div className="mt-2 grid gap-1 border-l border-white/10 pl-2">
+                <div className={`mt-1.5 grid gap-0.5 border-white/10 ${effectiveCollapsed ? 'border-l pl-1' : 'border-l pl-2'}`}>
                   {legacyNav.map((item) => (
-                    <NavLink key={item.href} to={item.href} onClick={() => setOpen(false)} className={({ isActive }) => `rounded-lg px-3 py-1.5 text-sm font-medium transition ${isActive ? 'bg-white/12 text-white' : 'text-[#cbdacf] hover:bg-white/[0.08] hover:text-white'}`}>
-                      {item.label}
+                    <NavLink key={item.href} to={item.href} title={item.label} onClick={() => setOpen(false)} className={({ isActive }) => `rounded-lg text-sm font-medium transition ${effectiveCollapsed ? 'px-2 py-2 text-center' : 'px-2.5 py-1'} ${isActive ? 'bg-white/12 text-white' : 'text-[#cbdacf] hover:bg-white/[0.08] hover:text-white'}`}>
+                      {effectiveCollapsed ? item.label.slice(0, 1) : item.label}
                     </NavLink>
                   ))}
                 </div>
@@ -140,11 +168,16 @@ export function AdminShell({ children }: { children: ReactNode }) {
             </div>
           )}
         </nav>
+        <div className="mt-auto hidden border-t border-white/10 pt-3 lg:block">
+          <button type="button" onClick={() => setCollapsed((value) => !value)} aria-label={collapsed ? 'Expandir menu' : 'Contraer menu'} title={collapsed ? 'Expandir menu' : 'Contraer menu'} className={`flex w-full items-center rounded-lg py-2 text-sm font-semibold text-[#b8d2c4] transition hover:bg-white/[0.08] hover:text-white ${collapsed ? 'justify-center px-2' : 'gap-3 px-3'}`}>
+            {effectiveCollapsed ? <PanelLeftOpen size={17} /> : <><PanelLeftClose size={17} /><span>Contraer menu</span></>}
+          </button>
+        </div>
       </aside>
 
       <div className="min-w-0">
         <header className="sticky top-0 z-30 border-b border-[#ddd6ca] bg-[#fbfaf6]/90 backdrop-blur">
-          <div className="flex h-14 min-w-0 items-center justify-between gap-4 px-5 lg:px-8">
+          <div className="flex h-12 min-w-0 items-center justify-between gap-4 px-4 lg:px-5">
             <button type="button" className="rounded-lg border border-[#c9c1b4] bg-white p-2 text-[#17202d] lg:hidden" aria-label="Abrir navegacion administrativa" aria-expanded={open} aria-controls="admin-nav" onClick={() => setOpen(true)}>
               <Menu size={20} />
             </button>
@@ -154,7 +187,7 @@ export function AdminShell({ children }: { children: ReactNode }) {
                 <>
                   <AdminNotificationsCenter />
                   <UserInitials name={auth.profile?.full_name} />
-                  <button type="button" onClick={() => void auth.signOut()} className="hidden rounded-lg border border-[#c9c1b4] bg-white px-3 py-2 text-sm font-semibold text-[#17202d] transition hover:border-[#235b3e] hover:bg-[#fbfaf7] focus-visible:ring-2 focus-visible:ring-[#235b3e] focus-visible:ring-offset-2 sm:inline-flex">
+                  <button type="button" onClick={() => void auth.signOut()} className="hidden rounded-md border border-[#c9c1b4] bg-white px-3 py-1.5 text-[13px] font-semibold text-[#17202d] transition hover:border-[#235b3e] hover:bg-[#fbfaf7] focus-visible:ring-2 focus-visible:ring-[#235b3e] focus-visible:ring-offset-2 sm:inline-flex">
                     Cerrar sesion
                   </button>
                 </>
@@ -163,7 +196,7 @@ export function AdminShell({ children }: { children: ReactNode }) {
           </div>
         </header>
 
-        <div className="min-w-0 px-5 py-6 lg:px-8 lg:py-7">
+        <div className="min-w-0 px-4 py-4 lg:px-5 lg:py-5" style={detailOpen && window.innerWidth >= 1280 ? { paddingRight: 'calc(var(--detail-panel-width) + 8px)' } : undefined}>
           <main className="mx-auto min-w-0 max-w-full xl:max-w-[1500px]">{children}</main>
         </div>
       </div>

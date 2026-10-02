@@ -178,7 +178,7 @@ Deno.serve(async (request) => {
     const now = new Date().toISOString()
     const { data: collaborator, error: updateError } = await supabase
       .from('admin_profiles')
-      .update({ invitation_status: 'accepted', onboarding_completed_at: now, invitation_revoked_at: null })
+      .update({ invitation_status: 'accepted', onboarding_completed_at: now, invitation_revoked_at: null, is_active: true })
       .eq('id', authenticated.userId)
       .eq('role', 'collaborator')
       .select(collaboratorColumns())

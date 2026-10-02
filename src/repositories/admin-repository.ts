@@ -38,6 +38,17 @@ import type {
   ProspectRecord,
   ProspectUpdate,
   CollaboratorRecord,
+  RedComercialProspectActivityFormValues,
+  RedComercialProspectDetailRecord,
+  RedComercialProspectDuplicateRecord,
+  RedComercialProspectFilters,
+  RedComercialProspectFormValues,
+  RedComercialProspectListItem,
+  RedComercialProspectMetricsRecord,
+  RedComercialProspectPanelRecord,
+  RedComercialFollowupFilters,
+  RedComercialFollowupListItem,
+  RedComercialFollowupMetricsRecord,
   RedComercialHomeData,
   RepresentedCompanyFormValues,
   RepresentedCompanyMembershipRecord,
@@ -79,6 +90,24 @@ export type AdminRepository = {
   listCompanyMemberships(): Promise<RepositoryResult<RepresentedCompanyMembershipRecord[]>>
   upsertCompanyMembership(companyId: string, userId: string): Promise<RepositoryResult<RepresentedCompanyMembershipRecord | null>>
   deactivateCompanyMembership(companyId: string, userId: string): Promise<RepositoryResult<RepresentedCompanyMembershipRecord | null>>
+  listRedComercialProspects(companyId: string, filters?: RedComercialProspectFilters): Promise<RepositoryResult<{ rows: RedComercialProspectListItem[]; total: number }>>
+  getRedComercialProspectMetrics(companyId: string): Promise<RepositoryResult<RedComercialProspectMetricsRecord>>
+  getRedComercialProspectDetail(id: string): Promise<RepositoryResult<RedComercialProspectDetailRecord | null>>
+  getRedComercialProspectPanel(id: string): Promise<RepositoryResult<RedComercialProspectPanelRecord | null>>
+  createRedComercialOpportunity(prospectId: string, payload: Record<string, unknown>): Promise<RepositoryResult<RedComercialProspectPanelRecord | null>>
+  updateRedComercialOpportunity(opportunityId: string, payload: Record<string, unknown>): Promise<RepositoryResult<RedComercialProspectPanelRecord | null>>
+  createRedComercialCrossOpportunity(prospectId: string, targetCompanyId: string, reason: string): Promise<RepositoryResult<RedComercialProspectPanelRecord | null>>
+  createRedComercialProspectNote(prospectId: string, body: string): Promise<RepositoryResult<RedComercialProspectPanelRecord | null>>
+  updateRedComercialProspectNote(noteId: string, body: string, archived?: boolean): Promise<RepositoryResult<RedComercialProspectPanelRecord | null>>
+  uploadRedComercialProspectFile(prospectId: string, file: File, category?: string): Promise<RepositoryResult<RedComercialProspectPanelRecord | null>>
+  createRedComercialProspectFileSignedUrl(path: string): Promise<RepositoryResult<string | null>>
+  archiveRedComercialProspectFile(fileId: string): Promise<RepositoryResult<RedComercialProspectPanelRecord | null>>
+  detectRedComercialProspectDuplicates(values: Pick<RedComercialProspectFormValues, 'represented_company_id' | 'company_name' | 'website_url' | 'contact_email' | 'contact_phone'>, excludeProspectId?: string): Promise<RepositoryResult<RedComercialProspectDuplicateRecord[]>>
+  createRedComercialProspect(values: RedComercialProspectFormValues): Promise<RepositoryResult<RedComercialProspectDetailRecord | null>>
+  updateRedComercialProspect(id: string, values: Partial<RedComercialProspectFormValues & { is_archived: boolean }>): Promise<RepositoryResult<RedComercialProspectDetailRecord | null>>
+  createRedComercialProspectActivity(prospectId: string, values: RedComercialProspectActivityFormValues): Promise<RepositoryResult<RedComercialProspectDetailRecord | null>>
+  listRedComercialFollowups(filters?: RedComercialFollowupFilters): Promise<RepositoryResult<{ rows: RedComercialFollowupListItem[]; total: number }>>
+  getRedComercialFollowupMetrics(filters?: Omit<RedComercialFollowupFilters, 'page' | 'pageSize' | 'view'>): Promise<RepositoryResult<RedComercialFollowupMetricsRecord>>
   listAdminNotifications(limit?: number): Promise<RepositoryResult<AdminNotificationRecord[]>>
   getUnreadAdminNotificationCount(): Promise<RepositoryResult<number>>
   markAdminNotificationRead(id: string): Promise<RepositoryResult<AdminNotificationRecord | null>>

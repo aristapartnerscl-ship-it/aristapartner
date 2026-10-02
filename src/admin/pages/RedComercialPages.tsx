@@ -58,13 +58,13 @@ function ErrorBlock({ text }: { text: string }) {
 
 function MetricCard({ label, value, icon: Icon }: { label: string; value: string | number; icon: typeof Building2 }) {
   return (
-    <div className="min-h-[104px] rounded-xl border border-[#ddd6ca] bg-white px-4 py-4 shadow-[0_1px_2px_rgba(23,32,45,0.035)]">
+    <div className="min-h-[78px] rounded-lg border border-[#ddd6ca] bg-white px-3 py-2.5 shadow-[0_1px_2px_rgba(23,32,45,0.025)]">
       <div className="flex items-start justify-between gap-3">
         <div>
-          <p className="text-xs font-semibold uppercase tracking-[0.08em] text-slate-500">{label}</p>
-          <p className="mt-3 text-3xl font-semibold leading-none text-[#17202d]">{value}</p>
+          <p className="text-[11px] font-semibold uppercase tracking-[0.06em] text-slate-500">{label}</p>
+          <p className="mt-1.5 text-[25px] font-semibold leading-none text-[#17202d]">{value}</p>
         </div>
-        <span className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-[#e7f0ea] text-[#235b3e]">
+        <span className="inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-md bg-[#e7f0ea] text-[#235b3e]">
           <Icon size={17} aria-hidden="true" />
         </span>
       </div>
@@ -74,8 +74,8 @@ function MetricCard({ label, value, icon: Icon }: { label: string; value: string
 
 function CompanyCard({ company, canEdit, onEdit }: { company: RepresentedCompanyRecord; canEdit: boolean; onEdit?: (company: RepresentedCompanyRecord) => void }) {
   return (
-    <article className="rounded-xl border border-[#ddd6ca] bg-white p-4 shadow-[0_1px_2px_rgba(23,32,45,0.035)]">
-      <div className="flex min-w-0 items-start gap-3">
+    <article className="rounded-lg border border-[#ddd6ca] bg-white p-3 shadow-[0_1px_2px_rgba(23,32,45,0.025)]">
+      <div className="flex min-w-0 items-start gap-2.5">
         <CompanyLogo company={company} />
         <div className="min-w-0 flex-1">
           <div className="flex flex-wrap items-center gap-2">
@@ -84,10 +84,10 @@ function CompanyCard({ company, canEdit, onEdit }: { company: RepresentedCompany
               {company.status === 'active' ? 'Activa' : 'Inactiva'}
             </span>
           </div>
-          {company.description && <p className="mt-1.5 line-clamp-2 text-sm leading-5 text-slate-600">{company.description}</p>}
+          {company.description && <p className="mt-1 line-clamp-2 text-[13px] leading-5 text-slate-600">{company.description}</p>}
         </div>
       </div>
-      <dl className="mt-4 grid gap-3 border-t border-[#eee8dd] pt-4 text-sm md:grid-cols-2">
+      <dl className="mt-3 grid gap-2 border-t border-[#eee8dd] pt-3 text-[13px] md:grid-cols-2">
         <div>
           <dt className="font-semibold text-[#17202d]">Qué ofrece</dt>
           <dd className="mt-1 line-clamp-2 text-slate-600">{company.offer_summary || 'Sin definir'}</dd>
@@ -105,12 +105,12 @@ function CompanyCard({ company, canEdit, onEdit }: { company: RepresentedCompany
           <dd className="mt-1 text-slate-600">{formatList(company.target_industries)}</dd>
         </div>
       </dl>
-      <div className="mt-4 flex flex-wrap gap-2">
-        <Link to={`/admin/empresas/${company.id}`} className="rounded-lg border border-[#c9c1b4] bg-white px-3 py-2 text-sm font-semibold text-[#17202d] transition hover:border-[#235b3e] hover:bg-[#fbfaf7]">
+      <div className="mt-3 flex flex-wrap gap-1.5">
+        <Link to={`/admin/empresas/${company.id}`} className="rounded-md border border-[#c9c1b4] bg-white px-3 py-1.5 text-[13px] font-semibold text-[#17202d] transition hover:border-[#235b3e] hover:bg-[#fbfaf7]">
           Ver
         </Link>
         {canEdit && (
-          <button type="button" onClick={() => onEdit?.(company)} className="rounded-lg bg-[#235b3e] px-3 py-2 text-sm font-semibold text-white transition hover:bg-[#1b4732]">
+          <button type="button" onClick={() => onEdit?.(company)} className="rounded-md bg-[#235b3e] px-3 py-1.5 text-[13px] font-semibold text-white transition hover:bg-[#1b4732]">
             Editar
           </button>
         )}
@@ -253,12 +253,12 @@ export function RedComercialHome() {
   }, [])
 
   return (
-    <div className="grid gap-5">
+    <div className="grid gap-3">
       <AdminPageHeader eyebrow="ARISTA" title="Red Comercial Arista" text="Base comercial para empresas representadas, carteras y asignaciones." />
       {error && <ErrorBlock text={error} />}
       {!data ? <LoadingBlock /> : (
         <>
-          <div className="grid gap-3 md:grid-cols-3">
+          <div className="grid gap-2 md:grid-cols-3">
             {admin ? (
               <>
                 <MetricCard label="Empresas representadas" value={data.representedCompanies} icon={Building2} />
@@ -273,11 +273,11 @@ export function RedComercialHome() {
             )}
           </div>
           {!admin && (
-            <section className="rounded-xl border border-[#ddd6ca] bg-white p-4 shadow-[0_1px_2px_rgba(23,32,45,0.035)]">
+            <section className="rounded-lg border border-[#ddd6ca] bg-white p-3 shadow-[0_1px_2px_rgba(23,32,45,0.025)]">
               <h2 className="text-base font-semibold text-[#17202d]">Mis empresas</h2>
-              <div className="mt-3 grid gap-2">
+              <div className="mt-2 grid gap-1.5">
                 {data.myCompanies.length === 0 ? <p className="text-sm text-slate-600">Aún no tienes carteras asignadas.</p> : data.myCompanies.map((company) => (
-                  <Link key={company.id} to={`/admin/empresas/${company.id}`} className="flex items-center gap-3 rounded-lg border border-[#eee8dd] p-3 transition hover:border-[#235b3e] hover:bg-[#fbfaf7]">
+                  <Link key={company.id} to={`/admin/empresas/${company.id}`} className="flex items-center gap-2.5 rounded-md border border-[#eee8dd] p-2.5 transition hover:border-[#235b3e] hover:bg-[#fbfaf7]">
                     <CompanyLogo company={company} size="sm" />
                     <span className="font-semibold text-[#17202d]">{company.name}</span>
                   </Link>
@@ -333,11 +333,11 @@ export function AdminCompaniesPage() {
   }
 
   return (
-    <div className="grid gap-5">
+    <div className="grid gap-3">
       <AdminPageHeader eyebrow="Red Comercial" title="Empresas Arista" text="Empresas representadas y portafolio comercial de Arista." actionLabel={admin ? '+ Nueva empresa' : undefined} onAction={() => setEditing('new')} />
       {error && <ErrorBlock text={error} />}
       {loading ? <LoadingBlock /> : companies.length === 0 ? <EmptyState title="No hay empresas representadas todavía." text={admin ? 'Crea la primera empresa para iniciar el portafolio comercial.' : 'No hay empresas disponibles.'} /> : (
-        <div className="grid min-w-0 gap-4 xl:grid-cols-2">
+        <div className="grid min-w-0 gap-3 xl:grid-cols-2">
           {companies.map((company) => <CompanyCard key={company.id} company={company} canEdit={admin} onEdit={setEditing} />)}
         </div>
       )}
@@ -371,9 +371,9 @@ export function CompanyDetailPage() {
   if (!company) return <EmptyState title="Empresa no encontrada" text="No fue posible encontrar la empresa solicitada." />
 
   return (
-    <div className="grid gap-5">
+    <div className="grid gap-3">
       <button type="button" onClick={() => navigate(-1)} className="w-fit text-sm font-semibold text-[#235b3e]">Volver</button>
-      <section className="rounded-xl border border-[#ddd6ca] bg-white p-4 shadow-[0_1px_2px_rgba(23,32,45,0.035)]">
+      <section className="rounded-lg border border-[#ddd6ca] bg-white p-3 shadow-[0_1px_2px_rgba(23,32,45,0.025)]">
         <div className="flex flex-col gap-4 sm:flex-row sm:items-start">
           <CompanyLogo company={company} size="lg" />
           <div className="min-w-0">
@@ -384,7 +384,7 @@ export function CompanyDetailPage() {
           </div>
         </div>
       </section>
-      <section className="grid gap-4 lg:grid-cols-2">
+      <section className="grid gap-3 lg:grid-cols-2">
         {[
           ['Productos/servicios', company.offer_summary],
           ['Problema que resuelve', company.problem_solved],
@@ -394,7 +394,7 @@ export function CompanyDetailPage() {
           ['Palabras clave', formatList(company.keywords)],
           ['Qué no prometer', company.what_not_to_promise],
         ].map(([label, value]) => (
-          <div key={label} className="rounded-xl border border-[#ddd6ca] bg-white p-4 shadow-[0_1px_2px_rgba(23,32,45,0.03)]">
+          <div key={label} className="rounded-lg border border-[#ddd6ca] bg-white p-3 shadow-[0_1px_2px_rgba(23,32,45,0.025)]">
             <h2 className="text-sm font-semibold uppercase tracking-[0.14em] text-[#235b3e]">{label}</h2>
             <p className="mt-3 text-sm leading-6 text-slate-700">{value || 'Sin definir'}</p>
           </div>
@@ -424,11 +424,11 @@ export function MyPortfoliosPage() {
     })
   }, [])
   return (
-    <div className="grid gap-5">
+    <div className="grid gap-3">
       <AdminPageHeader eyebrow="Red Comercial" title="Mis carteras" text="Empresas representadas asociadas a tu gestión comercial." />
       {error && <ErrorBlock text={error} />}
       {loading ? <LoadingBlock /> : companies.length === 0 ? <EmptyState title="No tienes carteras asignadas." text="Cuando un administrador te asigne empresas, aparecerán en esta vista." /> : (
-        <div className="grid gap-4 xl:grid-cols-2">{companies.map((company) => <CompanyCard key={company.id} company={company} canEdit={false} />)}</div>
+        <div className="grid gap-3 xl:grid-cols-2">{companies.map((company) => <CompanyCard key={company.id} company={company} canEdit={false} />)}</div>
       )}
     </div>
   )
