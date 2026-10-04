@@ -1,9 +1,10 @@
 import { cleanup, render, screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest'
-import { MemoryRouter } from 'react-router-dom'
+import { MemoryRouter, Route, Routes } from 'react-router-dom'
 import { AdminAuthContext } from '../admin-auth-context'
 import type { AdminAuthContextValue } from '../admin-auth-context'
+import { AdminShell } from '../../components/admin/AdminShell'
 import type { CollaboratorRecord, RedComercialProspectDetailRecord, RedComercialProspectListItem, RepresentedCompanyMembershipRecord, RepresentedCompanyRecord } from '../../types/admin'
 import { RedComercialProspectsPage } from './RedComercialProspectsPage'
 
@@ -28,6 +29,7 @@ const repositoryMocks = vi.hoisted(() => ({
   uploadRedComercialProspectFile: vi.fn(),
   createRedComercialProspectFileSignedUrl: vi.fn(),
   archiveRedComercialProspectFile: vi.fn(),
+  getUnreadAdminNotificationCount: vi.fn(),
 }))
 
 vi.mock('../../repositories', () => ({ adminRepository: repositoryMocks }))
@@ -159,6 +161,7 @@ const aristaOpportunity = {
   commission_status: 'to_validate',
   result_status: 'in_process',
   attributed_collaborator_id: 'collab-1',
+  attributed_collaborator_name: 'Camila Perez',
   collaborator_compensation_type: 'percentage',
   collaborator_compensation_rate: 40,
   collaborator_compensation_amount: null,
@@ -183,11 +186,25 @@ function authValue(role: 'owner' | 'collaborator' = 'owner'): AdminAuthContextVa
   }
 }
 
-function renderPage(role: 'owner' | 'collaborator' = 'owner') {
+function renderPage(role: 'owner' | 'collaborator' = 'owner', initialEntry = '/admin/prospectos?company=company-1') {
   return render(
-    <MemoryRouter initialEntries={['/admin/prospectos?company=company-1']}>
+    <MemoryRouter initialEntries={[initialEntry]}>
       <AdminAuthContext.Provider value={authValue(role)}>
         <RedComercialProspectsPage />
+      </AdminAuthContext.Provider>
+    </MemoryRouter>,
+  )
+}
+
+function renderPageInShell(role: 'owner' | 'collaborator' = 'owner', initialEntry = '/admin/prospectos?company=company-1') {
+  return render(
+    <MemoryRouter initialEntries={[initialEntry]}>
+      <AdminAuthContext.Provider value={authValue(role)}>
+        <AdminShell>
+          <Routes>
+            <Route path="/admin/prospectos" element={<RedComercialProspectsPage />} />
+          </Routes>
+        </AdminShell>
       </AdminAuthContext.Provider>
     </MemoryRouter>,
   )
@@ -213,9 +230,62 @@ describe('RedComercialProspectsPage', () => {
     repositoryMocks.createRedComercialOpportunity.mockResolvedValue({ data: { prospect: fullDetail, opportunities: [], cross_opportunities: [], notes: [], files: [] }, error: null })
     repositoryMocks.createRedComercialCrossOpportunity.mockResolvedValue({ data: { prospect: fullDetail, opportunities: [], cross_opportunities: [], notes: [], files: [] }, error: null })
     repositoryMocks.createRedComercialProspectNote.mockResolvedValue({ data: { prospect: fullDetail, opportunities: [], cross_opportunities: [], notes: [], files: [] }, error: null })
+    repositoryMocks.getUnreadAdminNotificationCount.mockResolvedValue({ data: 0, error: null })
   })
 
   afterEach(() => cleanup())
+
+  test('/admin/prospectos sin company muestra selector sin auto-seleccionar cartera', async () => {
+    renderPage('owner', '/admin/prospectos')
+    expect(await screen.findByText('Selecciona una Empresa Arista para gestionar su cartera comercial.')).toBeInTheDocument()
+    expect(await screen.findByRole('button', { name: /Centro Psicovinculo/ })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: /Questar/ })).toBeInTheDocument()
+    expect(repositoryMocks.listRedComercialProspects).not.toHaveBeenCalled()
+  })
+
+  test('selector base respeta carteras de collaborator', async () => {
+    renderPage('collaborator', '/admin/prospectos')
+    expect(await screen.findByRole('button', { name: /Centro Psicovinculo/ })).toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: /Questar/ })).not.toBeInTheDocument()
+    expect(repositoryMocks.listMyRepresentedCompanies).toHaveBeenCalled()
+  })
+
+  test('click en tarjeta agrega company query y carga workspace actual', async () => {
+    const user = userEvent.setup()
+    renderPage('owner', '/admin/prospectos')
+    await user.click(await screen.findByRole('button', { name: /Centro Psicovinculo/ }))
+    await waitFor(() => expect(repositoryMocks.listRedComercialProspects).toHaveBeenCalledWith('company-1', expect.objectContaining({ page: 1 })))
+    expect(await screen.findByText('Empresa ABC')).toBeInTheDocument()
+    expect(await screen.findByLabelText('Empresa actual')).toBeInTheDocument()
+  })
+
+  test('/admin/prospectos con company mantiene workspace operativo', async () => {
+    renderPage('owner', '/admin/prospectos?company=company-1')
+    expect(await screen.findByLabelText('Empresa actual')).toBeInTheDocument()
+    expect(await screen.findByText('Empresa ABC')).toBeInTheDocument()
+    expect(screen.queryByText('Selecciona una Empresa Arista para gestionar su cartera comercial.')).not.toBeInTheDocument()
+  })
+
+  test('selector Empresa actual cambia la cartera manteniendo la pantalla operativa', async () => {
+    const user = userEvent.setup()
+    renderPage('owner', '/admin/prospectos?company=company-1')
+    await user.selectOptions(await screen.findByLabelText('Empresa actual'), 'company-2')
+    await waitFor(() => expect(repositoryMocks.listRedComercialProspects).toHaveBeenCalledWith('company-2', expect.objectContaining({ page: 1 })))
+  })
+
+  test('sidebar Prospectos vuelve al selector global', async () => {
+    const user = userEvent.setup()
+    renderPageInShell('owner', '/admin/prospectos?company=company-1')
+    await screen.findByLabelText('Empresa actual')
+    await user.click(screen.getByRole('link', { name: /Prospectos/ }))
+    expect(await screen.findByText('Selecciona una Empresa Arista para gestionar su cartera comercial.')).toBeInTheDocument()
+  })
+
+  test('deep link contextual con company y open abre el prospecto seleccionado', async () => {
+    renderPage('owner', '/admin/prospectos?company=company-1&open=prospect-1')
+    await waitFor(() => expect(repositoryMocks.getRedComercialProspectDetail).toHaveBeenCalledWith('prospect-1'))
+    expect(await screen.findByText('Estado de la venta')).toBeInTheDocument()
+  })
 
   test('admin ve todas las empresas disponibles', async () => {
     renderPage('owner')
@@ -244,7 +314,7 @@ describe('RedComercialProspectsPage', () => {
     repositoryMocks.getRedComercialProspectPanel.mockResolvedValueOnce({ data: { prospect: fullDetail, opportunities: [aristaOpportunity], cross_opportunities: [], notes: [], files: [] }, error: null })
     renderPage('collaborator')
     await user.click(await screen.findByText('Empresa ABC'))
-    expect(await screen.findByText('Gestión entregada a Arista')).toBeInTheDocument()
+    expect(await screen.findByText('Gestion entregada a Arista')).toBeInTheDocument()
     expect(screen.getByText('Contrato')).toBeInTheDocument()
     expect(screen.queryByLabelText('Control actual')).not.toBeInTheDocument()
     expect(screen.getByText('Pendiente')).toBeInTheDocument()
@@ -259,6 +329,83 @@ describe('RedComercialProspectsPage', () => {
     expect(await screen.findByLabelText('Control actual')).toBeInTheDocument()
     expect(screen.getByLabelText('Contrato')).toBeInTheDocument()
     expect(screen.getByLabelText('Pago cliente')).toBeInTheDocument()
+  })
+
+  test('admin no puede guardar participacion sin colaborador atribuido', async () => {
+    const user = userEvent.setup()
+    renderPage('owner')
+    await user.click(await screen.findByText('Empresa ABC'))
+    await user.click(await screen.findByRole('button', { name: /Crear oportunidad/ }))
+    await user.selectOptions(screen.getByLabelText('Tipo de participacion'), 'percentage')
+    await user.type(screen.getByLabelText('Participacion atribuida'), '40')
+    await user.click(screen.getAllByRole('button', { name: 'Crear oportunidad' }).at(-1)!)
+    expect(await screen.findByText('Selecciona un colaborador atribuido para registrar participacion.')).toBeInTheDocument()
+    expect(repositoryMocks.createRedComercialOpportunity).not.toHaveBeenCalled()
+  })
+
+  test('admin ve participacion atribuida sin texto de propiedad personal', async () => {
+    const user = userEvent.setup()
+    repositoryMocks.getRedComercialProspectPanel.mockResolvedValueOnce({ data: { prospect: fullDetail, opportunities: [aristaOpportunity], cross_opportunities: [], notes: [], files: [] }, error: null })
+    renderPage('owner')
+    await user.click(await screen.findByText('Empresa ABC'))
+    expect(await screen.findByText('Colaborador atribuido')).toBeInTheDocument()
+    expect(screen.getAllByText('Camila Perez').length).toBeGreaterThan(0)
+    expect(screen.getByText('Participacion atribuida')).toBeInTheDocument()
+    expect(screen.queryByText('Tu participacion atribuida')).not.toBeInTheDocument()
+  })
+
+  test('admin asigna collaborator por UUID y el panel rehidratado lo conserva', async () => {
+    const user = userEvent.setup()
+    const orphanOpportunity = { ...aristaOpportunity, attributed_collaborator_id: null, attributed_collaborator_name: null }
+    const assignedOpportunity = { ...aristaOpportunity, attributed_collaborator_id: 'collab-1', attributed_collaborator_name: 'Camila Perez' }
+    repositoryMocks.getRedComercialProspectPanel.mockResolvedValueOnce({ data: { prospect: fullDetail, opportunities: [orphanOpportunity], cross_opportunities: [], notes: [], files: [] }, error: null })
+    repositoryMocks.updateRedComercialOpportunity.mockResolvedValueOnce({ data: { prospect: fullDetail, opportunities: [assignedOpportunity], cross_opportunities: [], notes: [], files: [] }, error: null })
+    renderPage('owner')
+    await user.click(await screen.findByText('Empresa ABC'))
+    await user.selectOptions(await screen.findByLabelText('Colaborador atribuido'), 'collab-1')
+    expect(repositoryMocks.updateRedComercialOpportunity).toHaveBeenCalledWith('opportunity-1', { attributed_collaborator_id: 'collab-1' })
+    await waitFor(() => expect((screen.getByLabelText('Colaborador atribuido') as HTMLSelectElement).value).toBe('collab-1'))
+    expect(screen.getByText('Participacion atribuida')).toBeInTheDocument()
+    expect(screen.getByText('40%')).toBeInTheDocument()
+  })
+
+  test('admin quita atribucion y la respuesta limpia participacion', async () => {
+    const user = userEvent.setup()
+    const clearedOpportunity = { ...aristaOpportunity, attributed_collaborator_id: null, attributed_collaborator_name: null, collaborator_compensation_type: null, collaborator_compensation_rate: null, collaborator_compensation_amount: null }
+    repositoryMocks.getRedComercialProspectPanel.mockResolvedValueOnce({ data: { prospect: fullDetail, opportunities: [aristaOpportunity], cross_opportunities: [], notes: [], files: [] }, error: null })
+    repositoryMocks.updateRedComercialOpportunity.mockResolvedValueOnce({ data: { prospect: fullDetail, opportunities: [clearedOpportunity], cross_opportunities: [], notes: [], files: [] }, error: null })
+    renderPage('owner')
+    await user.click(await screen.findByText('Empresa ABC'))
+    await user.selectOptions(await screen.findByLabelText('Colaborador atribuido'), '')
+    expect(repositoryMocks.updateRedComercialOpportunity).toHaveBeenCalledWith('opportunity-1', { attributed_collaborator_id: '' })
+    await waitFor(() => expect((screen.getByLabelText('Colaborador atribuido') as HTMLSelectElement).value).toBe(''))
+    expect(screen.getAllByText('Sin definir').length).toBeGreaterThan(0)
+    expect(screen.queryByText('40%')).not.toBeInTheDocument()
+  })
+
+  test('collaborator atribuido ve su participacion y no atribuido no ve compensacion', async () => {
+    const user = userEvent.setup()
+    repositoryMocks.getRedComercialProspectPanel.mockResolvedValueOnce({ data: { prospect: fullDetail, opportunities: [aristaOpportunity], cross_opportunities: [], notes: [], files: [] }, error: null })
+    renderPage('collaborator')
+    await user.click(await screen.findByText('Empresa ABC'))
+    expect((await screen.findAllByText('Mi participacion')).length).toBeGreaterThan(0)
+    expect(screen.getByText('40%')).toBeInTheDocument()
+
+    await user.keyboard('{Escape}')
+    repositoryMocks.getRedComercialProspectPanel.mockResolvedValueOnce({ data: { prospect: fullDetail, opportunities: [{ ...aristaOpportunity, attributed_collaborator_id: null, attributed_collaborator_name: null }], cross_opportunities: [], notes: [], files: [] }, error: null })
+    await user.click(await screen.findByText('Empresa ABC'))
+    expect(await screen.findByText('Colaborador atribuido')).toBeInTheDocument()
+    expect(screen.queryByText('Tu participacion atribuida')).not.toBeInTheDocument()
+    expect(screen.queryByText('40%')).not.toBeInTheDocument()
+  })
+
+  test('collaborator no puede reasignar atribucion desde el panel', async () => {
+    const user = userEvent.setup()
+    repositoryMocks.getRedComercialProspectPanel.mockResolvedValueOnce({ data: { prospect: fullDetail, opportunities: [aristaOpportunity], cross_opportunities: [], notes: [], files: [] }, error: null })
+    renderPage('collaborator')
+    await user.click(await screen.findByText('Empresa ABC'))
+    expect(await screen.findByText('Colaborador atribuido')).toBeInTheDocument()
+    expect(screen.queryByLabelText('Colaborador atribuido')).not.toBeInTheDocument()
   })
 
   test('panel lateral muestra detalle completo o aviso limitado', async () => {

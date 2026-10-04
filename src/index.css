@@ -24,6 +24,85 @@
   --color-dark-text-muted: rgba(255, 255, 255, 0.76);
 }
 
+/* Shared visual language for the current Red Comercial application. */
+.admin-red-comercial {
+  --admin-card-radius: 0.5rem;
+  --admin-border: var(--color-border);
+  --admin-border-soft: var(--surface-line-soft);
+  --admin-control-height: 2.25rem;
+  --admin-muted-text: var(--color-text-soft);
+  --admin-surface: var(--color-surface);
+  --admin-background: var(--color-surface-muted);
+  --admin-page-gap: 0.75rem;
+}
+
+.admin-red-comercial .admin-page-header { gap: 0.5rem; }
+.admin-red-comercial .admin-page-eyebrow { color: var(--color-brand); font-size: 10px; font-weight: 700; letter-spacing: 0.16em; line-height: 1; text-transform: uppercase; }
+.admin-red-comercial .admin-page-header h1 { font-size: 26px; line-height: 1.15; }
+.admin-red-comercial .admin-page-header button { min-height: 36px; padding: 0.45rem 0.75rem; font-size: 12px; }
+
+.admin-red-comercial .admin-kpi-card { min-height: 78px; border: 1px solid var(--admin-border); border-radius: var(--admin-card-radius); padding: 0.55rem 0.75rem; box-shadow: 0 1px 2px rgba(23, 32, 45, 0.025); }
+.admin-red-comercial .admin-kpi-card .admin-kpi-label { font-size: 10px; font-weight: 700; letter-spacing: 0.08em; line-height: 1.15; opacity: 0.78; text-transform: uppercase; }
+.admin-red-comercial .admin-kpi-card strong { display: block; color: var(--color-graphite); font-size: 20px; font-weight: 650; line-height: 1.15; margin-top: 0.4rem; }
+.admin-red-comercial .admin-metric-strip { display: flex; flex-wrap: wrap; align-items: center; gap: 0.25rem 1.25rem; border: 1px solid var(--admin-border); border-radius: var(--admin-card-radius); background: var(--admin-surface); color: var(--admin-muted-text); padding: 0.5rem 0.75rem; font-size: 12px; }
+
+.admin-red-comercial .admin-tabs { border-bottom: 1px solid var(--admin-border); }
+.admin-red-comercial .admin-tabs button { border-bottom: 2px solid transparent; color: #64748b; font-size: 12px; font-weight: 650; padding: 0.4rem 0.75rem; }
+.admin-red-comercial .admin-tabs button:hover { color: var(--color-brand); }
+.admin-red-comercial .admin-tabs button.is-active { border-bottom-color: var(--color-brand); color: var(--color-brand); }
+
+.admin-red-comercial input:not([type='checkbox']):not([type='radio']),
+.admin-red-comercial select,
+.admin-red-comercial textarea { border-radius: 0.375rem; border-color: #c9c1b4; font-size: 13px; }
+.admin-red-comercial input:not([type='checkbox']):not([type='radio']),
+.admin-red-comercial select { min-height: var(--admin-control-height); }
+.admin-red-comercial input:focus,
+.admin-red-comercial select:focus,
+.admin-red-comercial textarea:focus { border-color: var(--color-brand); outline: 2px solid var(--surface-line-soft); outline-offset: 0; }
+.admin-red-comercial label { gap: 0.25rem; }
+
+.admin-red-comercial table thead th { background: #fbfaf7; border-bottom-color: var(--admin-border-soft); color: #64748b; font-size: 10px; letter-spacing: 0.08em; line-height: 1.15; padding: 0.5rem 0.625rem; text-transform: uppercase; }
+.admin-red-comercial table tbody td { border-bottom-color: #f1ece3; line-height: 1.2; padding: 0.45rem 0.625rem; }
+.admin-red-comercial table tbody tr:last-child td { border-bottom: 0; }
+.admin-red-comercial table + div { font-size: 12px; }
+
+.admin-red-comercial [class*='rounded-xl'][class*='border'],
+.admin-red-comercial [class*='rounded-lg'][class*='border'] { border-radius: var(--admin-card-radius); }
+.admin-red-comercial .admin-empty-state { padding: 1.25rem; }
+.admin-red-comercial .admin-empty-state h2 { font-size: 16px; }
+.admin-red-comercial .admin-empty-state p { font-size: 12px; line-height: 1.45; }
+.admin-red-comercial .admin-modal-header { padding-block: 0.75rem; }
+.admin-red-comercial .admin-modal-header h2 { font-size: 18px; }
+
+.admin-red-comercial .dashboard-columns {
+  display: grid;
+  align-items: start;
+  gap: 0.75rem;
+  grid-template-columns: minmax(0, 1.35fr) minmax(320px, 0.85fr);
+}
+.admin-red-comercial .dashboard-column {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+.admin-red-comercial .dashboard-panel { height: auto; min-height: 0; }
+.admin-red-comercial .dashboard-panel table tbody td { padding-block: 0.375rem; }
+.admin-red-comercial .dashboard-panel p { margin-block: 0; }
+
+@media (max-width: 1023px) {
+  .admin-red-comercial .dashboard-columns { grid-template-columns: 1fr; }
+  .admin-red-comercial .dashboard-column { display: contents; }
+  .admin-red-comercial .dashboard-panel { order: 10; }
+  .admin-red-comercial .dashboard-order-attention { order: 1; }
+  .admin-red-comercial .dashboard-order-activity { order: 2; }
+  .admin-red-comercial .dashboard-order-followups { order: 3; }
+  .admin-red-comercial .dashboard-order-opportunities { order: 4; }
+  .admin-red-comercial .dashboard-order-cross { order: 5; }
+  .admin-red-comercial .dashboard-order-results { order: 6; }
+  .admin-red-comercial .dashboard-order-portfolios { order: 7; }
+}
+
 /* Compact CRM detail/table surfaces shared by Prospectos and Seguimientos. */
 aside[class*="xl:fixed"][class*="xl:right-0"] section.border-b {
   padding-block: 0.5rem;

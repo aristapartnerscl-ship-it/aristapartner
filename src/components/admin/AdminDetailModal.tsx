@@ -54,7 +54,7 @@ export function AdminDetailModal({ title, subtitle, children, onClose, returnFoc
   return createPortal(
     <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/55 p-2 sm:p-5" onMouseDown={(event) => { if (event.target === event.currentTarget) onClose() }}>
       <div ref={dialogRef} role="dialog" aria-modal="true" aria-labelledby="admin-detail-modal-title" tabIndex={-1} className={`flex max-h-[calc(100vh-1rem)] w-full flex-col overflow-hidden rounded-lg border border-slate-200 bg-white shadow-2xl sm:max-h-[92vh] ${size === 'large' ? 'max-w-6xl' : 'max-w-4xl'}`}>
-        <header className="sticky top-0 z-10 flex shrink-0 items-start justify-between gap-4 border-b border-slate-200 bg-white px-4 py-4 sm:px-6">
+        <header className="admin-modal-header sticky top-0 z-10 flex shrink-0 items-start justify-between gap-4 border-b border-slate-200 bg-white px-4 py-4 sm:px-6">
           <div>
             <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[#235b3e]">Detalle</p>
             <h2 id="admin-detail-modal-title" className="mt-1 text-xl font-semibold text-[#17202d] sm:text-2xl">{title}</h2>

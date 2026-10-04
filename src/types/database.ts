@@ -156,6 +156,65 @@ export type RepresentedCompanyPrivateDetailsRow = {
   updated_at: string
 }
 
+export type RepresentedCompanySalesPlaybookRow = {
+  represented_company_id: string
+  value_proposition: string | null
+  sales_offerings: string | null
+  modalities: string | null
+  plans: string | null
+  inclusions: string | null
+  exclusions: string | null
+  use_cases: string | null
+  recurring_model: string | null
+  buyer_roles: string | null
+  decision_makers: string | null
+  influencers: string | null
+  needs: string | null
+  intent_signals: string | null
+  qualification_criteria: string | null
+  disqualification_criteria: string | null
+  short_pitch: string | null
+  introduction_guidance: string | null
+  discovery_questions: string[]
+  sales_process: string | null
+  required_information: string | null
+  material_guidance: string | null
+  recommended_next_step: string | null
+  sales_plan: string | null
+  opportunity_triggers: string[]
+  cross_sell_use_cases: string[]
+  updated_by: string | null
+  created_at: string
+  updated_at: string
+}
+
+export type RepresentedCompanyFaqRow = {
+  id: string
+  represented_company_id: string
+  type: 'faq' | 'objection'
+  question: string
+  answer: string
+  requires_escalation: boolean
+  sort_order: number
+  is_active: boolean
+  created_at: string
+  updated_at: string
+}
+
+export type RepresentedCompanyMaterialRow = {
+  id: string
+  represented_company_id: string
+  title: string
+  description: string | null
+  material_type: string
+  storage_path: string | null
+  external_url: string | null
+  visibility: 'directory' | 'assigned_only' | 'admin_only'
+  uploaded_by: string | null
+  created_at: string
+  is_archived: boolean
+}
+
 export type RepresentedCompanyMembershipRow = {
   id: string
   represented_company_id: string
@@ -301,6 +360,7 @@ export type RedComercialOpportunity = {
   commission_status: string
   result_status: 'in_process' | 'won' | 'lost' | 'cancelled'
   attributed_collaborator_id: string | null
+  attributed_collaborator_name?: string | null
   collaborator_compensation_type: 'percentage' | 'fixed_amount' | null
   collaborator_compensation_rate: number | null
   collaborator_compensation_amount: number | null
@@ -313,18 +373,66 @@ export type RedComercialOpportunity = {
   updated_at: string
 }
 
+export type RedComercialOpportunityListRow = RedComercialOpportunity & {
+  represented_company_name: string
+  represented_company_logo_storage_path: string | null
+  prospect_company_name: string
+  prospect_logo_storage_path: string | null
+  attributed_collaborator_name: string | null
+  can_edit: boolean
+}
+
+export type RedComercialOpportunityMetrics = {
+  total: number
+  in_process: number
+  arista: number
+  collaborator: number
+  contract_pending: number
+  payment_pending: number
+  commission_pending: number
+  won: number
+  lost: number
+}
+
 export type RedComercialCrossOpportunity = {
   id: string
   source_prospect_id: string
+  source_prospect_company_name: string
+  source_prospect_logo_storage_path: string | null
+  source_represented_company_id: string
+  source_represented_company_name: string
+  source_represented_company_logo_storage_path: string | null
   target_represented_company_id: string
   target_company_name: string
   target_company_logo_storage_path: string | null
   detected_by: string
+  detected_by_name: string | null
   reason: string
   status: 'detected' | 'under_review' | 'assigned' | 'converted' | 'discarded'
   assigned_to: string | null
+  assigned_to_name: string | null
+  converted_prospect_id: string | null
+  converted_prospect_company_name: string | null
+  converted_at: string | null
+  converted_by: string | null
+  converted_by_name: string | null
+  discarded_at: string | null
+  discarded_by: string | null
+  discarded_by_name: string | null
+  discard_reason: 'not_applicable' | 'already_exists' | 'no_fit' | 'insufficient_info' | 'other' | null
+  discard_note: string | null
   created_at: string
   updated_at: string
+  can_manage: boolean
+}
+
+export type RedComercialCrossOpportunityMetrics = {
+  total: number
+  detected: number
+  under_review: number
+  assigned: number
+  converted: number
+  discarded: number
 }
 
 export type RedComercialProspectNote = {

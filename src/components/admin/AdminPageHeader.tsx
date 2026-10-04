@@ -8,11 +8,11 @@ type AdminPageHeaderProps = {
 
 export function AdminPageHeader({ eyebrow = 'Panel privado', title, text, actionLabel, onAction }: AdminPageHeaderProps) {
   return (
-    <div className="flex flex-col gap-2 md:flex-row md:items-start md:justify-between">
+    <div className="admin-page-header flex flex-col gap-2 md:flex-row md:items-start md:justify-between">
       <div>
-        <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[#2f6b4f]">{eyebrow}</p>
+        <p className="admin-page-eyebrow">{eyebrow}</p>
         <h1 className="mt-1 text-2xl font-semibold tracking-tight text-[#17202d] md:text-[1.875rem]">{title}</h1>
-        {text && <p className="mt-1 max-w-3xl text-[13px] leading-5 text-slate-600">{text}</p>}
+        {text && <p className="mt-0.5 max-w-3xl text-[13px] leading-5 text-slate-600">{text}</p>}
       </div>
       {actionLabel && (
         <button

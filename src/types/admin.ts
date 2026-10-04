@@ -73,7 +73,10 @@ import type {
   RedComercialProspectMetrics,
   RedComercialProspectPanel,
   RedComercialOpportunity,
+  RedComercialOpportunityListRow,
+  RedComercialOpportunityMetrics,
   RedComercialCrossOpportunity,
+  RedComercialCrossOpportunityMetrics,
   RedComercialProspectNote,
   RedComercialProspectFile,
   RedComercialProspectStatus,
@@ -83,6 +86,9 @@ import type {
   RepresentedCompanyInsert,
   RepresentedCompanyMembershipRow,
   RepresentedCompanyPrivateDetailsRow,
+  RepresentedCompanySalesPlaybookRow,
+  RepresentedCompanyFaqRow,
+  RepresentedCompanyMaterialRow,
   RepresentedCompanyRow,
   RepresentedCompanyUpdate,
   SupplierRow,
@@ -138,6 +144,9 @@ export type {
   RepresentedCompanyInsert,
   RepresentedCompanyMembershipRow,
   RepresentedCompanyPrivateDetailsRow,
+  RepresentedCompanySalesPlaybookRow,
+  RepresentedCompanyFaqRow,
+  RepresentedCompanyMaterialRow,
   RepresentedCompanyRow,
   RepresentedCompanyUpdate,
   Priority,
@@ -172,6 +181,19 @@ export type RepresentedCompanyFormValues = {
 
 export type RepresentedCompanyMembershipRecord = RepresentedCompanyMembershipRow
 export type RepresentedCompanyPrivateDetailsRecord = RepresentedCompanyPrivateDetailsRow
+export type RepresentedCompanySalesPlaybookRecord = RepresentedCompanySalesPlaybookRow
+export type RepresentedCompanyFaqRecord = RepresentedCompanyFaqRow
+export type RepresentedCompanyMaterialRecord = RepresentedCompanyMaterialRow
+export type RedComercialCompanyWorkspace = {
+  company: RepresentedCompanyRecord
+  playbook: Partial<RepresentedCompanySalesPlaybookRecord>
+  faqs: RepresentedCompanyFaqRecord[]
+  materials: RepresentedCompanyMaterialRecord[]
+  private_details: RepresentedCompanyPrivateDetailsRecord | null
+  can_edit: boolean
+  is_assigned: boolean
+  updated_at: string | null
+}
 export type CollaboratorRecord = Pick<AdminProfileRow, 'id' | 'full_name' | 'email' | 'role' | 'is_active' | 'created_at' | 'updated_at' | 'last_activity_at' | 'invitation_status' | 'invited_at' | 'invitation_sent_at' | 'invitation_revoked_at' | 'onboarding_completed_at'>
 
 export type RedComercialHomeData = {
@@ -181,13 +203,101 @@ export type RedComercialHomeData = {
   myMemberships: RepresentedCompanyMembershipRecord[]
   myCompanies: RepresentedCompanyRecord[]
 }
+export type RedComercialDashboardData = {
+  summary: { followups_today: number; followups_overdue: number; active_prospects: number; opportunities_in_process: number; opportunities_arista: number; payments_pending: number; won_this_month: number; commission_pending: number }
+  attention_today: Array<{ type: string; label: string; prospect_id: string; prospect_name: string; company_id: string; company_name: string; reason: string; owner_name: string | null; at: string; href: string }>
+  upcoming_followups: Array<{ prospect_id: string; prospect_name: string; company_id: string; company_name: string; owner_name: string | null; at: string; status: string; href: string }>
+  opportunities: Array<{ id: string; prospect_id: string; prospect_name: string; company_id: string; company_name: string; control_mode: string; contract_status: string; payment_status: string; result_status: string; commission_status?: string | null; collaborator_compensation_type?: 'percentage' | 'fixed_amount' | null; collaborator_compensation_rate?: number | null; collaborator_compensation_amount?: number | null; currency?: string | null; collaborator_name: string | null; updated_at: string; href: string }>
+  cross_opportunities: Array<{ id: string; prospect_id: string; prospect_name: string; target_company_id: string; target_company_name: string; detected_by_name: string | null; status: string; created_at: string; href: string }>
+  recent_results: Array<{ id: string; prospect_id: string; prospect_name: string; company_id: string; company_name: string; result_status: string; payment_status: string; collaborator_name: string | null; closed_at: string; href: string }>
+  portfolios: Array<{ id: string; name: string; logo_storage_path: string | null; active_prospects: number; overdue: number; opportunities_in_process: number; href: string }>
+  recent_activity: Array<{ id: string; title: string; activity_type: string; created_by_name: string | null; created_at: string; prospect_name: string }>
+}
 
 export type RedComercialProspectListItem = RedComercialProspectListRow
 export type RedComercialProspectDetailRecord = RedComercialProspectDetail
 export type RedComercialProspectMetricsRecord = RedComercialProspectMetrics
 export type RedComercialProspectPanelRecord = RedComercialProspectPanel
 export type RedComercialOpportunityRecord = RedComercialOpportunity
+export type RedComercialOpportunityListItem = RedComercialOpportunityListRow
+export type RedComercialOpportunityMetricsRecord = RedComercialOpportunityMetrics
 export type RedComercialCrossOpportunityRecord = RedComercialCrossOpportunity
+export type RedComercialCrossOpportunityMetricsRecord = RedComercialCrossOpportunityMetrics
+export type RedComercialResultsFilters = {
+  from?: string
+  to?: string
+  companyId?: string
+  collaboratorId?: string
+  resultStatus?: string
+  paymentStatus?: string
+  controlMode?: string
+  search?: string
+  page?: number
+  pageSize?: number
+}
+export type RedComercialResultsSummary = {
+  closures: number
+  won: number
+  lost: number
+  cancelled: number
+  in_process: number
+  paid: number
+  payment_pending: number
+  commission_pending: number
+  close_rate: number | null
+  avg_close_days: number | null
+}
+export type RedComercialResultsCompany = {
+  company_id: string
+  company_name: string
+  company_logo_storage_path: string | null
+  closed: number
+  won: number
+  lost: number
+  in_process: number
+  paid: number
+  payment_pending: number
+  volume_by_currency: Record<string, number>
+  average_ticket_by_currency: Record<string, number>
+}
+export type RedComercialResultsCollaborator = {
+  collaborator_id: string
+  collaborator_name: string | null
+  attributed: number
+  closed: number
+  won: number
+  lost: number
+  in_process: number
+  generated: number
+  pending: number
+  paid: number
+}
+export type RedComercialClosure = {
+  id: string
+  prospect_id: string
+  company_id: string
+  company_name: string
+  company_logo_storage_path: string | null
+  prospect_name: string
+  result_status: 'won' | 'lost'
+  payment_status: string
+  commission_status: string
+  control_mode: string
+  collaborator_id: string | null
+  collaborator_name: string | null
+  sale_net_amount: number | null
+  currency: string
+  closed_at: string | null
+  created_at: string
+}
+export type RedComercialResultsData = {
+  summary: RedComercialResultsSummary
+  volume_by_currency: Record<string, number>
+  companies: RedComercialResultsCompany[]
+  collaborators: RedComercialResultsCollaborator[]
+  closures: RedComercialClosure[]
+  total_closures: number
+}
 export type RedComercialProspectNoteRecord = RedComercialProspectNote
 export type RedComercialProspectFileRecord = RedComercialProspectFile
 export type RedComercialFollowupListItem = RedComercialFollowupListRow
@@ -218,6 +328,34 @@ export type RedComercialFollowupFilters = {
   mine?: boolean
   pageSize?: number
   page?: number
+}
+
+export type RedComercialOpportunityView = 'all' | 'in_process' | 'arista' | 'contract_pending' | 'payment_pending' | 'commission_pending' | 'won' | 'lost'
+
+export type RedComercialOpportunityFilters = {
+  search?: string
+  companyId?: string
+  controlMode?: RedComercialOpportunity['control_mode'] | ''
+  contractStatus?: string
+  paymentStatus?: string
+  responsibleId?: string
+  resultStatus?: RedComercialOpportunity['result_status'] | ''
+  view?: RedComercialOpportunityView
+  page?: number
+  pageSize?: number
+}
+
+export type RedComercialCrossOpportunityView = 'all' | RedComercialCrossOpportunityRecord['status']
+
+export type RedComercialCrossOpportunityFilters = {
+  search?: string
+  sourceCompanyId?: string
+  targetCompanyId?: string
+  status?: RedComercialCrossOpportunityRecord['status'] | ''
+  assignedTo?: string
+  view?: RedComercialCrossOpportunityView
+  page?: number
+  pageSize?: number
 }
 
 export type RedComercialProspectFormValues = {

@@ -20,9 +20,13 @@ import { AdminSettings } from './pages/AdminSettings'
 import { AdminInvitationAcceptance } from './pages/AdminInvitationAcceptance'
 import { AdminLogin } from './pages/AdminLogin'
 import { AdminPasswordRecoveryRequest, AdminPasswordUpdate } from './pages/AdminPasswordRecovery'
-import { AdminCompaniesPage, AssignmentsPage, CollaboratorsPage, CompanyDetailPage, MyPortfoliosPage, RedComercialHome } from './pages/RedComercialPages'
+import { AdminCompaniesPage, AssignmentsPage, CollaboratorsPage, CompanyDetailPage, MyPortfoliosPage } from './pages/RedComercialPages'
+import { RedComercialDashboardPage } from './pages/RedComercialDashboardPage'
 import { RedComercialProspectsPage } from './pages/RedComercialProspectsPage'
 import { RedComercialFollowupsPage } from './pages/RedComercialFollowupsPage'
+import { RedComercialOpportunitiesPage } from './pages/RedComercialOpportunitiesPage'
+import { RedComercialCrossOpportunitiesPage } from './pages/RedComercialCrossOpportunitiesPage'
+import { RedComercialResultsPage } from './pages/RedComercialResultsPage'
 
 export default function AdminRoutes() {
   return (
@@ -33,12 +37,15 @@ export default function AdminRoutes() {
         <Route path="recuperar-contrasena" element={<AdminPasswordRecoveryRequest />} />
         <Route path="actualizar-contrasena" element={<AdminPasswordUpdate />} />
         <Route element={<AdminGuard />}>
-          <Route index element={<RedComercialHome />} />
+          <Route index element={<RedComercialDashboardPage />} />
           <Route path="empresas" element={<AdminCompaniesPage />} />
           <Route path="empresas/:id" element={<CompanyDetailPage />} />
           <Route path="mis-carteras" element={<MyPortfoliosPage />} />
           <Route path="prospectos" element={<RedComercialProspectsPage />} />
           <Route path="seguimientos" element={<RedComercialFollowupsPage />} />
+          <Route path="oportunidades" element={<RedComercialOpportunitiesPage />} />
+          <Route path="oportunidades-cruzadas" element={<RedComercialCrossOpportunitiesPage />} />
+          <Route path="resultados" element={<RedComercialResultsPage />} />
           <Route element={<AdminRoleGuard />}>
             <Route path="colaboradores" element={<CollaboratorsPage />} />
             <Route path="asignaciones" element={<AssignmentsPage />} />
@@ -50,7 +57,7 @@ export default function AdminRoutes() {
             <Route path="propuestas/nueva" element={<AdminProposalFormPage mode="create" />} />
             <Route path="propuestas/:id" element={<AdminProposalWorkspace />} />
             <Route path="propuestas/:id/editar" element={<AdminProposalFormPage mode="edit" />} />
-            <Route path="oportunidades" element={<AdminOpportunities />} />
+            <Route path="oportunidades-anterior" element={<AdminOpportunities />} />
             <Route path="oportunidades/nueva" element={<AdminOpportunityFormPage mode="create" />} />
             <Route path="oportunidades/:id" element={<AdminOpportunityDetail />} />
             <Route path="oportunidades/:id/editar" element={<AdminOpportunityFormPage mode="edit" />} />

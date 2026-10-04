@@ -1,13 +1,14 @@
 import { Building2, Link as LinkIcon, Upload, Users } from 'lucide-react'
-import { useEffect, useMemo, useState, type ChangeEvent, type FormEvent } from 'react'
-import { Link, useNavigate, useParams } from 'react-router-dom'
+import { useCallback, useEffect, useMemo, useState, type ChangeEvent, type CSSProperties, type FormEvent, type ReactNode } from 'react'
+import { Link, useParams } from 'react-router-dom'
 import { AdminDetailModal } from '../../components/admin/AdminDetailModal'
 import { AdminPageHeader } from '../../components/admin/AdminPageHeader'
+import { AdminKpiCard } from '../../components/admin/AdminVisualSystem'
 import { CompanyLogo } from '../../components/admin/CompanyLogo'
 import { EmptyState } from '../../components/admin/EmptyState'
 import { adminRepository } from '../../repositories'
-import type { CollaboratorRecord, RedComercialHomeData, RepresentedCompanyFormValues, RepresentedCompanyMembershipRecord, RepresentedCompanyRecord } from '../../types/admin'
-import { formatList, isRedComercialAdmin } from '../red-comercial-utils'
+import type { CollaboratorRecord, RedComercialCompanyWorkspace, RedComercialHomeData, RepresentedCompanyFaqRecord, RepresentedCompanyFormValues, RepresentedCompanyMembershipRecord, RepresentedCompanyRecord } from '../../types/admin'
+import { formatList, getCompanyAccentColor, hexToRgba, isRedComercialAdmin } from '../red-comercial-utils'
 import { useAdminAuth } from '../useAdminAuth'
 
 const emptyCompanyForm: RepresentedCompanyFormValues = {
@@ -56,61 +57,62 @@ function ErrorBlock({ text }: { text: string }) {
   return <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm leading-5 text-red-800 shadow-[0_1px_2px_rgba(127,29,29,0.04)]">{text}</div>
 }
 
+function companyDate(value: string) {
+  return new Intl.DateTimeFormat('es-CL', { day: '2-digit', month: '2-digit', year: 'numeric' }).format(new Date(value))
+}
+
+function isUuid(value: string | undefined): value is string {
+  return Boolean(value && /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(value))
+}
+
 function MetricCard({ label, value, icon: Icon }: { label: string; value: string | number; icon: typeof Building2 }) {
-  return (
-    <div className="min-h-[78px] rounded-lg border border-[#ddd6ca] bg-white px-3 py-2.5 shadow-[0_1px_2px_rgba(23,32,45,0.025)]">
-      <div className="flex items-start justify-between gap-3">
-        <div>
-          <p className="text-[11px] font-semibold uppercase tracking-[0.06em] text-slate-500">{label}</p>
-          <p className="mt-1.5 text-[25px] font-semibold leading-none text-[#17202d]">{value}</p>
-        </div>
-        <span className="inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-md bg-[#e7f0ea] text-[#235b3e]">
-          <Icon size={17} aria-hidden="true" />
-        </span>
-      </div>
-    </div>
-  )
+  return <AdminKpiCard label={label} value={value} icon={Icon} tone="neutral" />
 }
 
 function CompanyCard({ company, canEdit, onEdit }: { company: RepresentedCompanyRecord; canEdit: boolean; onEdit?: (company: RepresentedCompanyRecord) => void }) {
+  const accentColor = getCompanyAccentColor(company)
+  const cardStyle = {
+    '--company-accent-border': hexToRgba(accentColor, 0.32),
+    background: `linear-gradient(135deg, ${hexToRgba(accentColor, 0.1)} 0%, rgba(255, 255, 255, 0.96) 68%)`,
+  } as CSSProperties
   return (
-    <article className="rounded-lg border border-[#ddd6ca] bg-white p-3 shadow-[0_1px_2px_rgba(23,32,45,0.025)]">
-      <div className="flex min-w-0 items-start gap-2.5">
-        <CompanyLogo company={company} />
+    <article style={cardStyle} className="rounded-lg border border-[#ddd6ca] p-2.5 shadow-[0_1px_2px_rgba(23,32,45,0.025)] transition duration-200 hover:-translate-y-0.5 hover:border-[var(--company-accent-border)] hover:shadow-[0_3px_8px_rgba(23,32,45,0.07)]">
+      <div className="flex min-w-0 items-start gap-2">
+        <CompanyLogo company={company} size="sm" />
         <div className="min-w-0 flex-1">
-          <div className="flex flex-wrap items-center gap-2">
-            <h2 className="truncate text-base font-semibold text-[#17202d]">{company.name}</h2>
-            <span className={`rounded-full px-2.5 py-1 text-xs font-semibold ${company.status === 'active' ? 'bg-[#e7f0ea] text-[#235b3e]' : 'bg-stone-100 text-stone-600'}`}>
+          <div className="flex flex-wrap items-center gap-1.5">
+            <h2 className="truncate text-[14px] font-semibold text-[#17202d]">{company.name}</h2>
+            <span className={`rounded-full px-2 py-0.5 text-[10px] font-semibold ${company.status === 'active' ? 'bg-[#e7f0ea] text-[#235b3e]' : 'bg-stone-100 text-stone-600'}`}>
               {company.status === 'active' ? 'Activa' : 'Inactiva'}
             </span>
           </div>
-          {company.description && <p className="mt-1 line-clamp-2 text-[13px] leading-5 text-slate-600">{company.description}</p>}
+          {company.description && <p className="mt-0.5 line-clamp-1 text-[11px] leading-4 text-slate-600">{company.description}</p>}
         </div>
       </div>
-      <dl className="mt-3 grid gap-2 border-t border-[#eee8dd] pt-3 text-[13px] md:grid-cols-2">
+      <dl className="mt-2 grid gap-x-3 gap-y-1.5 border-t border-[#eee8dd] pt-2 text-[12px] md:grid-cols-2">
         <div>
-          <dt className="font-semibold text-[#17202d]">Qué ofrece</dt>
-          <dd className="mt-1 line-clamp-2 text-slate-600">{company.offer_summary || 'Sin definir'}</dd>
+          <dt className="text-[10px] font-semibold uppercase tracking-[0.06em] text-slate-500">Qué ofrece</dt>
+          <dd className="mt-0.5 line-clamp-1 text-slate-700">{company.offer_summary || 'Sin definir'}</dd>
         </div>
         <div>
-          <dt className="font-semibold text-[#17202d]">Cliente ideal</dt>
-          <dd className="mt-1 line-clamp-2 text-slate-600">{company.ideal_customer || 'Sin definir'}</dd>
+          <dt className="text-[10px] font-semibold uppercase tracking-[0.06em] text-slate-500">Cliente ideal</dt>
+          <dd className="mt-0.5 line-clamp-1 text-slate-700">{company.ideal_customer || 'Sin definir'}</dd>
         </div>
         <div>
-          <dt className="font-semibold text-[#17202d]">Territorio</dt>
-          <dd className="mt-1 text-slate-600">{company.territory || 'Sin definir'}</dd>
+          <dt className="text-[10px] font-semibold uppercase tracking-[0.06em] text-slate-500">Territorio</dt>
+          <dd className="mt-0.5 truncate text-slate-700">{company.territory || 'Sin definir'}</dd>
         </div>
         <div>
-          <dt className="font-semibold text-[#17202d]">Industrias</dt>
-          <dd className="mt-1 text-slate-600">{formatList(company.target_industries)}</dd>
+          <dt className="text-[10px] font-semibold uppercase tracking-[0.06em] text-slate-500">Industrias</dt>
+          <dd className="mt-0.5 line-clamp-1 text-slate-700">{formatList(company.target_industries)}</dd>
         </div>
       </dl>
-      <div className="mt-3 flex flex-wrap gap-1.5">
-        <Link to={`/admin/empresas/${company.id}`} className="rounded-md border border-[#c9c1b4] bg-white px-3 py-1.5 text-[13px] font-semibold text-[#17202d] transition hover:border-[#235b3e] hover:bg-[#fbfaf7]">
+      <div className="mt-2 flex flex-wrap gap-1.5">
+        <Link to={`/admin/empresas/${company.id}`} className="rounded-md border border-[#c9c1b4] bg-white px-2.5 py-1 text-[12px] font-semibold text-[#17202d] transition hover:border-[#235b3e] hover:bg-[#fbfaf7]">
           Ver
         </Link>
         {canEdit && (
-          <button type="button" onClick={() => onEdit?.(company)} className="rounded-md bg-[#235b3e] px-3 py-1.5 text-[13px] font-semibold text-white transition hover:bg-[#1b4732]">
+          <button type="button" onClick={() => onEdit?.(company)} className="rounded-md bg-[#235b3e] px-2.5 py-1 text-[12px] font-semibold text-white transition hover:bg-[#1b4732]">
             Editar
           </button>
         )}
@@ -337,7 +339,7 @@ export function AdminCompaniesPage() {
       <AdminPageHeader eyebrow="Red Comercial" title="Empresas Arista" text="Empresas representadas y portafolio comercial de Arista." actionLabel={admin ? '+ Nueva empresa' : undefined} onAction={() => setEditing('new')} />
       {error && <ErrorBlock text={error} />}
       {loading ? <LoadingBlock /> : companies.length === 0 ? <EmptyState title="No hay empresas representadas todavía." text={admin ? 'Crea la primera empresa para iniciar el portafolio comercial.' : 'No hay empresas disponibles.'} /> : (
-        <div className="grid min-w-0 gap-3 xl:grid-cols-2">
+        <div className="grid min-w-0 gap-2.5 lg:grid-cols-2 2xl:grid-cols-3">
           {companies.map((company) => <CompanyCard key={company.id} company={company} canEdit={admin} onEdit={setEditing} />)}
         </div>
       )}
@@ -350,66 +352,157 @@ export function AdminCompaniesPage() {
   )
 }
 
+type CompanyWorkspaceTab = 'summary' | 'offer' | 'ideal' | 'selling' | 'faq' | 'materials' | 'private'
+
+const workspaceTabs: Array<{ key: CompanyWorkspaceTab; label: string; adminOnly?: boolean }> = [
+  { key: 'summary', label: 'Resumen' },
+  { key: 'offer', label: 'Oferta' },
+  { key: 'ideal', label: 'Cliente ideal' },
+  { key: 'selling', label: 'Como vender' },
+  { key: 'faq', label: 'FAQ / Objeciones' },
+  { key: 'materials', label: 'Materiales' },
+  { key: 'private', label: 'Privado Arista', adminOnly: true },
+]
+
+const workspaceEditFields: Record<string, Array<{ key: string; label: string }>> = {
+  offer: [
+    { key: 'value_proposition', label: 'Propuesta de valor' }, { key: 'sales_offerings', label: 'Productos / servicios' },
+    { key: 'modalities', label: 'Modalidades' }, { key: 'plans', label: 'Planes' }, { key: 'inclusions', label: 'Que incluye' },
+    { key: 'exclusions', label: 'Que no incluye' }, { key: 'use_cases', label: 'Casos de uso' }, { key: 'recurring_model', label: 'Recurrencia' },
+  ],
+  ideal: [
+    { key: 'buyer_roles', label: 'Cargos / buyer persona' }, { key: 'decision_makers', label: 'Quien decide' },
+    { key: 'influencers', label: 'Quien influye' }, { key: 'needs', label: 'Necesidades tipicas' },
+    { key: 'intent_signals', label: 'Senales de intencion' }, { key: 'qualification_criteria', label: 'Criterios de calificacion' },
+    { key: 'disqualification_criteria', label: 'Criterios de descarte / mal fit' },
+  ],
+  selling: [
+    { key: 'short_pitch', label: 'Pitch corto' }, { key: 'introduction_guidance', label: 'Presentacion inicial' },
+    { key: 'discovery_questions', label: 'Preguntas de descubrimiento' }, { key: 'sales_process', label: 'Proceso comercial recomendado' },
+    { key: 'required_information', label: 'Informacion necesaria' }, { key: 'material_guidance', label: 'Como presentar material' },
+    { key: 'recommended_next_step', label: 'Proximo paso recomendado' }, { key: 'sales_plan', label: 'Plan comercial' },
+  ],
+  signals: [
+    { key: 'opportunity_triggers', label: 'Cuando pensar en esta empresa' }, { key: 'cross_sell_use_cases', label: 'Oportunidades tipicas' },
+  ],
+}
+
+function workspaceText(value: unknown) {
+  return typeof value === 'string' && value.trim() ? value : 'No hay informacion cargada todavia.'
+}
+
+function workspaceLines(value: unknown) {
+  return Array.isArray(value) ? value.filter((item): item is string => typeof item === 'string').join('\n') : ''
+}
+
+function WorkspaceEditModal({ title, fields, initial, onClose, onSave, saving }: { title: string; fields: Array<{ key: string; label: string }>; initial: Record<string, unknown>; onClose: () => void; onSave: (payload: Record<string, unknown>) => void; saving: boolean }) {
+  const [values, setValues] = useState(() => Object.fromEntries(fields.map(({ key }) => [key, Array.isArray(initial[key]) ? workspaceLines(initial[key]) : String(initial[key] ?? '')])))
+  const arrayKeys = new Set(['discovery_questions', 'opportunity_triggers', 'cross_sell_use_cases'])
+  function submit(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault()
+    const payload = Object.fromEntries(Object.entries(values).map(([key, value]) => [key, arrayKeys.has(key) ? value.split('\n').map((item) => item.trim()).filter(Boolean) : value]))
+    onSave(payload)
+  }
+  return <AdminDetailModal title={title} onClose={onClose} size="large"><form className="grid gap-3" onSubmit={submit}>
+    <div className="grid gap-3 md:grid-cols-2">{fields.map((field) => <label key={field.key} className="grid gap-1 text-[12px] font-semibold text-slate-700 md:last:col-span-2"><span>{field.label}</span><textarea rows={field.key.includes('questions') || field.key.includes('triggers') || field.key.includes('use_cases') ? 4 : 3} value={values[field.key]} onChange={(event) => setValues((current) => ({ ...current, [field.key]: event.target.value }))} className="rounded-md border border-[#c9c1b4] px-2.5 py-2 text-[13px] font-normal outline-none focus:border-[#235b3e]" placeholder={field.key.includes('questions') || field.key.includes('triggers') || field.key.includes('use_cases') ? 'Una linea por elemento' : ''} /></label>)}</div>
+    <div className="flex justify-end gap-2"><button type="button" onClick={onClose} className="rounded-md border border-[#c9c1b4] px-3 py-1.5 text-[12px] font-semibold">Cancelar</button><button type="submit" disabled={saving} className="rounded-md bg-[#235b3e] px-3 py-1.5 text-[12px] font-semibold text-white disabled:opacity-60">{saving ? 'Guardando...' : 'Guardar seccion'}</button></div>
+  </form></AdminDetailModal>
+}
+
+function CompanyWorkspaceSection({ title, children, canEdit, onEdit }: { title: string; children: ReactNode; canEdit?: boolean; onEdit?: () => void }) {
+  return <section className="rounded-lg border border-[#ddd6ca] bg-white p-3 shadow-[0_1px_2px_rgba(23,32,45,0.025)]"><div className="flex items-center justify-between gap-2"><h2 className="text-[13px] font-semibold text-[#17202d]">{title}</h2>{canEdit && <button type="button" onClick={onEdit} className="text-[11px] font-semibold text-[#235b3e]">Editar</button>}</div><div className="mt-2 text-[12px] leading-5 text-slate-700">{children}</div></section>
+}
+
+function FaqEditModal({ initial, onClose, onSave, saving }: { initial: Partial<RepresentedCompanyFaqRecord>; onClose: () => void; onSave: (values: Partial<RepresentedCompanyFaqRecord>) => void; saving: boolean }) {
+  const [values, setValues] = useState({ type: initial.type ?? 'faq', question: initial.question ?? '', answer: initial.answer ?? '', requires_escalation: initial.requires_escalation ?? false })
+  return <AdminDetailModal title={initial.id ? 'Editar FAQ / objecion' : 'Nueva FAQ / objecion'} onClose={onClose}><form className="grid gap-3" onSubmit={(event) => { event.preventDefault(); onSave(values) }}><label className="grid gap-1 text-[12px] font-semibold text-slate-700">Tipo<select value={values.type} onChange={(event) => setValues((current) => ({ ...current, type: event.target.value as 'faq' | 'objection' }))} className="rounded-md border border-[#c9c1b4] px-2.5 py-2 text-[13px] font-normal"><option value="faq">FAQ</option><option value="objection">Objecion</option></select></label><label className="grid gap-1 text-[12px] font-semibold text-slate-700">Pregunta<textarea required rows={2} value={values.question} onChange={(event) => setValues((current) => ({ ...current, question: event.target.value }))} className="rounded-md border border-[#c9c1b4] px-2.5 py-2 text-[13px] font-normal" /></label><label className="grid gap-1 text-[12px] font-semibold text-slate-700">Respuesta autorizada<textarea required rows={5} value={values.answer} onChange={(event) => setValues((current) => ({ ...current, answer: event.target.value }))} className="rounded-md border border-[#c9c1b4] px-2.5 py-2 text-[13px] font-normal" /></label><label className="flex items-center gap-2 text-[12px] font-semibold text-slate-700"><input type="checkbox" checked={values.requires_escalation} onChange={(event) => setValues((current) => ({ ...current, requires_escalation: event.target.checked }))} /> Requiere escalar a empresa representada</label><div className="flex justify-end gap-2"><button type="button" onClick={onClose} className="rounded-md border border-[#c9c1b4] px-3 py-1.5 text-[12px] font-semibold">Cancelar</button><button type="submit" disabled={saving} className="rounded-md bg-[#235b3e] px-3 py-1.5 text-[12px] font-semibold text-white disabled:opacity-60">{saving ? 'Guardando...' : 'Guardar'}</button></div></form></AdminDetailModal>
+}
+
+function CompanySummaryRail({ workspace, company, admin }: { workspace: RedComercialCompanyWorkspace; company: RepresentedCompanyRecord; admin: boolean }) {
+  const featuredFaqs = workspace.faqs.slice(0, 3)
+  const featuredMaterials = workspace.materials.slice(0, 3)
+  return <div className="grid gap-2 lg:grid-cols-3">
+    <CompanyWorkspaceSection title="FAQ / objeciones destacadas"><div className="grid gap-1.5">{featuredFaqs.length ? featuredFaqs.map((faq) => <div key={faq.id} className="border-b border-[#eee8dd] pb-1.5 last:border-0 last:pb-0"><p className="font-semibold text-[#17202d]">{faq.question}</p><p className="mt-0.5 line-clamp-2 text-slate-600">{faq.answer}</p>{faq.requires_escalation && <span className="mt-1 inline-flex rounded-full bg-amber-50 px-1.5 py-0.5 text-[10px] font-semibold text-amber-800">Escalar</span>}</div>) : <p>{workspace.is_assigned || admin ? 'No hay FAQ cargadas.' : 'Contenido disponible en cartera asignada.'}</p>}</div></CompanyWorkspaceSection>
+    <CompanyWorkspaceSection title="Materiales principales"><div className="grid gap-1.5">{featuredMaterials.length ? featuredMaterials.map((material) => <div key={material.id} className="flex items-center justify-between gap-2 border-b border-[#eee8dd] pb-1.5 last:border-0 last:pb-0"><span className="min-w-0 truncate font-semibold text-[#17202d]">{material.title}</span><span className="shrink-0 text-[10px] uppercase text-slate-400">{material.material_type}</span></div>) : <p>No hay materiales cargados.</p>}</div></CompanyWorkspaceSection>
+    {admin && <CompanyWorkspaceSection title="Privado Arista"><div className="grid gap-1.5"><p><span className="font-semibold">Comision:</span> {workspaceText(workspace.private_details?.agreed_commission)}</p><p><span className="font-semibold">Terminos:</span> {workspaceText(workspace.private_details?.economic_terms)}</p><p><span className="font-semibold">Notas:</span> {workspaceText(workspace.private_details?.sensitive_notes)}</p></div></CompanyWorkspaceSection>}
+    <CompanyWorkspaceSection title="Responsable Arista"><p>{company.internal_owner_id || 'Sin responsable asignado'}</p></CompanyWorkspaceSection>
+    <CompanyWorkspaceSection title="Acceso comercial"><p>{workspace.is_assigned ? 'Playbook completo de venta' : 'Directorio general y oportunidades tipicas'}</p></CompanyWorkspaceSection>
+    <CompanyWorkspaceSection title="Actualizacion"><p>{workspace.updated_at ? companyDate(workspace.updated_at) : 'Sin fecha registrada'}</p></CompanyWorkspaceSection>
+  </div>
+}
+
 export function CompanyDetailPage() {
   const { id } = useParams()
-  const navigate = useNavigate()
-  const [company, setCompany] = useState<RepresentedCompanyRecord | null>(null)
+  const auth = useAdminAuth()
+  const admin = isRedComercialAdmin(auth.profile)
+  const [workspace, setWorkspace] = useState<RedComercialCompanyWorkspace | null>(null)
+  const [tab, setTab] = useState<CompanyWorkspaceTab>('summary')
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
+  const [editing, setEditing] = useState<string | null>(null)
+  const [faqEditing, setFaqEditing] = useState<Partial<RepresentedCompanyFaqRecord> | null>(null)
+  const [saving, setSaving] = useState(false)
+  const playbook = (workspace?.playbook ?? {}) as Record<string, unknown>
 
-  useEffect(() => {
-    if (!id) return
-    adminRepository.getRepresentedCompanyById(id).then((result) => {
-      setCompany(result.data)
-      setError(result.error ?? '')
+  const load = useCallback(async () => {
+    if (!isUuid(id)) {
+      setError('La empresa indicada en la URL no es valida.')
       setLoading(false)
-    })
+      return
+    }
+    setLoading(true)
+    const result = await adminRepository.getRedComercialCompanyWorkspace(id)
+    setWorkspace(result.data)
+    setError(result.error ?? '')
+    setLoading(false)
   }, [id])
+  useEffect(() => { void load() }, [load])
 
-  if (loading) return <LoadingBlock />
+  async function saveSection(section: string, payload: Record<string, unknown>) {
+    if (!id) return
+    setSaving(true)
+    const result = await adminRepository.updateRedComercialCompanyPlaybook(id, section, payload)
+    setSaving(false)
+    if (result.error) { setError(result.error); return }
+    setWorkspace(result.data)
+    setEditing(null)
+  }
+
+  async function saveFaq(values: Partial<RepresentedCompanyFaqRecord>) {
+    if (!id) return
+    setSaving(true)
+    const result = await adminRepository.upsertRedComercialCompanyFaq(id, { ...values, id: faqEditing?.id })
+    setSaving(false)
+    if (result.error) { setError(result.error); return }
+    setFaqEditing(null)
+    await load()
+  }
+
+  if (loading) return <LoadingBlock text="Cargando playbook comercial..." />
   if (error) return <ErrorBlock text={error} />
-  if (!company) return <EmptyState title="Empresa no encontrada" text="No fue posible encontrar la empresa solicitada." />
+  if (!workspace) return <EmptyState title="Empresa no encontrada" text="No fue posible encontrar la empresa solicitada." />
+  const company = workspace.company
+  const visibleTabs = workspaceTabs.filter((item) => !item.adminOnly || admin)
+  const editFields = editing ? workspaceEditFields[editing] ?? [] : []
+  return <div className="grid gap-2">
+    <section className="rounded-lg border border-[#ddd6ca] bg-white px-2.5 py-2 shadow-[0_1px_2px_rgba(23,32,45,0.025)]"><div className="flex flex-wrap items-center gap-2"><Link to="/admin/empresas" className="mr-1 text-[11px] font-semibold text-[#235b3e]">Volver</Link><CompanyLogo company={company} size="sm" /><div className="min-w-0 flex-1"><div className="flex flex-wrap items-center gap-1.5"><h1 className="truncate text-[17px] font-semibold text-[#17202d]">{company.name}</h1><span className="rounded-full bg-[#e7f0ea] px-1.5 py-0.5 text-[10px] font-semibold text-[#235b3e]">{company.status === 'active' ? 'Activa' : 'Inactiva'}</span></div><p className="truncate text-[11px] text-slate-600">{workspaceText(company.description)}</p></div><div className="flex items-center gap-2 text-[11px] text-slate-500">{company.website_url && <a href={company.website_url} target="_blank" rel="noreferrer" className="font-semibold text-[#235b3e]">Sitio web</a>}<span>{company.territory || 'Territorio sin definir'}</span><span>{workspace.is_assigned ? 'Cartera asignada' : 'Directorio general'}</span></div>{admin && <div className="ml-auto flex items-center gap-1.5"><button type="button" onClick={() => setEditing('offer')} className="rounded-md border border-[#c9c1b4] px-2 py-1 text-[10px] font-semibold text-[#17202d]">Editar</button><button type="button" onClick={() => setTab('materials')} className="rounded-md border border-[#c9c1b4] px-2 py-1 text-[10px] font-semibold text-[#235b3e]">Agregar material</button><button type="button" onClick={() => setTab('faq')} className="rounded-md bg-[#235b3e] px-2 py-1 text-[10px] font-semibold text-white">Nueva FAQ</button></div>}</div></section>
+    <nav className="flex min-w-0 gap-0.5 overflow-x-auto rounded-lg border border-[#ddd6ca] bg-[#fbfaf7] p-0.5">{visibleTabs.map((item) => <button key={item.key} type="button" onClick={() => setTab(item.key)} className={`whitespace-nowrap rounded-md px-2 py-1 text-[10px] font-semibold transition ${tab === item.key ? 'bg-white text-[#235b3e] shadow-sm' : 'text-slate-500 hover:text-[#17202d]'}`}>{item.label}</button>)}</nav>
+    {tab === 'summary' && <div className="grid gap-2 md:grid-cols-2"><CompanyWorkspaceSection title="Descripcion de empresa"><p>{workspaceText(company.description)}</p></CompanyWorkspaceSection><CompanyWorkspaceSection title="Propuesta de valor"><p>{workspaceText(playbook.value_proposition ?? company.offer_summary)}</p></CompanyWorkspaceSection><CompanyWorkspaceSection title="Problema que resuelve"><p>{workspaceText(company.problem_solved)}</p></CompanyWorkspaceSection><CompanyWorkspaceSection title="Cliente ideal"><p>{workspaceText(company.ideal_customer)}</p></CompanyWorkspaceSection><CompanyWorkspaceSection title="Territorio e industrias"><p>{company.territory || 'Territorio sin definir'} · {company.target_industries.length ? company.target_industries.join(' · ') : 'Industrias sin definir'}</p></CompanyWorkspaceSection><CompanyWorkspaceSection title="Palabras clave / senales"><p>{company.keywords.length ? company.keywords.join(' · ') : 'No hay informacion cargada todavia.'}</p></CompanyWorkspaceSection><CompanyWorkspaceSection title="Cuando pensar en esta empresa" canEdit={admin} onEdit={() => setEditing('signals')}><ListBlock items={[...company.opportunity_examples, ...((playbook.opportunity_triggers as string[] | undefined) ?? [])]} /></CompanyWorkspaceSection><CompanyWorkspaceSection title="Oportunidades tipicas" canEdit={admin} onEdit={() => setEditing('signals')}><ListBlock items={(playbook.cross_sell_use_cases as string[] | undefined) ?? []} /></CompanyWorkspaceSection></div>}
+    {tab === 'offer' && <div className="grid gap-2 md:grid-cols-2"><CompanyWorkspaceSection title="Que vendemos" canEdit={admin} onEdit={() => setEditing('offer')}><p>{workspaceText(playbook.sales_offerings ?? company.offer_summary)}</p></CompanyWorkspaceSection><CompanyWorkspaceSection title="Propuesta de valor"><p>{workspaceText(playbook.value_proposition)}</p></CompanyWorkspaceSection><CompanyWorkspaceSection title="Modalidades"><p>{workspaceText(playbook.modalities)}</p></CompanyWorkspaceSection><CompanyWorkspaceSection title="Planes y recurrencia"><p>{workspaceText(playbook.plans)}<br />{workspaceText(playbook.recurring_model)}</p></CompanyWorkspaceSection><CompanyWorkspaceSection title="Incluye / no incluye"><p><strong>Incluye:</strong> {workspaceText(playbook.inclusions)}<br /><strong>No incluye:</strong> {workspaceText(playbook.exclusions)}</p></CompanyWorkspaceSection><CompanyWorkspaceSection title="Casos de uso"><p>{workspaceText(playbook.use_cases)}</p></CompanyWorkspaceSection><CompanyWorkspaceSection title="Limites comerciales"><p>{company.what_not_to_promise || workspaceText(playbook.exclusions)}</p></CompanyWorkspaceSection></div>}
+    {tab === 'ideal' && <div className="grid gap-2 md:grid-cols-2"><CompanyWorkspaceSection title="Perfil cliente ideal"><p>{workspaceText(company.ideal_customer)}</p></CompanyWorkspaceSection><CompanyWorkspaceSection title="Industrias y territorio"><p>{company.target_industries.join(' · ') || 'Industrias sin definir'}<br />{company.territory || 'Territorio sin definir'}</p></CompanyWorkspaceSection><CompanyWorkspaceSection title="Cargos y decisores" canEdit={admin} onEdit={() => setEditing('ideal')}><p><strong>Cargos:</strong> {workspaceText(playbook.buyer_roles)}<br /><strong>Decide:</strong> {workspaceText(playbook.decision_makers)}<br /><strong>Influye:</strong> {workspaceText(playbook.influencers)}</p></CompanyWorkspaceSection><CompanyWorkspaceSection title="Necesidades y senales" canEdit={admin} onEdit={() => setEditing('ideal')}><p><strong>Necesidades:</strong> {workspaceText(playbook.needs)}<br /><strong>Senales:</strong> {workspaceText(playbook.intent_signals)}</p></CompanyWorkspaceSection><CompanyWorkspaceSection title="Calificacion" canEdit={admin} onEdit={() => setEditing('ideal')}><p><strong>Buen fit:</strong> {workspaceText(playbook.qualification_criteria)}<br /><strong>No es buen fit:</strong> {workspaceText(playbook.disqualification_criteria)}</p></CompanyWorkspaceSection></div>}
+    {tab === 'selling' && <div className="grid gap-2 md:grid-cols-2"><CompanyWorkspaceSection title="Pitch corto" canEdit={admin} onEdit={() => setEditing('selling')}><p>{workspaceText(playbook.short_pitch)}</p></CompanyWorkspaceSection><CompanyWorkspaceSection title="Presentacion inicial" canEdit={admin} onEdit={() => setEditing('selling')}><p>{workspaceText(playbook.introduction_guidance)}</p></CompanyWorkspaceSection><CompanyWorkspaceSection title="Preguntas de descubrimiento" canEdit={admin} onEdit={() => setEditing('selling')}><ListBlock items={(playbook.discovery_questions as string[] | undefined) ?? []} /></CompanyWorkspaceSection><CompanyWorkspaceSection title="Proceso comercial recomendado" canEdit={admin} onEdit={() => setEditing('selling')}><p>{workspaceText(playbook.sales_process)}</p></CompanyWorkspaceSection><CompanyWorkspaceSection title="Plan comercial" canEdit={admin} onEdit={() => setEditing('selling')}><p>{workspaceText(playbook.sales_plan)}</p></CompanyWorkspaceSection><CompanyWorkspaceSection title="Siguiente paso" canEdit={admin} onEdit={() => setEditing('selling')}><p>{workspaceText(playbook.recommended_next_step)}</p></CompanyWorkspaceSection></div>}
+    {tab === 'faq' && <div className="grid gap-2 md:grid-cols-2">{workspace.faqs.length === 0 ? <EmptyState title={workspace.is_assigned || admin ? 'No hay FAQ u objeciones cargadas.' : 'Contenido operativo restringido'} text={workspace.is_assigned || admin ? 'Agrega respuestas autorizadas para ayudar a la red comercial.' : 'Asigna esta empresa a tu cartera para ver el playbook de venta.'} /> : workspace.faqs.map((faq) => <CompanyWorkspaceSection key={faq.id} title={`${faq.type === 'objection' ? 'Objecion' : 'FAQ'} · ${faq.question}`} canEdit={admin} onEdit={() => setFaqEditing(faq)}><p>{faq.answer}</p>{faq.requires_escalation && <span className="mt-2 inline-flex rounded-full bg-amber-50 px-2 py-0.5 text-[10px] font-semibold text-amber-800">Consultar con representado</span>}</CompanyWorkspaceSection>)}{admin && <button type="button" onClick={() => setFaqEditing({ type: 'faq' })} className="w-fit rounded-md border border-[#c9c1b4] px-2.5 py-1.5 text-[11px] font-semibold text-[#235b3e]">+ Agregar FAQ / objecion</button>}</div>}
+    {tab === 'materials' && <div className="grid gap-2 md:grid-cols-2">{workspace.materials.length === 0 ? <EmptyState title="No hay materiales cargados." text="Los materiales autorizados apareceran aqui." /> : workspace.materials.map((material) => <CompanyWorkspaceSection key={material.id} title={material.title}><p>{material.description || 'Material comercial autorizado.'}</p><p className="mt-1 text-[10px] uppercase tracking-[0.06em] text-slate-500">{material.material_type} · {material.visibility}</p>{material.external_url && <a href={material.external_url} target="_blank" rel="noreferrer" className="mt-1 inline-block font-semibold text-[#235b3e]">Abrir material</a>}</CompanyWorkspaceSection>)}</div>}
+    {tab === 'private' && admin && <div className="grid gap-2 md:grid-cols-2"><CompanyWorkspaceSection title="Modelo de comision"><p>{workspaceText(workspace.private_details?.agreed_commission)}</p></CompanyWorkspaceSection><CompanyWorkspaceSection title="Terminos economicos"><p>{workspaceText(workspace.private_details?.economic_terms)}</p></CompanyWorkspaceSection><CompanyWorkspaceSection title="Condiciones contractuales"><p>{workspaceText(workspace.private_details?.contract_notes)}</p></CompanyWorkspaceSection><CompanyWorkspaceSection title="Notas privadas Arista"><p>{workspaceText(workspace.private_details?.sensitive_notes)}</p></CompanyWorkspaceSection></div>}
+    {tab === 'summary' && <CompanySummaryRail workspace={workspace} company={company} admin={admin} />}
+    <p className="text-right text-[10px] text-slate-400">Ultima actualizacion: {workspace.updated_at ? companyDate(workspace.updated_at) : 'Sin fecha'}</p>
+    {editing && <WorkspaceEditModal title={`Editar ${editing}`} fields={editFields} initial={playbook} onClose={() => setEditing(null)} onSave={(payload) => void saveSection(editing === 'signals' ? 'signals' : editing, payload)} saving={saving} />}
+    {faqEditing && <FaqEditModal initial={faqEditing} onClose={() => setFaqEditing(null)} onSave={(values) => void saveFaq(values)} saving={saving} />}
+  </div>
+}
 
-  return (
-    <div className="grid gap-3">
-      <button type="button" onClick={() => navigate(-1)} className="w-fit text-sm font-semibold text-[#235b3e]">Volver</button>
-      <section className="rounded-lg border border-[#ddd6ca] bg-white p-3 shadow-[0_1px_2px_rgba(23,32,45,0.025)]">
-        <div className="flex flex-col gap-4 sm:flex-row sm:items-start">
-          <CompanyLogo company={company} size="lg" />
-          <div className="min-w-0">
-            <p className="text-xs font-semibold uppercase tracking-[0.2em] text-[#235b3e]">Empresa representada</p>
-            <h1 className="mt-1.5 text-2xl font-semibold text-[#17202d]">{company.name}</h1>
-            {company.website_url && <a href={company.website_url} target="_blank" rel="noreferrer" className="mt-2 inline-block text-sm font-semibold text-[#235b3e]">{company.website_url}</a>}
-            {company.description && <p className="mt-3 max-w-4xl text-sm leading-6 text-slate-600">{company.description}</p>}
-          </div>
-        </div>
-      </section>
-      <section className="grid gap-3 lg:grid-cols-2">
-        {[
-          ['Productos/servicios', company.offer_summary],
-          ['Problema que resuelve', company.problem_solved],
-          ['Cliente ideal', company.ideal_customer],
-          ['Territorio', company.territory],
-          ['Industrias', formatList(company.target_industries)],
-          ['Palabras clave', formatList(company.keywords)],
-          ['Qué no prometer', company.what_not_to_promise],
-        ].map(([label, value]) => (
-          <div key={label} className="rounded-lg border border-[#ddd6ca] bg-white p-3 shadow-[0_1px_2px_rgba(23,32,45,0.025)]">
-            <h2 className="text-sm font-semibold uppercase tracking-[0.14em] text-[#235b3e]">{label}</h2>
-            <p className="mt-3 text-sm leading-6 text-slate-700">{value || 'Sin definir'}</p>
-          </div>
-        ))}
-      </section>
-      <section className="rounded-xl border border-[#ddd6ca] bg-white p-4 shadow-[0_1px_2px_rgba(23,32,45,0.03)]">
-        <h2 className="text-base font-semibold text-[#17202d]">¿Cuándo es una oportunidad?</h2>
-        {company.opportunity_examples.length === 0 ? <p className="mt-3 text-sm text-slate-600">Sin ejemplos definidos.</p> : (
-          <ul className="mt-3 grid gap-2 text-sm text-slate-700">
-            {company.opportunity_examples.map((example) => <li key={example} className="rounded-md bg-[#fbfaf7] px-3 py-2">{example}</li>)}
-          </ul>
-        )}
-      </section>
-    </div>
-  )
+function ListBlock({ items }: { items: string[] }) {
+  return items.length ? <ul className="grid gap-1">{items.map((item) => <li key={item} className="rounded-md bg-[#fbfaf7] px-2 py-1">{item}</li>)}</ul> : <p>No hay informacion cargada todavia.</p>
 }
 
 export function MyPortfoliosPage() {
@@ -428,7 +521,7 @@ export function MyPortfoliosPage() {
       <AdminPageHeader eyebrow="Red Comercial" title="Mis carteras" text="Empresas representadas asociadas a tu gestión comercial." />
       {error && <ErrorBlock text={error} />}
       {loading ? <LoadingBlock /> : companies.length === 0 ? <EmptyState title="No tienes carteras asignadas." text="Cuando un administrador te asigne empresas, aparecerán en esta vista." /> : (
-        <div className="grid gap-3 xl:grid-cols-2">{companies.map((company) => <CompanyCard key={company.id} company={company} canEdit={false} />)}</div>
+        <div className="grid gap-2.5 lg:grid-cols-2 2xl:grid-cols-3">{companies.map((company) => <CompanyCard key={company.id} company={company} canEdit={false} />)}</div>
       )}
     </div>
   )

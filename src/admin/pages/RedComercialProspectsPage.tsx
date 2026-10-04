@@ -1,6 +1,6 @@
 import { BriefcaseBusiness, CalendarClock, CalendarDays, CheckCircle2, CircleDot, Clock3, Globe2, Mail, MessageCircle, MoreHorizontal, Phone, Plus, Search, X } from 'lucide-react'
-import { useCallback, useEffect, useState, type FormEvent } from 'react'
-import { useSearchParams } from 'react-router-dom'
+import { useCallback, useEffect, useState, type CSSProperties, type FormEvent } from 'react'
+import { Link, useSearchParams } from 'react-router-dom'
 import { AdminDetailModal } from '../../components/admin/AdminDetailModal'
 import { CompanyLogo } from '../../components/admin/CompanyLogo'
 import { EmptyState } from '../../components/admin/EmptyState'
@@ -18,7 +18,7 @@ import type {
   RepresentedCompanyMembershipRecord,
   RepresentedCompanyRecord,
 } from '../../types/admin'
-import { isRedComercialAdmin } from '../red-comercial-utils'
+import { getCompanyAccentColor, hexToRgba, isRedComercialAdmin } from '../red-comercial-utils'
 import { getProspectStatusPresentation } from '../prospect-status'
 import { useAdminAuth } from '../useAdminAuth'
 import { RedComercialProspectDetailPanel } from './RedComercialProspectDetailPanel'
@@ -161,6 +161,28 @@ function LoadingBlock({ text = 'Cargando prospectos...' }: { text?: string }) {
 
 function ErrorBlock({ text }: { text: string }) {
   return <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800">{text}</div>
+}
+
+function CompanyProspectSelector({ companies, metrics, loading, admin, onSelect }: { companies: RepresentedCompanyRecord[]; metrics: Record<string, RedComercialProspectMetricsRecord>; loading: boolean; admin: boolean; onSelect: (id: string) => void }) {
+  const [query, setQuery] = useState('')
+  const visible = companies
+    .filter((company) => company.name.toLowerCase().includes(query.trim().toLowerCase()))
+    .sort((a, b) => a.name.localeCompare(b.name, 'es'))
+
+  return <div className="grid min-w-0 gap-3">
+    <div className="min-w-0"><p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-[#235b3e]">Red Comercial / Prospectos</p><h1 className="mt-2 text-[28px] font-semibold leading-tight tracking-tight text-[#17202d]">Prospectos</h1><p className="mt-0.5 text-[13px] text-slate-600">Selecciona una Empresa Arista para gestionar su cartera comercial.</p></div>
+    <label className="relative max-w-md"><Search size={16} className="pointer-events-none absolute left-3 top-3 text-slate-400" /><input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Buscar Empresa Arista..." className="h-9 w-full rounded-md border border-[#c9c1b4] bg-white pl-9 pr-3 text-[13px] outline-none focus:border-[#235b3e]" /></label>
+    {loading ? <LoadingBlock text="Cargando empresas..." /> : visible.length === 0 ? <div className="grid gap-3"><EmptyState title={admin ? 'No hay Empresas Arista activas.' : 'Aun no tienes empresas asignadas.'} text={admin ? 'Crea o activa una empresa para gestionar sus prospectos.' : 'Cuando tengas una cartera asignada aparecera en esta vista.'} />{admin && <Link to="/admin/empresas" className="mx-auto inline-flex rounded-md bg-[#235b3e] px-4 py-2 text-sm font-semibold text-white">Ir a Empresas Arista</Link>}</div> : <div className="grid min-w-0 grid-cols-1 gap-2 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4">{visible.map((company) => {
+      const companyMetrics = metrics[company.id] ?? emptyMetrics
+      const accentColor = getCompanyAccentColor(company)
+      const cardStyle = {
+        '--company-accent': accentColor,
+        '--company-accent-border': hexToRgba(accentColor, 0.32),
+        background: `linear-gradient(135deg, ${hexToRgba(accentColor, 0.1)} 0%, rgba(255, 255, 255, 0.96) 68%)`,
+      } as CSSProperties
+      return <button key={company.id} type="button" onClick={() => onSelect(company.id)} style={cardStyle} className="grid min-h-[108px] cursor-pointer gap-1.5 rounded-lg border border-[#ddd6ca] p-2.5 text-left shadow-[0_1px_2px_rgba(23,32,45,0.025)] transition duration-200 hover:-translate-y-0.5 hover:border-[var(--company-accent-border)] hover:shadow-[0_3px_8px_rgba(23,32,45,0.07)]"><span className="flex min-w-0 items-center gap-2"><CompanyLogo company={company} size="sm" /><span className="truncate text-[14px] font-semibold text-[#17202d]">{company.name}</span></span><span className="grid gap-0.5 text-[12px] text-slate-600"><strong className="text-[13px] text-[#17202d]">{companyMetrics.total_prospects} {companyMetrics.total_prospects === 1 ? 'prospecto' : 'prospectos'}</strong><span className={companyMetrics.overdue > 0 ? 'text-amber-700' : 'text-slate-600'}>{companyMetrics.today} hoy &middot; {companyMetrics.overdue} vencidos</span></span><span className="mt-auto text-[11px] font-semibold text-[#235b3e]">Ver prospectos &gt;</span></button>
+    })}</div>}
+  </div>
 }
 
 function prospectToForm(prospect: RedComercialProspectDetailRecord): RedComercialProspectFormValues {
@@ -415,22 +437,26 @@ export function LegacyProspectDetailPanel({ prospect, onClose, onEdit, onActivit
   )
 }
 
-export function ProspectDetailPanel({ prospect, onClose, onEdit, onActivity, onArchive, onSchedule, onChanged }: { prospect: RedComercialProspectDetailRecord; onClose: () => void; onEdit?: () => void; onActivity?: () => void; onArchive?: () => void; onSchedule?: () => void; onChanged?: () => void }) {
-  return <RedComercialProspectDetailPanel prospect={prospect} onClose={onClose} onEdit={onEdit} onActivity={onActivity} onArchive={onArchive} onSchedule={onSchedule} onChanged={onChanged} />
+export function ProspectDetailPanel({ prospect, opportunityId, onClose, onEdit, onActivity, onArchive, onSchedule, onChanged }: { prospect: RedComercialProspectDetailRecord; opportunityId?: string; onClose: () => void; onEdit?: () => void; onActivity?: () => void; onArchive?: () => void; onSchedule?: () => void; onChanged?: () => void }) {
+  return <RedComercialProspectDetailPanel prospect={prospect} opportunityId={opportunityId} onClose={onClose} onEdit={onEdit} onActivity={onActivity} onArchive={onArchive} onSchedule={onSchedule} onChanged={onChanged} />
 }
 
 export function RedComercialProspectsPage() {
   const auth = useAdminAuth()
   const admin = isRedComercialAdmin(auth.profile)
   const [searchParams, setSearchParams] = useSearchParams()
+  const companyParam = searchParams.get('company') ?? ''
+  const openProspectId = searchParams.get('open')
   const [companies, setCompanies] = useState<RepresentedCompanyRecord[]>([])
   const [memberships, setMemberships] = useState<RepresentedCompanyMembershipRecord[]>([])
   const [collaborators, setCollaborators] = useState<CollaboratorRecord[]>([])
-  const [selectedCompanyId, setSelectedCompanyId] = useState(searchParams.get('company') ?? sessionStorage.getItem('red-comercial-prospect-company') ?? '')
+  const [selectedCompanyId, setSelectedCompanyId] = useState(companyParam)
+  const [selectorMetrics, setSelectorMetrics] = useState<Record<string, RedComercialProspectMetricsRecord>>({})
   const [metrics, setMetrics] = useState<RedComercialProspectMetricsRecord>(emptyMetrics)
   const [rows, setRows] = useState<RedComercialProspectListItem[]>([])
   const [total, setTotal] = useState(0)
   const [loading, setLoading] = useState(true)
+  const [optionsLoading, setOptionsLoading] = useState(true)
   const [error, setError] = useState('')
   const [filters, setFilters] = useState<RedComercialProspectFilters>({ pageSize: 25, page: 1, quickFilter: 'all' })
   const [selected, setSelected] = useState<RedComercialProspectDetailRecord | null>(null)
@@ -454,6 +480,7 @@ export function RedComercialProspectsPage() {
 
   useEffect(() => {
     async function loadOptions() {
+      setOptionsLoading(true)
       const [companyResult, membershipResult, collaboratorResult] = await Promise.all([
         admin ? adminRepository.listRepresentedCompanies() : adminRepository.listMyRepresentedCompanies(),
         adminRepository.listCompanyMemberships(),
@@ -464,20 +491,27 @@ export function RedComercialProspectsPage() {
       setMemberships(membershipResult.data)
       setCollaborators(collaboratorResult.data)
       setError(companyResult.error ?? membershipResult.error ?? collaboratorResult.error ?? '')
-      setSelectedCompanyId((current) => current || availableCompanies[0]?.id || '')
+      const metricEntries = await Promise.all(availableCompanies.map(async (company) => {
+        const result = await adminRepository.getRedComercialProspectMetrics(company.id)
+        return [company.id, result.data] as const
+      }))
+      setSelectorMetrics(Object.fromEntries(metricEntries))
+      setOptionsLoading(false)
     }
     void loadOptions()
   }, [admin])
 
   useEffect(() => {
-    if (!selectedCompanyId && companies.length === 1) setSelectedCompanyId(companies[0].id)
-  }, [companies, selectedCompanyId])
-
-  useEffect(() => {
-    if (!selectedCompanyId) return
-    sessionStorage.setItem('red-comercial-prospect-company', selectedCompanyId)
-    setSearchParams({ company: selectedCompanyId })
-  }, [selectedCompanyId, setSearchParams])
+    setSelectedCompanyId(companyParam)
+    if (!companyParam) {
+      setSelected(null)
+      setEditing(null)
+      setRows([])
+      setTotal(0)
+      setMetrics(emptyMetrics)
+      setLoading(false)
+    }
+  }, [companyParam])
 
   const loadProspects = useCallback(async () => {
     if (!selectedCompanyId) {
@@ -505,6 +539,22 @@ export function RedComercialProspectsPage() {
       return
     }
     setSelected(result.data)
+  }
+
+  useEffect(() => {
+    if (selectedCompanyId && openProspectId && selected?.id !== openProspectId) void openDetail(openProspectId)
+  }, [openProspectId, selected?.id, selectedCompanyId])
+
+  function selectCompany(id: string) {
+    setFilters((current) => ({ ...current, page: 1 }))
+    setSelected(null)
+    setSearchParams({ company: id })
+  }
+
+  function returnToCompanies() {
+    setSelected(null)
+    setEditing(null)
+    setSearchParams({})
   }
 
   function baseForm(): RedComercialProspectFormValues {
@@ -567,6 +617,10 @@ export function RedComercialProspectsPage() {
     { key: 'no_response' as const, label: 'Sin respuesta', count: metrics.contacted_no_response },
     { key: 'interested' as const, label: 'Interesados', count: metrics.interested },
   ]
+
+  if (!selectedCompanyId) {
+    return <CompanyProspectSelector companies={companies} metrics={selectorMetrics} loading={optionsLoading} admin={admin} onSelect={selectCompany} />
+  }
 
   const table = (
     <div className="min-w-0 overflow-hidden rounded-xl border border-[#ddd6ca] bg-white shadow-[0_1px_2px_rgba(23,32,45,0.035)]">
@@ -633,9 +687,10 @@ export function RedComercialProspectsPage() {
           </div>
         </div>
         <label className="grid min-w-[260px] gap-1 text-[13px] font-semibold text-slate-700">Empresa actual
-          <select value={selectedCompanyId} onChange={(event) => setSelectedCompanyId(event.target.value)} className="h-10 rounded-md border border-[#c9c1b4] bg-white px-3 text-[13px] outline-none focus:border-[#235b3e]">
+          <select value={selectedCompanyId} onChange={(event) => selectCompany(event.target.value)} className="h-10 rounded-md border border-[#c9c1b4] bg-white px-3 text-[13px] outline-none focus:border-[#235b3e]">
             {companies.map((company) => <option key={company.id} value={company.id}>{company.name}</option>)}
           </select>
+          <button type="button" onClick={returnToCompanies} className="w-fit text-[12px] font-semibold text-[#235b3e] hover:underline">&lt;- Todas las empresas</button>
         </label>
       </div>
       {error && <ErrorBlock text={error} />}
@@ -671,7 +726,7 @@ export function RedComercialProspectsPage() {
           <button type="button" onClick={() => setFilters((current) => ({ ...current, includeArchived: !current.includeArchived, page: 1 }))} className={`rounded-full border px-2.5 py-1 text-[12px] font-semibold ${filters.includeArchived ? 'border-slate-500 bg-slate-100 text-slate-700' : 'border-[#ddd6ca] text-slate-600'}`}>Archivados</button>
         </div>
       </section>
-      {!selectedCompanyId ? <EmptyState title="Selecciona una cartera" text="Elige una empresa representada para gestionar prospectos." /> : loading ? <LoadingBlock /> : rows.length === 0 ? (
+      {loading ? <LoadingBlock /> : rows.length === 0 ? (
         <div className="grid gap-3">
           <EmptyState title="Aun no hay prospectos" text="Agrega el primer prospecto de esta cartera para comenzar el seguimiento comercial." />
           <button type="button" onClick={() => setEditing('new')} className="mx-auto inline-flex items-center gap-2 rounded-md bg-[#235b3e] px-4 py-2 text-sm font-semibold text-white transition hover:bg-[#1b4732]"><Plus size={16} /> Nuevo prospecto</button>

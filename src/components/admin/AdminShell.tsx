@@ -1,6 +1,6 @@
-import { BriefcaseBusiness, Building2, CalendarClock, ChevronDown, Home, Menu, PanelLeftClose, PanelLeftOpen, Settings, Target, Users, X } from 'lucide-react'
+import { BarChart3, BriefcaseBusiness, Building2, CalendarClock, ChevronDown, CircleDollarSign, GitBranch, Home, Menu, PanelLeftClose, PanelLeftOpen, Settings, Target, Users, X } from 'lucide-react'
 import { useEffect, useState, type CSSProperties, type ReactNode } from 'react'
-import { NavLink } from 'react-router-dom'
+import { NavLink, useLocation } from 'react-router-dom'
 import { isRedComercialAdmin } from '../../admin/red-comercial-utils'
 import { useAdminAuth } from '../../admin/useAdminAuth'
 import { AdminNotificationsCenter } from './AdminNotificationsCenter'
@@ -11,6 +11,9 @@ const primaryNav = [
   { label: 'Mis carteras', href: '/admin/mis-carteras', icon: BriefcaseBusiness },
   { label: 'Prospectos', href: '/admin/prospectos', icon: Target },
   { label: 'Seguimientos', href: '/admin/seguimientos', icon: CalendarClock },
+  { label: 'Oportunidades', href: '/admin/oportunidades', icon: CircleDollarSign },
+  { label: 'Oportunidades cruzadas', href: '/admin/oportunidades-cruzadas', icon: GitBranch },
+  { label: 'Resultados', href: '/admin/resultados', icon: BarChart3 },
 ]
 
 const adminOnlyNav = [
@@ -24,7 +27,7 @@ const legacyNav = [
   { label: 'Pipeline comercial', href: '/admin/pipeline' },
   { label: 'Propuestas', href: '/admin/propuestas' },
   { label: 'Prospeccion', href: '/admin/prospeccion' },
-  { label: 'Oportunidades', href: '/admin/oportunidades' },
+  { label: 'Oportunidades anteriores', href: '/admin/oportunidades-anterior' },
   { label: 'Proveedores', href: '/admin/proveedores' },
   { label: 'Contactos', href: '/admin/contactos' },
   { label: 'Consultas', href: '/admin/consultas' },
@@ -55,6 +58,8 @@ export function AdminShell({ children }: { children: ReactNode }) {
   const [compactByLayout, setCompactByLayout] = useState(false)
   const [detailOpen, setDetailOpen] = useState(false)
   const auth = useAdminAuth()
+  const location = useLocation()
+  const newRedComercial = /^\/admin(?:\/|$)/.test(location.pathname) && !location.pathname.includes('anterior') && !['/admin/dashboard-anterior', '/admin/pipeline', '/admin/prospeccion', '/admin/propuestas', '/admin/proveedores', '/admin/contactos', '/admin/consultas', '/admin/recepciones', '/admin/seguimiento', '/admin/acuerdos'].some((path) => location.pathname.startsWith(path))
   const admin = isRedComercialAdmin(auth.profile)
   const effectiveCollapsed = collapsed || compactByLayout
 
@@ -197,7 +202,7 @@ export function AdminShell({ children }: { children: ReactNode }) {
         </header>
 
         <div className="min-w-0 px-4 py-4 lg:px-5 lg:py-5" style={detailOpen && window.innerWidth >= 1280 ? { paddingRight: 'calc(var(--detail-panel-width) + 8px)' } : undefined}>
-          <main className="mx-auto min-w-0 max-w-full xl:max-w-[1500px]">{children}</main>
+          <main className={`mx-auto min-w-0 max-w-full xl:max-w-[1500px] ${newRedComercial ? 'admin-red-comercial' : ''}`}>{children}</main>
         </div>
       </div>
     </div>

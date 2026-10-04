@@ -46,10 +46,21 @@ import type {
   RedComercialProspectListItem,
   RedComercialProspectMetricsRecord,
   RedComercialProspectPanelRecord,
+  RedComercialOpportunityFilters,
+  RedComercialOpportunityListItem,
+  RedComercialOpportunityMetricsRecord,
+  RedComercialCrossOpportunityFilters,
+  RedComercialCrossOpportunityMetricsRecord,
+  RedComercialResultsData,
+  RedComercialResultsFilters,
+  RedComercialCrossOpportunityRecord,
   RedComercialFollowupFilters,
   RedComercialFollowupListItem,
   RedComercialFollowupMetricsRecord,
   RedComercialHomeData,
+  RedComercialDashboardData,
+  RedComercialCompanyWorkspace,
+  RepresentedCompanyFaqRecord,
   RepresentedCompanyFormValues,
   RepresentedCompanyMembershipRecord,
   RepresentedCompanyRecord,
@@ -73,9 +84,13 @@ import type {
 export type AdminRepository = {
   getCurrentAdminProfile(userId: string): Promise<RepositoryResult<AdminProfile | null>>
   getRedComercialHomeData(): Promise<RepositoryResult<RedComercialHomeData>>
+  getRedComercialDashboard(period?: 'today' | 'week'): Promise<RepositoryResult<RedComercialDashboardData>>
   listRepresentedCompanies(): Promise<RepositoryResult<RepresentedCompanyRecord[]>>
   listMyRepresentedCompanies(): Promise<RepositoryResult<RepresentedCompanyRecord[]>>
   getRepresentedCompanyById(id: string): Promise<RepositoryResult<RepresentedCompanyRecord | null>>
+  getRedComercialCompanyWorkspace(id: string): Promise<RepositoryResult<RedComercialCompanyWorkspace | null>>
+  updateRedComercialCompanyPlaybook(id: string, section: string, payload: Record<string, unknown>): Promise<RepositoryResult<RedComercialCompanyWorkspace | null>>
+  upsertRedComercialCompanyFaq(companyId: string, values: Partial<RepresentedCompanyFaqRecord>): Promise<RepositoryResult<RepresentedCompanyFaqRecord | null>>
   createRepresentedCompany(values: RepresentedCompanyFormValues): Promise<RepositoryResult<RepresentedCompanyRecord | null>>
   updateRepresentedCompany(id: string, values: RepresentedCompanyFormValues): Promise<RepositoryResult<RepresentedCompanyRecord | null>>
   uploadCompanyLogo(companyId: string, file: File): Promise<RepositoryResult<string | null>>
@@ -94,6 +109,7 @@ export type AdminRepository = {
   getRedComercialProspectMetrics(companyId: string): Promise<RepositoryResult<RedComercialProspectMetricsRecord>>
   getRedComercialProspectDetail(id: string): Promise<RepositoryResult<RedComercialProspectDetailRecord | null>>
   getRedComercialProspectPanel(id: string): Promise<RepositoryResult<RedComercialProspectPanelRecord | null>>
+  getRedComercialOpportunityPanel(opportunityId: string): Promise<RepositoryResult<RedComercialProspectPanelRecord | null>>
   createRedComercialOpportunity(prospectId: string, payload: Record<string, unknown>): Promise<RepositoryResult<RedComercialProspectPanelRecord | null>>
   updateRedComercialOpportunity(opportunityId: string, payload: Record<string, unknown>): Promise<RepositoryResult<RedComercialProspectPanelRecord | null>>
   createRedComercialCrossOpportunity(prospectId: string, targetCompanyId: string, reason: string): Promise<RepositoryResult<RedComercialProspectPanelRecord | null>>
@@ -108,6 +124,16 @@ export type AdminRepository = {
   createRedComercialProspectActivity(prospectId: string, values: RedComercialProspectActivityFormValues): Promise<RepositoryResult<RedComercialProspectDetailRecord | null>>
   listRedComercialFollowups(filters?: RedComercialFollowupFilters): Promise<RepositoryResult<{ rows: RedComercialFollowupListItem[]; total: number }>>
   getRedComercialFollowupMetrics(filters?: Omit<RedComercialFollowupFilters, 'page' | 'pageSize' | 'view'>): Promise<RepositoryResult<RedComercialFollowupMetricsRecord>>
+  listRedComercialOpportunities(filters?: RedComercialOpportunityFilters): Promise<RepositoryResult<{ rows: RedComercialOpportunityListItem[]; total: number }>>
+  getRedComercialOpportunityMetrics(filters?: Pick<RedComercialOpportunityFilters, 'search' | 'companyId' | 'controlMode' | 'contractStatus' | 'paymentStatus' | 'responsibleId' | 'resultStatus'>): Promise<RepositoryResult<RedComercialOpportunityMetricsRecord>>
+  listRedComercialCrossOpportunities(filters?: RedComercialCrossOpportunityFilters): Promise<RepositoryResult<{ rows: RedComercialCrossOpportunityRecord[]; total: number }>>
+  getRedComercialCrossOpportunityMetrics(filters?: Pick<RedComercialCrossOpportunityFilters, 'search' | 'sourceCompanyId' | 'targetCompanyId' | 'assignedTo'>): Promise<RepositoryResult<RedComercialCrossOpportunityMetricsRecord>>
+  getRedComercialResults(filters?: RedComercialResultsFilters): Promise<RepositoryResult<RedComercialResultsData>>
+  getRedComercialCrossOpportunityDetail(id: string): Promise<RepositoryResult<RedComercialCrossOpportunityRecord | null>>
+  updateRedComercialCrossOpportunityStatus(id: string, status: RedComercialCrossOpportunityRecord['status']): Promise<RepositoryResult<RedComercialCrossOpportunityRecord | null>>
+  assignRedComercialCrossOpportunity(id: string, assignedTo: string | null): Promise<RepositoryResult<RedComercialCrossOpportunityRecord | null>>
+  convertRedComercialCrossOpportunity(id: string): Promise<RepositoryResult<RedComercialCrossOpportunityRecord | null>>
+  discardRedComercialCrossOpportunity(id: string, reason: NonNullable<RedComercialCrossOpportunityRecord['discard_reason']>, note?: string): Promise<RepositoryResult<RedComercialCrossOpportunityRecord | null>>
   listAdminNotifications(limit?: number): Promise<RepositoryResult<AdminNotificationRecord[]>>
   getUnreadAdminNotificationCount(): Promise<RepositoryResult<number>>
   markAdminNotificationRead(id: string): Promise<RepositoryResult<AdminNotificationRecord | null>>

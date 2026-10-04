@@ -24,6 +24,21 @@ export function companyLogoUrl(company: { logo_storage_path?: string | null }) {
   return supabase.storage.from('company-logos').getPublicUrl(company.logo_storage_path).data.publicUrl
 }
 
+export function getCompanyAccentColor(company: { name: string; slug: string }) {
+  const identity = `${company.slug} ${company.name}`.toLowerCase()
+  if (identity.includes('centro-psicovinculo') || identity.includes('centro psicovinculo')) return '#8d73b8'
+  if (identity.includes('noveli-editorial') || identity.includes('noveli editorial')) return '#b28a42'
+  return '#3f7a5b'
+}
+
+export function hexToRgba(hex: string, alpha: number) {
+  const value = hex.replace('#', '')
+  const red = Number.parseInt(value.slice(0, 2), 16)
+  const green = Number.parseInt(value.slice(2, 4), 16)
+  const blue = Number.parseInt(value.slice(4, 6), 16)
+  return `rgba(${red}, ${green}, ${blue}, ${alpha})`
+}
+
 export function formatList(items: string[]) {
   return items.length > 0 ? items.join(' · ') : 'Sin definir'
 }
