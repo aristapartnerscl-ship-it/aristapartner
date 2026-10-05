@@ -1,7 +1,8 @@
-import { BriefcaseBusiness, CalendarClock, CalendarDays, CheckCircle2, CircleDot, Clock3, Globe2, Mail, MessageCircle, MoreHorizontal, Phone, Plus, Search, X } from 'lucide-react'
+import { BriefcaseBusiness, CalendarClock, CalendarDays, CheckCircle2, CircleDot, Clock3, Globe2, Mail, MessageCircle, Phone, Plus, Search, Trash2, X } from 'lucide-react'
 import { useCallback, useEffect, useState, type CSSProperties, type FormEvent } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
 import { AdminDetailModal } from '../../components/admin/AdminDetailModal'
+import { AdminActionMenu } from '../../components/admin/AdminActionMenu'
 import { CompanyLogo } from '../../components/admin/CompanyLogo'
 import { EmptyState } from '../../components/admin/EmptyState'
 import { adminRepository } from '../../repositories'
@@ -18,7 +19,7 @@ import type {
   RepresentedCompanyMembershipRecord,
   RepresentedCompanyRecord,
 } from '../../types/admin'
-import { getCompanyAccentColor, hexToRgba, isRedComercialAdmin } from '../red-comercial-utils'
+import { getCompanyAccentColor, hexToRgba, isRedComercialAdmin, isRedComercialProspectArchived } from '../red-comercial-utils'
 import { getProspectStatusPresentation } from '../prospect-status'
 import { useAdminAuth } from '../useAdminAuth'
 import { RedComercialProspectDetailPanel } from './RedComercialProspectDetailPanel'
@@ -460,6 +461,8 @@ export function RedComercialProspectsPage() {
   const [error, setError] = useState('')
   const [filters, setFilters] = useState<RedComercialProspectFilters>({ pageSize: 25, page: 1, quickFilter: 'all' })
   const [selected, setSelected] = useState<RedComercialProspectDetailRecord | null>(null)
+  const [deleteFor, setDeleteFor] = useState<RedComercialProspectListItem | null>(null)
+  const [deleteError, setDeleteError] = useState('')
   const [editing, setEditing] = useState<RedComercialProspectDetailRecord | 'new' | null>(null)
   const [activityFor, setActivityFor] = useState<RedComercialProspectDetailRecord | null>(null)
   const [formMessage, setFormMessage] = useState('')
@@ -610,6 +613,30 @@ export function RedComercialProspectsPage() {
     await loadProspects()
   }
 
+  async function restoreProspect(prospect: RedComercialProspectListItem) {
+    const result = await adminRepository.updateRedComercialProspect(prospect.id, { is_archived: false, status: 'to_contact' })
+    if (result.error) { setError(result.error); return }
+    setSelected(null)
+    await loadProspects()
+  }
+
+  async function archiveRow(prospect: RedComercialProspectListItem) {
+    const result = await adminRepository.updateRedComercialProspect(prospect.id, { is_archived: true, status: 'archived' })
+    if (result.error) { setError(result.error); return }
+    setSelected(null)
+    await loadProspects()
+  }
+
+  async function deleteArchivedProspect() {
+    if (!deleteFor) return
+    setDeleteError('')
+    const result = await adminRepository.deleteRedComercialArchivedProspect(deleteFor.id)
+    if (result.error) { setDeleteError(result.error); return }
+    setDeleteFor(null)
+    setSelected(null)
+    await loadProspects()
+  }
+
   const quickChips = [
     { key: 'all' as const, label: 'Todos', count: metrics.total_prospects },
     { key: 'today' as const, label: 'Hoy', count: metrics.today },
@@ -650,7 +677,18 @@ export function RedComercialProspectsPage() {
                 <td className="whitespace-nowrap border-b border-[#f1ece3] px-2.5 py-2 text-slate-600">{followupDisplay(row.next_followup_at, row.status)}</td>
                 <td className="whitespace-nowrap border-b border-[#f1ece3] px-2.5 py-2 text-slate-700">{row.owner_name ? <span className="inline-flex items-center gap-1.5"><span className="inline-flex h-6 w-6 items-center justify-center rounded-full bg-[#eef4ef] text-[10px] font-bold text-[#235b3e]">{initials(row.owner_name)}</span>{displayPersonName(row.owner_name)}</span> : <span className="text-slate-400">Sin responsable</span>}</td>
                 <td className="whitespace-nowrap border-b border-[#f1ece3] px-2.5 py-2">
-                  <button type="button" onClick={(event) => { event.stopPropagation(); void openDetail(row.id) }} className="rounded-md border border-[#c9c1b4] p-1.5 text-[#17202d]" aria-label={`Ver ${row.company_name}`}><MoreHorizontal size={16} /></button>
+                  <AdminActionMenu items={isRedComercialProspectArchived(row) && admin ? [
+                    { label: 'Ver detalle', onSelect: () => { void openDetail(row.id) } },
+                    { label: 'Restaurar', onSelect: () => { void restoreProspect(row) } },
+                    { label: 'Eliminar permanentemente', tone: 'danger', separator: true, icon: <Trash2 size={14} />, onSelect: () => setDeleteFor(row) },
+                  ] : admin ? [
+                    { label: 'Ver detalle', onSelect: () => { void openDetail(row.id) } },
+                    { label: 'Editar', onSelect: () => { void openDetail(row.id) } },
+                    { label: 'Registrar actividad', onSelect: () => { void openDetail(row.id) } },
+                    { label: 'Archivar', separator: true, onSelect: () => { void archiveRow(row) } },
+                  ] : [
+                    { label: 'Ver detalle', onSelect: () => { void openDetail(row.id) } },
+                  ]} />
                 </td>
               </tr>
             ))}
@@ -793,6 +831,13 @@ export function RedComercialProspectsPage() {
           </form>
         </AdminDetailModal>
       )}
+      {deleteFor && <AdminDetailModal title="Eliminar prospecto" onClose={() => { setDeleteFor(null); setDeleteError('') }}>
+        <div className="grid gap-4 text-sm">
+          <p className="text-slate-600">Esta acción eliminará permanentemente a <strong className="text-[#17202d]">«{deleteFor.company_name}»</strong>. No podrás recuperarlo.</p>
+          {deleteError && <p className="rounded-md bg-rose-50 px-3 py-2 text-rose-800">{deleteError}</p>}
+          <div className="flex justify-end gap-2"><button type="button" onClick={() => { setDeleteFor(null); setDeleteError('') }} className="rounded-md border border-[#c9c1b4] px-3 py-2 font-semibold">Cancelar</button><button type="button" onClick={() => void deleteArchivedProspect()} className="inline-flex items-center gap-2 rounded-md bg-rose-700 px-3 py-2 font-semibold text-white"><Trash2 size={14} />Eliminar permanentemente</button></div>
+        </div>
+      </AdminDetailModal>}
     </div>
   )
 }

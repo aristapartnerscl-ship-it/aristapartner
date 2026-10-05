@@ -45,6 +45,21 @@ export const emptyAdminRepository: AdminRepository = {
   async upsertRedComercialCompanyFaq() {
     return { data: null, error: 'La conexion del panel administrativo aun no esta disponible.', errorKind: 'auth' as const }
   },
+  async createRepresentedCompanyMaterial() {
+    return { data: null, error: 'La conexion del panel administrativo aun no esta disponible.', errorKind: 'auth' as const }
+  },
+  async updateRepresentedCompanyMaterial() {
+    return { data: null, error: 'La conexion del panel administrativo aun no esta disponible.', errorKind: 'auth' as const }
+  },
+  async archiveRepresentedCompanyMaterial() {
+    return { data: null, error: 'La conexion del panel administrativo aun no esta disponible.', errorKind: 'auth' as const }
+  },
+  async createRepresentedCompanyMaterialSignedUrl() {
+    return { data: null, error: 'La conexion del panel administrativo aun no esta disponible.', errorKind: 'auth' as const }
+  },
+  async replaceRepresentedCompanyMaterial() {
+    return { data: null, error: 'La conexion del panel administrativo aun no esta disponible.', errorKind: 'auth' as const }
+  },
   async createRepresentedCompany() {
     return { data: null, error: 'La conexión del panel administrativo aún no está disponible.', errorKind: 'auth' }
   },
@@ -78,6 +93,16 @@ export const emptyAdminRepository: AdminRepository = {
   async updateCollaboratorStatus() {
     return { data: null, error: 'La conexión del panel administrativo aún no está disponible.', errorKind: 'auth' }
   },
+  async updateRedComercialUserRole() {
+    return { data: null, error: 'La conexión del panel administrativo aún no está disponible.', errorKind: 'auth' }
+  },
+  async listAristaBusinessProspects() { return { data: [], error: null } },
+  async getAristaBusinessProspect() { return { data: null, error: null } },
+  async createAristaBusinessProspect() { return { data: null, error: 'La conexión del panel administrativo aún no está disponible.', errorKind: 'auth' } },
+  async updateAristaBusinessProspect() { return { data: null, error: 'La conexión del panel administrativo aún no está disponible.', errorKind: 'auth' } },
+  async addAristaBusinessProspectActivity() { return { data: null, error: 'La conexión del panel administrativo aún no está disponible.', errorKind: 'auth' } },
+  async convertAristaBusinessProspect() { return { data: null, error: 'La conexión del panel administrativo aún no está disponible.', errorKind: 'auth' } },
+  async convertFormSubmissionToAristaProspect() { return { data: null, error: 'La conexión del panel administrativo aún no está disponible.', errorKind: 'auth' } },
   async listCompanyMemberships() {
     return { data: [], error: null }
   },
@@ -125,6 +150,7 @@ export const emptyAdminRepository: AdminRepository = {
   async updateRedComercialProspect() {
     return { data: null, error: 'La conexión del panel administrativo aún no está disponible.', errorKind: 'auth' }
   },
+  async deleteRedComercialArchivedProspect() { return { data: null, error: 'Panel no disponible.', errorKind: 'auth' as const } },
   async createRedComercialProspectActivity() {
     return { data: null, error: 'La conexión del panel administrativo aún no está disponible.', errorKind: 'auth' }
   },

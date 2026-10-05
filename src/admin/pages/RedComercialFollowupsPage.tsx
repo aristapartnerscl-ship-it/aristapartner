@@ -117,15 +117,6 @@ export function RedComercialFollowupsPage() {
   const selectedCompany = companies.find((company) => company.id === filters.companyId)
 
   useEffect(() => {
-    document.documentElement.dataset.redProspectDetail = selected ? 'open' : 'closed'
-    window.dispatchEvent(new Event('arista-red-prospect-detail'))
-    return () => {
-      delete document.documentElement.dataset.redProspectDetail
-      window.dispatchEvent(new Event('arista-red-prospect-detail'))
-    }
-  }, [selected])
-
-  useEffect(() => {
     let cancelled = false
     async function loadOptions() {
       const [companyResult, collaboratorResult] = await Promise.all([admin ? adminRepository.listRepresentedCompanies() : adminRepository.listMyRepresentedCompanies(), admin ? adminRepository.listCollaborators() : Promise.resolve({ data: [], error: null })])
@@ -170,7 +161,7 @@ export function RedComercialFollowupsPage() {
     setSelected(result.data); await load(); return true
   }
 
-  return <div className="grid min-w-0 grid-cols-1 items-start gap-3">
+  return <div className={`grid min-w-0 grid-cols-1 items-start gap-3 ${selected ? 'xl:pr-[398px]' : ''}`}>
     <div className="grid min-w-0 gap-3">
     <div className="flex flex-col gap-2 lg:flex-row lg:items-end lg:justify-between">
       <div><p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-[#235b3e]">Red Comercial / Seguimientos</p><h1 className="mt-1 text-[28px] font-semibold leading-tight text-[#17202d]">Seguimientos</h1><p className="mt-0.5 text-[13px] text-slate-600">Agenda comercial de prospectos, próximos contactos y tareas pendientes.</p></div>

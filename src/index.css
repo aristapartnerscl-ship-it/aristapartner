@@ -26,25 +26,141 @@
 
 /* Shared visual language for the current Red Comercial application. */
 .admin-red-comercial {
-  --admin-card-radius: 0.5rem;
-  --admin-border: var(--color-border);
+  --admin-card-radius: 0.45rem;
+  --admin-border: #e6e2da;
   --admin-border-soft: var(--surface-line-soft);
-  --admin-control-height: 2.25rem;
+  --admin-control-height: 2.15rem;
   --admin-muted-text: var(--color-text-soft);
   --admin-surface: var(--color-surface);
   --admin-background: var(--color-surface-muted);
-  --admin-page-gap: 0.75rem;
+  --admin-page-gap: 0.625rem;
+  --admin-section-gap: 0.625rem;
+  --admin-shadow-subtle: 0 1px 2px rgba(23, 32, 45, 0.025);
 }
 
-.admin-red-comercial .admin-page-header { gap: 0.5rem; }
+.admin-red-comercial .admin-select-field {
+  display: grid;
+  min-width: 0;
+  gap: 0.2rem;
+}
+
+.admin-red-comercial .admin-field-label {
+  color: #64748b;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  line-height: 1.1;
+  text-transform: uppercase;
+}
+
+.admin-red-comercial .admin-select {
+  min-width: 0;
+  min-height: 34px;
+  border: 1px solid var(--admin-border);
+  border-radius: 8px;
+  background: #fff;
+  color: var(--color-text-muted);
+  font-size: 12px;
+  line-height: 1.2;
+  padding: 0 0.65rem;
+  outline: none;
+}
+
+.admin-red-comercial .admin-select:focus {
+  border-color: var(--color-brand);
+  box-shadow: 0 0 0 2px rgba(35, 91, 62, 0.09);
+}
+
+.admin-red-comercial .admin-select--company { width: min(220px, 100%); }
+.admin-red-comercial .admin-select--responsible { width: min(190px, 100%); }
+.admin-red-comercial .admin-select--status { width: min(160px, 100%); }
+.admin-red-comercial .admin-select--channel { width: min(140px, 100%); }
+.admin-red-comercial .admin-select--period { width: min(150px, 100%); }
+.admin-red-comercial .admin-select--default { width: min(160px, 100%); }
+
+.admin-red-comercial .admin-action-menu {
+  position: relative;
+  display: inline-flex;
+}
+
+.admin-red-comercial .admin-action-menu__trigger {
+  display: inline-flex;
+  height: 30px;
+  width: 30px;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--admin-border);
+  border-radius: 7px;
+  background: #fff;
+  color: var(--color-text-muted);
+  transition: background-color 120ms ease, border-color 120ms ease;
+}
+
+.admin-red-comercial .admin-action-menu__trigger:hover,
+.admin-red-comercial .admin-action-menu__trigger[aria-expanded='true'] {
+  border-color: #9db9a7;
+  background: #f3f8f4;
+  color: var(--color-brand);
+}
+
+.admin-action-menu__popover {
+  position: fixed;
+  z-index: 50;
+  min-width: 200px;
+  overflow: hidden;
+  border: 1px solid #e2ddd4;
+  border-radius: 8px;
+  background: #fff;
+  padding: 4px;
+  box-shadow: 0 8px 24px rgba(23, 32, 45, 0.13);
+}
+
+.admin-action-menu__item {
+  display: flex;
+  width: 100%;
+  min-height: 34px;
+  align-items: center;
+  gap: 8px;
+  border-radius: 6px;
+  padding: 0 9px;
+  color: var(--color-text-muted);
+  font-size: 12px;
+  text-align: left;
+}
+
+.admin-action-menu__item:hover,
+.admin-action-menu__item:focus-visible { background: var(--color-surface-muted); color: var(--color-brand); outline: none; }
+.admin-action-menu__item--danger { color: #b42318; }
+.admin-action-menu__item--danger:hover { background: #fff5f4; color: #b42318; }
+.admin-action-menu__item:disabled { cursor: not-allowed; opacity: 0.45; }
+.admin-action-menu__separator { border-top: 1px solid #eee8dd; margin: 4px 0; padding-top: 4px; }
+
+@media (max-width: 767px) {
+  .admin-red-comercial .admin-select--company,
+  .admin-red-comercial .admin-select--responsible,
+  .admin-red-comercial .admin-select--status,
+  .admin-red-comercial .admin-select--channel,
+  .admin-red-comercial .admin-select--period,
+  .admin-red-comercial .admin-select--default { width: 100%; }
+}
+
+.admin-red-comercial .admin-page-header { gap: 0.375rem; }
 .admin-red-comercial .admin-page-eyebrow { color: var(--color-brand); font-size: 10px; font-weight: 700; letter-spacing: 0.16em; line-height: 1; text-transform: uppercase; }
-.admin-red-comercial .admin-page-header h1 { font-size: 26px; line-height: 1.15; }
+.admin-red-comercial .admin-page-header h1 { font-size: 24px; line-height: 1.15; }
 .admin-red-comercial .admin-page-header button { min-height: 36px; padding: 0.45rem 0.75rem; font-size: 12px; }
 
-.admin-red-comercial .admin-kpi-card { min-height: 78px; border: 1px solid var(--admin-border); border-radius: var(--admin-card-radius); padding: 0.55rem 0.75rem; box-shadow: 0 1px 2px rgba(23, 32, 45, 0.025); }
+.admin-red-comercial .admin-kpi-card { min-height: 68px; border: 1px solid var(--admin-border); border-radius: var(--admin-card-radius); padding: 0.5rem 0.7rem; box-shadow: var(--admin-shadow-subtle); }
 .admin-red-comercial .admin-kpi-card .admin-kpi-label { font-size: 10px; font-weight: 700; letter-spacing: 0.08em; line-height: 1.15; opacity: 0.78; text-transform: uppercase; }
-.admin-red-comercial .admin-kpi-card strong { display: block; color: var(--color-graphite); font-size: 20px; font-weight: 650; line-height: 1.15; margin-top: 0.4rem; }
-.admin-red-comercial .admin-metric-strip { display: flex; flex-wrap: wrap; align-items: center; gap: 0.25rem 1.25rem; border: 1px solid var(--admin-border); border-radius: var(--admin-card-radius); background: var(--admin-surface); color: var(--admin-muted-text); padding: 0.5rem 0.75rem; font-size: 12px; }
+.admin-red-comercial .admin-kpi-card strong { display: block; color: var(--color-graphite); font-size: 20px; font-weight: 650; line-height: 1.15; margin-top: 0.3rem; }
+.admin-red-comercial .admin-metric-strip { display: flex; flex-wrap: wrap; align-items: center; gap: 0.25rem 1.1rem; border: 1px solid var(--admin-border); border-radius: var(--admin-card-radius); background: var(--admin-surface); color: var(--admin-muted-text); padding: 0.4rem 0.7rem; font-size: 11px; }
+
+/* Final shared density for CRM screens that still use local metric markup. */
+.admin-red-comercial [class*="min-h-[78px]"][class*="bg-white"] { min-height: 68px; padding: 0.55rem 0.7rem; border-radius: var(--admin-card-radius); box-shadow: var(--admin-shadow-subtle); }
+.admin-red-comercial [class*="min-h-[78px]"][class*="bg-white"] [class*="text-[25px]"] { font-size: 21px; }
+.admin-red-comercial [class*="min-h-[78px]"][class*="bg-white"] [class*="text-[11px]"] { font-size: 10px; }
+.admin-red-comercial [class*="min-h-[108px]"][class*="cursor-pointer"] { min-height: 96px; padding: 0.65rem; }
+.admin-red-comercial [class*="min-h-[108px]"][class*="cursor-pointer"] > span:nth-child(2) { line-height: 1.35; }
+.admin-red-comercial [class*="min-h-[640px]"][class*="xl:fixed"] { border-radius: var(--admin-card-radius); box-shadow: 0 4px 16px rgba(23, 32, 45, 0.05); }
 
 .admin-red-comercial .admin-tabs { border-bottom: 1px solid var(--admin-border); }
 .admin-red-comercial .admin-tabs button { border-bottom: 2px solid transparent; color: #64748b; font-size: 12px; font-weight: 650; padding: 0.4rem 0.75rem; }
@@ -89,6 +205,35 @@
 .admin-red-comercial .dashboard-panel { height: auto; min-height: 0; }
 .admin-red-comercial .dashboard-panel table tbody td { padding-block: 0.375rem; }
 .admin-red-comercial .dashboard-panel p { margin-block: 0; }
+.admin-red-comercial .dashboard-order-portfolios a { border: 0; border-bottom: 1px solid #f0ede7; border-radius: 0; padding: 0.4rem 0; }
+.admin-red-comercial .dashboard-order-portfolios a:last-of-type { border-bottom: 0; }
+
+/* Shared light surfaces: sections carry hierarchy, rows carry detail. */
+.admin-red-comercial .admin-section-surface { border: 1px solid var(--admin-border); border-radius: var(--admin-card-radius); background: var(--admin-surface); box-shadow: var(--admin-shadow-subtle); padding: 0.7rem; }
+.admin-red-comercial .admin-info-section { border-bottom: 1px solid #eeeae3; padding: 0 0 0.7rem; }
+.admin-red-comercial .admin-info-section:last-child { border-bottom: 0; padding-bottom: 0; }
+.admin-red-comercial .admin-info-section > div:first-child { min-height: 20px; }
+.admin-red-comercial .admin-info-section > div:last-child { margin-top: 0.35rem; }
+.admin-red-comercial .admin-list-row { border-bottom: 1px solid #f0ede7; padding: 0.45rem 0; }
+.admin-red-comercial .admin-list-row:last-child { border-bottom: 0; }
+.admin-red-comercial .admin-company-card { box-shadow: var(--admin-shadow-subtle); padding: 0.65rem; }
+.admin-red-comercial .admin-company-card dl { margin-top: 0.45rem; padding-top: 0.45rem; }
+.admin-red-comercial .admin-company-card .admin-company-actions { margin-top: 0.5rem; }
+.admin-red-comercial .admin-filter-bar { border: 1px solid var(--admin-border); border-radius: var(--admin-card-radius); background: var(--admin-surface); padding: 0.5rem; box-shadow: var(--admin-shadow-subtle); }
+.admin-red-comercial .admin-filter-bar input,
+.admin-red-comercial .admin-filter-bar select { min-height: 34px; }
+.admin-red-comercial section:has(> div > label > select) > div:first-child { column-gap: 0.5rem; row-gap: 0.5rem; }
+.admin-red-comercial .admin-tabs { padding-bottom: 0; }
+.admin-red-comercial .admin-tabs button { padding: 0.35rem 0.65rem; font-size: 11px; }
+
+/* Company workspace: breathe in the header, keep the information grid readable. */
+.admin-red-comercial section:has(> div > a[href="/admin/empresas"]) { padding: 0.75rem 0.9rem; }
+.admin-red-comercial section:has(> div > a[href="/admin/empresas"]) > div:first-child { gap: 0.65rem; }
+.admin-red-comercial section:has(> div > a[href="/admin/empresas"]) > div:first-child > div:nth-child(3) { border-left: 1px solid #eeeae3; padding-left: 0.75rem; }
+.admin-red-comercial nav:has(> button) { border: 0; border-bottom: 1px solid var(--admin-border); border-radius: 0; background: transparent; padding: 0; }
+.admin-red-comercial nav:has(> button) > button { border-radius: 0; padding: 0.6rem 0.7rem; }
+.admin-red-comercial nav:has(> button) > button { background: transparent !important; box-shadow: none !important; }
+.admin-red-comercial nav:has(> button) > button[class*="shadow-sm"] { border-bottom: 2px solid var(--color-brand); }
 
 @media (max-width: 1023px) {
   .admin-red-comercial .dashboard-columns { grid-template-columns: 1fr; }

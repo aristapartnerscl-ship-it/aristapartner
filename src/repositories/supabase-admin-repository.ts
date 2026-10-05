@@ -1,6 +1,7 @@
 import type { PostgrestError, SupabaseClient } from '@supabase/supabase-js'
 import type {
   AdminProfile,
+  AristaBusinessProspectRecord,
   AdminNotificationRecord,
   CommercialAgreementCreateValues,
   CommercialAgreementRecord,
@@ -73,6 +74,7 @@ import type {
   RedComercialHomeData,
   RedComercialDashboardData,
   RedComercialCompanyWorkspace,
+  RepresentedCompanyMaterialRecord,
   RepresentedCompanyFaqRecord,
   RepresentedCompanyFormValues,
   RepresentedCompanyMembershipRecord,
@@ -441,11 +443,15 @@ function redComercialProspectPayload(values: Partial<RedComercialProspectFormVal
 
 function prospectRpcErrorMessage(error: PostgrestError | Error | null) {
   const message = error?.message ?? ''
+  const code = 'code' in (error ?? {}) ? (error as PostgrestError).code : null
+  if (code === 'PGRST202') return 'La función de eliminación aún no está disponible en el servidor. Aplica la migration pendiente.'
   if (message.includes('AP_DUPLICATE_PROSPECT')) return 'Este prospecto ya existe en esta cartera.'
   if (message.includes('AP_ACCESS_DENIED')) return 'Tu usuario no tiene permisos para gestionar este prospecto.'
   if (message.includes('AP_INVALID_OWNER')) return 'El responsable debe pertenecer a la cartera seleccionada.'
   if (message.includes('AP_INVALID_ASSIGNEE')) return 'El responsable debe tener una membresia activa en la empresa destino.'
-  if (message.includes('AP_ADMIN_REQUIRED')) return 'Solo un administrador puede completar esta accion.'
+  if (message.includes('AP_ADMIN_REQUIRED')) return 'No tienes permisos para eliminar este prospecto.'
+  if (message.includes('AP_PROSPECT_MUST_BE_ARCHIVED')) return 'El prospecto debe estar archivado antes de eliminarse.'
+  if (message.includes('AP_PROSPECT_HAS_HISTORY')) return 'No puede eliminarse porque tiene historial comercial asociado. Mantén este prospecto archivado.'
   if (message.includes('AP_INVALID_STATUS')) return 'Estado de oportunidad cruzada no valido.'
   if (message.includes('AP_INVALID_DISCARD_REASON')) return 'Selecciona un motivo de descarte valido.'
   if (message.includes('AP_COMPANY_NAME_REQUIRED')) return 'Ingresa la empresa prospecto.'
@@ -658,6 +664,63 @@ export class SupabaseAdminRepository implements AdminRepository {
     return ok(data as RepresentedCompanyFaqRecord)
   }
 
+  async createRepresentedCompanyMaterial(companyId: string, payload: Record<string, unknown>, file?: File) {
+    const normalized = file ? { ...payload, material_type: 'file', file_name: file.name, mime_type: file.type, file_size: file.size } : { ...payload, material_type: 'link' }
+    if (file && !this.isAllowedCompanyMaterialFile(file)) return { data: null, error: 'Formato de archivo no permitido.', errorKind: 'validation' as const }
+    if (file && file.size > 25 * 1024 * 1024) return { data: null, error: 'El archivo no debe superar 25 MB.', errorKind: 'validation' as const }
+    const { data, error } = await (this.client as SupabaseClient).rpc('create_represented_company_material', { p_company_id: companyId, p_payload: normalized })
+    if (error) return fail<RepresentedCompanyMaterialRecord | null>(null, error, 'red_comercial.materials.create')
+    const created = data as (RepresentedCompanyMaterialRecord & { upload_path?: string }) | null
+    if (file && created?.upload_path) {
+      const uploaded = await this.client.storage.from('represented-company-materials').upload(created.upload_path, file, { contentType: file.type, upsert: false })
+      if (uploaded.error) {
+        await (this.client as SupabaseClient).rpc('archive_represented_company_material', { p_material_id: created.id })
+        return fail<RepresentedCompanyMaterialRecord | null>(null, uploaded.error, 'red_comercial.materials.upload')
+      }
+    }
+    return ok(created as RepresentedCompanyMaterialRecord | null)
+  }
+
+  async updateRepresentedCompanyMaterial(id: string, payload: Record<string, unknown>) {
+    const { data, error } = await (this.client as SupabaseClient).rpc('update_represented_company_material', { p_material_id: id, p_payload: payload })
+    if (error) return fail<RepresentedCompanyMaterialRecord | null>(null, error, 'red_comercial.materials.update')
+    return ok((data ?? null) as RepresentedCompanyMaterialRecord | null)
+  }
+
+  async archiveRepresentedCompanyMaterial(id: string) {
+    const { data, error } = await (this.client as SupabaseClient).rpc('archive_represented_company_material', { p_material_id: id })
+    if (error) return fail<RepresentedCompanyMaterialRecord | null>(null, error, 'red_comercial.materials.archive')
+    return ok((data ?? null) as RepresentedCompanyMaterialRecord | null)
+  }
+
+  async createRepresentedCompanyMaterialSignedUrl(id: string) {
+    const { data, error } = await (this.client as SupabaseClient).rpc('get_represented_company_material_access', { p_material_id: id })
+    if (error) return fail<string | null>(null, error, 'red_comercial.materials.access')
+    const path = (data as { storage_path?: string } | null)?.storage_path
+    if (!path) return ok(null)
+    const signed = await this.client.storage.from('represented-company-materials').createSignedUrl(path, 600)
+    if (signed.error) return fail<string | null>(null, signed.error, 'red_comercial.materials.signed_url')
+    return ok(signed.data?.signedUrl ?? null)
+  }
+
+  async replaceRepresentedCompanyMaterial(id: string, file: File) {
+    if (!this.isAllowedCompanyMaterialFile(file)) return { data: null, error: 'Formato de archivo no permitido.', errorKind: 'validation' as const }
+    if (file.size > 25 * 1024 * 1024) return { data: null, error: 'El archivo no debe superar 25 MB.', errorKind: 'validation' as const }
+    const prepared = await (this.client as SupabaseClient).rpc('prepare_represented_company_material_replace', { p_material_id: id, p_file_name: file.name, p_mime_type: file.type, p_file_size: file.size })
+    if (prepared.error) return fail<RepresentedCompanyMaterialRecord | null>(null, prepared.error, 'red_comercial.materials.replace.prepare')
+    const value = prepared.data as { upload_path: string; old_storage_path?: string | null }
+    const uploaded = await this.client.storage.from('represented-company-materials').upload(value.upload_path, file, { contentType: file.type, upsert: false })
+    if (uploaded.error) return fail<RepresentedCompanyMaterialRecord | null>(null, uploaded.error, 'red_comercial.materials.replace.upload')
+    const confirmed = await (this.client as SupabaseClient).rpc('confirm_represented_company_material_replace', { p_material_id: id, p_storage_path: value.upload_path, p_file_name: file.name, p_mime_type: file.type, p_file_size: file.size })
+    if (confirmed.error) return fail<RepresentedCompanyMaterialRecord | null>(null, confirmed.error, 'red_comercial.materials.replace.confirm')
+    if (value.old_storage_path) await this.client.storage.from('represented-company-materials').remove([value.old_storage_path])
+    return ok(confirmed.data as RepresentedCompanyMaterialRecord)
+  }
+
+  private isAllowedCompanyMaterialFile(file: File) {
+    return new Set(['application/pdf', 'image/png', 'image/jpeg', 'image/webp', 'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document', 'application/vnd.ms-excel', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', 'application/vnd.ms-powerpoint', 'application/vnd.openxmlformats-officedocument.presentationml.presentation', 'text/plain', 'text/csv']).has(file.type)
+  }
+
   async createRepresentedCompany(values: RepresentedCompanyFormValues) {
     const admin = await this.ensureActiveOwner()
     if (!admin.userId) return { data: null, error: admin.error, errorKind: admin.errorKind }
@@ -753,6 +816,61 @@ export class SupabaseAdminRepository implements AdminRepository {
       .single()
     if (error) return fail<CollaboratorRecord | null>(null, error, 'collaborators.status')
     return ok(data as CollaboratorRecord)
+  }
+
+  async updateRedComercialUserRole(userId: string, role: 'owner' | 'collaborator') {
+    const { data, error } = await (this.client as SupabaseClient).rpc('update_red_comercial_user_role', { p_user_id: userId, p_role: role })
+    if (error) return fail<{ id: string; old_role: string; new_role: string } | null>(null, error, 'users.role.update')
+    return ok((data ?? null) as { id: string; old_role: string; new_role: string } | null)
+  }
+
+  async listAristaBusinessProspects(filters: { search?: string; status?: string; ownerUserId?: string; includeArchived?: boolean } = {}) {
+    const { data, error } = await (this.client as SupabaseClient).rpc('list_arista_business_prospects', {
+      p_search: filters.search?.trim() || null,
+      p_status: filters.status || null,
+      p_owner_user_id: filters.ownerUserId || null,
+      p_include_archived: Boolean(filters.includeArchived),
+      p_limit: 100,
+      p_offset: 0,
+    })
+    if (error) return fail<AristaBusinessProspectRecord[]>([], error, 'arista_prospects.list')
+    return ok((data ?? []) as AristaBusinessProspectRecord[])
+  }
+
+  async getAristaBusinessProspect(id: string) {
+    const { data, error } = await (this.client as SupabaseClient).rpc('get_arista_business_prospect', { p_prospect_id: id })
+    if (error) return fail<AristaBusinessProspectRecord | null>(null, error, 'arista_prospects.get')
+    return ok((data ?? null) as AristaBusinessProspectRecord | null)
+  }
+
+  async createAristaBusinessProspect(payload: Partial<AristaBusinessProspectRecord>) {
+    const { data, error } = await (this.client as SupabaseClient).rpc('create_arista_business_prospect', { p_payload: payload })
+    if (error) return fail<AristaBusinessProspectRecord | null>(null, error, 'arista_prospects.create')
+    return ok((data ?? null) as AristaBusinessProspectRecord | null)
+  }
+
+  async updateAristaBusinessProspect(id: string, payload: Partial<AristaBusinessProspectRecord>) {
+    const { data, error } = await (this.client as SupabaseClient).rpc('update_arista_business_prospect', { p_prospect_id: id, p_payload: payload })
+    if (error) return fail<AristaBusinessProspectRecord | null>(null, error, 'arista_prospects.update')
+    return ok((data ?? null) as AristaBusinessProspectRecord | null)
+  }
+
+  async addAristaBusinessProspectActivity(id: string, payload: { activity_type: string; subject: string; notes?: string; occurred_at?: string; next_followup_at?: string }) {
+    const { data, error } = await (this.client as SupabaseClient).rpc('add_arista_business_prospect_activity', { p_prospect_id: id, p_payload: payload })
+    if (error) return fail<AristaBusinessProspectRecord | null>(null, error, 'arista_prospects.activity')
+    return ok((data ?? null) as AristaBusinessProspectRecord | null)
+  }
+
+  async convertAristaBusinessProspect(id: string) {
+    const { data, error } = await (this.client as SupabaseClient).rpc('convert_arista_business_prospect', { p_prospect_id: id, p_payload: {} })
+    if (error) return fail<AristaBusinessProspectRecord | null>(null, error, 'arista_prospects.convert')
+    return ok((data ?? null) as AristaBusinessProspectRecord | null)
+  }
+
+  async convertFormSubmissionToAristaProspect(id: string, payload: Record<string, unknown> = {}) {
+    const { data, error } = await (this.client as SupabaseClient).rpc('convert_form_submission_to_arista_prospect', { p_submission_id: id, p_payload: payload })
+    if (error) return fail<AristaBusinessProspectRecord | null>(null, error, 'form_submissions.convert_arista')
+    return ok((data ?? null) as AristaBusinessProspectRecord | null)
   }
 
   async listCompanyMemberships() {
@@ -1061,6 +1179,12 @@ export class SupabaseAdminRepository implements AdminRepository {
       }
     }
     return ok(prospect)
+  }
+
+  async deleteRedComercialArchivedProspect(id: string) {
+    const { data, error } = await (this.client as SupabaseClient).rpc('delete_red_comercial_archived_prospect', { p_prospect_id: id })
+    if (error) return failProspectRpc<{ id: string; deleted: boolean } | null>(null, error, 'red_comercial.prospects.delete')
+    return ok((data ?? null) as { id: string; deleted: boolean } | null)
   }
 
   async createRedComercialProspectActivity(prospectId: string, values: RedComercialProspectActivityFormValues) {

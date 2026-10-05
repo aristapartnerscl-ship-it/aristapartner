@@ -109,8 +109,7 @@ describe('AdminNotificationsCenter', () => {
 
     await user.click(await screen.findByRole('button', { name: /0 sin leer/i }))
 
-    expect(await screen.findByText(/Aun no hay notificaciones administrativas/i)).toBeInTheDocument()
-    expect(screen.getByText(/Fase 1 la campana no genera eventos automaticamente/i)).toBeInTheDocument()
+    expect(await screen.findByText(/Aún no hay notificaciones administrativas/i)).toBeInTheDocument()
   })
 
   test('muestra listado reciente con estado leida y no leida', async () => {

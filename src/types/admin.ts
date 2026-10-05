@@ -196,6 +196,38 @@ export type RedComercialCompanyWorkspace = {
 }
 export type CollaboratorRecord = Pick<AdminProfileRow, 'id' | 'full_name' | 'email' | 'role' | 'is_active' | 'created_at' | 'updated_at' | 'last_activity_at' | 'invitation_status' | 'invited_at' | 'invitation_sent_at' | 'invitation_revoked_at' | 'onboarding_completed_at'>
 
+export type AristaBusinessProspectRecord = {
+  id: string
+  company_name: string
+  website: string | null
+  domain: string | null
+  industry: string | null
+  country: string | null
+  contact_name: string | null
+  contact_role: string | null
+  contact_email: string | null
+  contact_phone: string | null
+  source: string
+  what_they_sell: string | null
+  why_interesting: string | null
+  fit_notes: string | null
+  estimated_ticket: number | null
+  territory: string | null
+  status: string
+  owner_user_id: string | null
+  owner_name?: string | null
+  first_contact_at: string | null
+  last_contact_at: string | null
+  next_followup_at: string | null
+  is_archived: boolean
+  converted_represented_company_id: string | null
+  converted_at: string | null
+  converted_by?: string | null
+  created_at: string
+  updated_at: string
+  activities?: Array<{ id: string; activity_type: string; subject: string; notes: string | null; occurred_at: string; next_followup_at: string | null; created_by: string }>
+}
+
 export type RedComercialHomeData = {
   representedCompanies: number
   activeCollaborators: number

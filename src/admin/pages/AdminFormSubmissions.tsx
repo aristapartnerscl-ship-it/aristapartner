@@ -4,6 +4,7 @@ import { Link, useSearchParams } from 'react-router-dom'
 import { AdminPageHeader } from '../../components/admin/AdminPageHeader'
 import { AdminDetailModal } from '../../components/admin/AdminDetailModal'
 import { EmptyState } from '../../components/admin/EmptyState'
+import { AdminKpiCard } from '../../components/admin/AdminVisualSystem'
 import {
   buildContactInitialValues,
   buildInquiryDraft,
@@ -211,7 +212,7 @@ function finalDraftFields(submissionType: SubmissionType, draft: Record<string, 
     }))
 }
 
-export function AdminFormSubmissions() {
+export function AdminFormSubmissions({ modern = false }: { modern?: boolean }) {
   const [items, setItems] = useState<FormSubmissionRecord[]>([])
   const [selected, setSelected] = useState<FormSubmissionRecord | null>(null)
   const selectedTriggerRef = useRef<HTMLButtonElement | null>(null)
@@ -302,17 +303,35 @@ export function AdminFormSubmissions() {
     await loadSubmissions()
   }
 
+  async function convertToAristaProspect(item: FormSubmissionRecord) {
+    setStatus('')
+    const result = await adminRepository.convertFormSubmissionToAristaProspect(item.id)
+    if (result.error || !result.data) {
+      setStatus(result.error ?? 'No fue posible convertir la solicitud en prospección Arista.')
+      return
+    }
+    const updated = { ...item, status: 'converted' as const, converted_entity_type: 'arista_business_prospect', converted_entity_id: result.data.id }
+    updateSubmission(updated)
+    setConvertedEntity(null)
+    setStatus('Solicitud convertida en prospección Arista.')
+    await loadSubmissions()
+  }
+
   return (
     <div className="grid gap-6">
       <AdminPageHeader
-        title="Recepciones"
-        text="Formularios públicos recibidos para revisión administrativa antes de crear entidades internas."
+        title={modern ? 'Solicitudes web' : 'Recepciones'}
+        text={modern ? 'Solicitudes recibidas desde la web pública para gestión administrativa.' : 'Formularios públicos recibidos para revisión administrativa antes de crear entidades internas.'}
       />
+
+      {modern && <div className="grid grid-cols-2 gap-2 md:grid-cols-5">
+        {([['Nuevas', items.filter((item) => item.status === 'received').length], ['Leídas', items.filter((item) => item.status === 'under_review').length], ['En gestión', items.filter((item) => item.status === 'under_review').length], ['Convertidas', items.filter((item) => item.status === 'converted').length], ['Archivadas', items.filter((item) => item.status === 'archived').length]] as const).map(([label, value]) => <AdminKpiCard key={label} label={label} value={value} tone="neutral" />)}
+      </div>}
 
       <section className="rounded-lg border border-slate-200 bg-white p-4">
         <div className="grid gap-4 md:grid-cols-4">
           <label className="grid gap-2 text-sm font-medium text-slate-700">
-            Buscar recepciones
+            {modern ? 'Buscar solicitudes' : 'Buscar recepciones'}
             <input type="search" value={search} placeholder="Buscar por campos básicos validados" onChange={(event) => setParam('q', event.target.value)} className="rounded-md border border-slate-300 bg-white px-3 py-2" />
           </label>
           <SelectFilter label="Estado" value={statusFilter} options={statusOptions} onChange={(value) => setParam('status', value)} />
@@ -326,7 +345,7 @@ export function AdminFormSubmissions() {
 
       <div aria-live="polite" className="min-h-6 text-sm text-slate-700">{status}</div>
 
-      {loading && <div className="h-44 animate-pulse rounded-lg border border-slate-200 bg-white" aria-label="Cargando recepciones" />}
+      {loading && <div className="h-44 animate-pulse rounded-lg border border-slate-200 bg-white" aria-label={modern ? 'Cargando solicitudes web' : 'Cargando recepciones'} />}
       {!loading && error && <ErrorState error={error} onRetry={loadSubmissions} />}
       {!loading && !error && items.length === 0 && <EmptyState title="Aún no hay recepciones" text="Los formularios públicos aparecerán aquí cuando la recepción digital sea habilitada." />}
       {!loading && !error && items.length > 0 && filtered.length === 0 && <EmptyState title="Sin resultados" text="No hay recepciones que coincidan con los filtros actuales." />}
@@ -349,6 +368,7 @@ export function AdminFormSubmissions() {
             onClose={() => setSelected(null)}
             onStatusChange={changeStatus}
             onConverted={handleConversionResult}
+            onAristaConverted={convertToAristaProspect}
           />
         </AdminDetailModal>
       )}
@@ -408,6 +428,7 @@ function SubmissionDetail({
   onClose,
   onStatusChange,
   onConverted,
+  onAristaConverted,
 }: {
   submission: FormSubmissionRecord
   entity: ConvertedSubmissionEntity
@@ -415,6 +436,7 @@ function SubmissionDetail({
   onClose: () => void
   onStatusChange: (item: FormSubmissionRecord, status: SubmissionStatus, message: string) => Promise<void>
   onConverted: (result: SubmissionConversionResult, message: string) => Promise<void>
+  onAristaConverted: (item: FormSubmissionRecord) => Promise<void>
 }) {
   const [showEmpty, setShowEmpty] = useState(false)
   const [wizardOpen, setWizardOpen] = useState(false)
@@ -468,10 +490,12 @@ function SubmissionDetail({
       </dl>
 
       <div className="mt-6 flex flex-wrap gap-3">
+        {submission.status === 'archived' && <button type="button" disabled={processing === submission.id} onClick={() => void onStatusChange(submission, 'under_review', '¿Restaurar esta solicitud para continuar su gestión?')} className="rounded-md border border-[#235b3e] px-4 py-3 text-sm font-semibold text-[#235b3e]">Restaurar</button>}
         {submission.status === 'received' && (
           <button type="button" disabled={processing === submission.id} onClick={() => void onStatusChange(submission, 'under_review', '¿Marcar esta recepción como en evaluación?')} className="rounded-md bg-[#17202d] px-4 py-3 text-sm font-semibold text-white disabled:opacity-60">Iniciar revisión</button>
         )}
         {canConvert(submission) && <button type="button" onClick={() => setWizardOpen((value) => !value)} className="rounded-md border border-[#235b3e] px-4 py-3 text-sm font-semibold text-[#235b3e]">Convertir</button>}
+        {!['converted', 'archived'].includes(submission.status) && <button type="button" disabled={processing === submission.id} onClick={() => void onAristaConverted(submission)} className="rounded-md border border-[#235b3e] px-4 py-3 text-sm font-semibold text-[#235b3e]">Convertir en Prospección Arista</button>}
         {!['converted'].includes(submission.status) && <button type="button" disabled={processing === submission.id} onClick={() => void onStatusChange(submission, 'rejected', '¿Rechazar esta recepción?')} className="inline-flex items-center gap-2 rounded-md border border-slate-300 px-4 py-3 text-sm font-semibold disabled:opacity-60"><Ban size={17} aria-hidden="true" />Rechazar</button>}
         {!['converted'].includes(submission.status) && <button type="button" disabled={processing === submission.id} onClick={() => void onStatusChange(submission, 'spam', '¿Marcar esta recepción como spam?')} className="inline-flex items-center gap-2 rounded-md border border-slate-300 px-4 py-3 text-sm font-semibold disabled:opacity-60"><ShieldAlert size={17} aria-hidden="true" />Marcar spam</button>}
         {!['converted'].includes(submission.status) && <button type="button" disabled={processing === submission.id} onClick={() => void onStatusChange(submission, 'archived', '¿Archivar esta recepción? No se eliminará.')} className="inline-flex items-center gap-2 rounded-md border border-slate-300 px-4 py-3 text-sm font-semibold disabled:opacity-60"><Archive size={17} aria-hidden="true" />Archivar</button>}

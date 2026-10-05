@@ -1,4 +1,4 @@
-import { BarChart3, BriefcaseBusiness, Building2, CalendarClock, ChevronDown, CircleDollarSign, GitBranch, Home, Menu, PanelLeftClose, PanelLeftOpen, Settings, Target, Users, X } from 'lucide-react'
+import { BarChart3, BriefcaseBusiness, Building2, CalendarClock, ChevronDown, CircleDollarSign, GitBranch, Home, Menu, PanelLeftClose, PanelLeftOpen, Settings, Target, Users, X, Inbox, Radar } from 'lucide-react'
 import { useEffect, useState, type CSSProperties, type ReactNode } from 'react'
 import { NavLink, useLocation } from 'react-router-dom'
 import { isRedComercialAdmin } from '../../admin/red-comercial-utils'
@@ -17,6 +17,8 @@ const primaryNav = [
 ]
 
 const adminOnlyNav = [
+  { label: 'Solicitudes web', href: '/admin/solicitudes-web', icon: Inbox },
+  { label: 'Prospección Arista', href: '/admin/prospeccion-arista', icon: Radar },
   { label: 'Colaboradores', href: '/admin/colaboradores', icon: Users },
   { label: 'Asignaciones', href: '/admin/asignaciones', icon: ChevronDown },
   { label: 'Configuracion', href: '/admin/configuracion', icon: Settings },
@@ -190,7 +192,7 @@ export function AdminShell({ children }: { children: ReactNode }) {
             <div className="flex items-center gap-3">
               {auth.status === 'ready' && (
                 <>
-                  <AdminNotificationsCenter />
+                  {admin && <AdminNotificationsCenter />}
                   <UserInitials name={auth.profile?.full_name} />
                   <button type="button" onClick={() => void auth.signOut()} className="hidden rounded-md border border-[#c9c1b4] bg-white px-3 py-1.5 text-[13px] font-semibold text-[#17202d] transition hover:border-[#235b3e] hover:bg-[#fbfaf7] focus-visible:ring-2 focus-visible:ring-[#235b3e] focus-visible:ring-offset-2 sm:inline-flex">
                     Cerrar sesion

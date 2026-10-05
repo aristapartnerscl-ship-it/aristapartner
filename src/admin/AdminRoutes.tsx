@@ -27,6 +27,7 @@ import { RedComercialFollowupsPage } from './pages/RedComercialFollowupsPage'
 import { RedComercialOpportunitiesPage } from './pages/RedComercialOpportunitiesPage'
 import { RedComercialCrossOpportunitiesPage } from './pages/RedComercialCrossOpportunitiesPage'
 import { RedComercialResultsPage } from './pages/RedComercialResultsPage'
+import { AristaBusinessProspectsPage } from './pages/AristaBusinessProspectsPage'
 
 export default function AdminRoutes() {
   return (
@@ -48,6 +49,8 @@ export default function AdminRoutes() {
           <Route path="resultados" element={<RedComercialResultsPage />} />
           <Route element={<AdminRoleGuard />}>
             <Route path="colaboradores" element={<CollaboratorsPage />} />
+            <Route path="solicitudes-web" element={<AdminFormSubmissions modern />} />
+            <Route path="prospeccion-arista" element={<AristaBusinessProspectsPage />} />
             <Route path="asignaciones" element={<AssignmentsPage />} />
             <Route path="dashboard-anterior" element={<AdminDashboard />} />
             <Route path="prospeccion" element={<AdminProspecting />} />

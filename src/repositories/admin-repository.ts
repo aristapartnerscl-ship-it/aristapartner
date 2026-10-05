@@ -38,6 +38,7 @@ import type {
   ProspectRecord,
   ProspectUpdate,
   CollaboratorRecord,
+  AristaBusinessProspectRecord,
   RedComercialProspectActivityFormValues,
   RedComercialProspectDetailRecord,
   RedComercialProspectDuplicateRecord,
@@ -61,6 +62,7 @@ import type {
   RedComercialDashboardData,
   RedComercialCompanyWorkspace,
   RepresentedCompanyFaqRecord,
+  RepresentedCompanyMaterialRecord,
   RepresentedCompanyFormValues,
   RepresentedCompanyMembershipRecord,
   RepresentedCompanyRecord,
@@ -91,6 +93,11 @@ export type AdminRepository = {
   getRedComercialCompanyWorkspace(id: string): Promise<RepositoryResult<RedComercialCompanyWorkspace | null>>
   updateRedComercialCompanyPlaybook(id: string, section: string, payload: Record<string, unknown>): Promise<RepositoryResult<RedComercialCompanyWorkspace | null>>
   upsertRedComercialCompanyFaq(companyId: string, values: Partial<RepresentedCompanyFaqRecord>): Promise<RepositoryResult<RepresentedCompanyFaqRecord | null>>
+  createRepresentedCompanyMaterial(companyId: string, payload: Record<string, unknown>, file?: File): Promise<RepositoryResult<RepresentedCompanyMaterialRecord | null>>
+  updateRepresentedCompanyMaterial(id: string, payload: Record<string, unknown>): Promise<RepositoryResult<RepresentedCompanyMaterialRecord | null>>
+  archiveRepresentedCompanyMaterial(id: string): Promise<RepositoryResult<RepresentedCompanyMaterialRecord | null>>
+  createRepresentedCompanyMaterialSignedUrl(id: string): Promise<RepositoryResult<string | null>>
+  replaceRepresentedCompanyMaterial(id: string, file: File): Promise<RepositoryResult<RepresentedCompanyMaterialRecord | null>>
   createRepresentedCompany(values: RepresentedCompanyFormValues): Promise<RepositoryResult<RepresentedCompanyRecord | null>>
   updateRepresentedCompany(id: string, values: RepresentedCompanyFormValues): Promise<RepositoryResult<RepresentedCompanyRecord | null>>
   uploadCompanyLogo(companyId: string, file: File): Promise<RepositoryResult<string | null>>
@@ -102,6 +109,14 @@ export type AdminRepository = {
   revokeCollaboratorInvitation(userId: string): Promise<RepositoryResult<CollaboratorRecord | null>>
   removeCollaboratorInvitation(userId: string): Promise<RepositoryResult<boolean>>
   updateCollaboratorStatus(userId: string, isActive: boolean): Promise<RepositoryResult<CollaboratorRecord | null>>
+  updateRedComercialUserRole(userId: string, role: 'owner' | 'collaborator'): Promise<RepositoryResult<{ id: string; old_role: string; new_role: string } | null>>
+  listAristaBusinessProspects(filters?: { search?: string; status?: string; ownerUserId?: string; includeArchived?: boolean }): Promise<RepositoryResult<AristaBusinessProspectRecord[]>>
+  getAristaBusinessProspect(id: string): Promise<RepositoryResult<AristaBusinessProspectRecord | null>>
+  createAristaBusinessProspect(payload: Partial<AristaBusinessProspectRecord>): Promise<RepositoryResult<AristaBusinessProspectRecord | null>>
+  updateAristaBusinessProspect(id: string, payload: Partial<AristaBusinessProspectRecord>): Promise<RepositoryResult<AristaBusinessProspectRecord | null>>
+  addAristaBusinessProspectActivity(id: string, payload: { activity_type: string; subject: string; notes?: string; occurred_at?: string; next_followup_at?: string }): Promise<RepositoryResult<AristaBusinessProspectRecord | null>>
+  convertAristaBusinessProspect(id: string): Promise<RepositoryResult<AristaBusinessProspectRecord | null>>
+  convertFormSubmissionToAristaProspect(id: string, payload?: Record<string, unknown>): Promise<RepositoryResult<AristaBusinessProspectRecord | null>>
   listCompanyMemberships(): Promise<RepositoryResult<RepresentedCompanyMembershipRecord[]>>
   upsertCompanyMembership(companyId: string, userId: string): Promise<RepositoryResult<RepresentedCompanyMembershipRecord | null>>
   deactivateCompanyMembership(companyId: string, userId: string): Promise<RepositoryResult<RepresentedCompanyMembershipRecord | null>>
@@ -121,6 +136,7 @@ export type AdminRepository = {
   detectRedComercialProspectDuplicates(values: Pick<RedComercialProspectFormValues, 'represented_company_id' | 'company_name' | 'website_url' | 'contact_email' | 'contact_phone'>, excludeProspectId?: string): Promise<RepositoryResult<RedComercialProspectDuplicateRecord[]>>
   createRedComercialProspect(values: RedComercialProspectFormValues): Promise<RepositoryResult<RedComercialProspectDetailRecord | null>>
   updateRedComercialProspect(id: string, values: Partial<RedComercialProspectFormValues & { is_archived: boolean }>): Promise<RepositoryResult<RedComercialProspectDetailRecord | null>>
+  deleteRedComercialArchivedProspect(id: string): Promise<RepositoryResult<{ id: string; deleted: boolean } | null>>
   createRedComercialProspectActivity(prospectId: string, values: RedComercialProspectActivityFormValues): Promise<RepositoryResult<RedComercialProspectDetailRecord | null>>
   listRedComercialFollowups(filters?: RedComercialFollowupFilters): Promise<RepositoryResult<{ rows: RedComercialFollowupListItem[]; total: number }>>
   getRedComercialFollowupMetrics(filters?: Omit<RedComercialFollowupFilters, 'page' | 'pageSize' | 'view'>): Promise<RepositoryResult<RedComercialFollowupMetricsRecord>>

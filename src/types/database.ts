@@ -213,6 +213,14 @@ export type RepresentedCompanyMaterialRow = {
   uploaded_by: string | null
   created_at: string
   is_archived: boolean
+  category?: string | null
+  file_name?: string | null
+  mime_type?: string | null
+  file_size?: number | null
+  sort_order?: number
+  updated_at?: string
+  updated_by?: string | null
+  archived_at?: string | null
 }
 
 export type RepresentedCompanyMembershipRow = {

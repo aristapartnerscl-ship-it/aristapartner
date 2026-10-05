@@ -19,6 +19,7 @@ const repositoryMocks = vi.hoisted(() => ({
   detectRedComercialProspectDuplicates: vi.fn(),
   createRedComercialProspect: vi.fn(),
   updateRedComercialProspect: vi.fn(),
+  deleteRedComercialArchivedProspect: vi.fn(),
   createRedComercialProspectActivity: vi.fn(),
   getRedComercialProspectPanel: vi.fn(),
   createRedComercialOpportunity: vi.fn(),
@@ -123,6 +124,14 @@ const limitedRow: RedComercialProspectListItem = {
   can_view_detail: false,
 }
 
+const archivedRow: RedComercialProspectListItem = {
+  ...fullRow,
+  id: 'prospect-archived',
+  company_name: 'Empresa DEF',
+  status: 'archived',
+  is_archived: false,
+}
+
 const fullDetail: RedComercialProspectDetailRecord = {
   ...fullRow,
   website_url: 'https://abc.cl',
@@ -224,6 +233,7 @@ describe('RedComercialProspectsPage', () => {
     repositoryMocks.detectRedComercialProspectDuplicates.mockResolvedValue({ data: [], error: null })
     repositoryMocks.createRedComercialProspect.mockResolvedValue({ data: fullDetail, error: null })
     repositoryMocks.updateRedComercialProspect.mockResolvedValue({ data: fullDetail, error: null })
+    repositoryMocks.deleteRedComercialArchivedProspect.mockResolvedValue({ data: { id: 'prospect-archived', deleted: true }, error: null })
     repositoryMocks.createRedComercialProspectActivity.mockResolvedValue({ data: fullDetail, error: null })
     repositoryMocks.getRedComercialProspectPanel.mockImplementation((id: string) => Promise.resolve({ data: { prospect: id === 'prospect-1' ? fullDetail : limitedDetail, opportunities: [], cross_opportunities: [], notes: [], files: [] }, error: null }))
     repositoryMocks.updateRedComercialOpportunity.mockResolvedValue({ data: { prospect: fullDetail, opportunities: [], cross_opportunities: [], notes: [], files: [] }, error: null })
@@ -460,5 +470,35 @@ describe('RedComercialProspectsPage', () => {
     await user.type(screen.getByLabelText('Titulo'), 'WhatsApp enviado')
     await user.click(screen.getByRole('button', { name: 'Registrar actividad' }))
     expect(repositoryMocks.createRedComercialProspectActivity).toHaveBeenCalledWith('prospect-1', expect.objectContaining({ title: 'WhatsApp enviado' }))
+  })
+
+  test('admin muestra restaurar y eliminar en archivado aunque el booleano no llegue', async () => {
+    const user = userEvent.setup()
+    repositoryMocks.listRedComercialProspects.mockResolvedValueOnce({ data: { rows: [archivedRow], total: 1 }, error: null })
+    renderPage('owner')
+    await user.click((await screen.findAllByRole('button', { name: 'Acciones' }))[0])
+    expect(screen.getByRole('menuitem', { name: 'Ver detalle' })).toBeInTheDocument()
+    expect(screen.getByRole('menuitem', { name: 'Restaurar' })).toBeInTheDocument()
+    await user.click(screen.getByRole('menuitem', { name: 'Eliminar permanentemente' }))
+    expect(await screen.findByText(/Esta acción eliminará permanentemente/)).toBeInTheDocument()
+    await user.click(screen.getByRole('button', { name: 'Eliminar permanentemente' }))
+    await waitFor(() => expect(repositoryMocks.deleteRedComercialArchivedProspect).toHaveBeenCalledWith('prospect-archived'))
+  })
+
+  test('admin activo muestra archivar pero no restaurar ni eliminar permanente', async () => {
+    const user = userEvent.setup()
+    renderPage('owner')
+    await user.click((await screen.findAllByRole('button', { name: 'Acciones' }))[0])
+    expect(screen.getByRole('menuitem', { name: 'Archivar' })).toBeInTheDocument()
+    expect(screen.queryByRole('menuitem', { name: 'Restaurar' })).not.toBeInTheDocument()
+    expect(screen.queryByRole('menuitem', { name: 'Eliminar permanentemente' })).not.toBeInTheDocument()
+  })
+
+  test('collaborator no ve eliminar permanente en archivado', async () => {
+    const user = userEvent.setup()
+    repositoryMocks.listRedComercialProspects.mockResolvedValueOnce({ data: { rows: [archivedRow], total: 1 }, error: null })
+    renderPage('collaborator')
+    await user.click(await screen.findByRole('button', { name: 'Acciones' }))
+    expect(screen.queryByRole('menuitem', { name: 'Eliminar permanentemente' })).not.toBeInTheDocument()
   })
 })

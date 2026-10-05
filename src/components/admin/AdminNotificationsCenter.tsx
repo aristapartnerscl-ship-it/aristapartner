@@ -162,8 +162,7 @@ export function AdminNotificationsCenter() {
 
             {!loading && !error && notifications.length === 0 && (
               <p className="rounded-md bg-[#faf8f2] p-3 text-sm text-slate-600">
-                Aun no hay notificaciones administrativas. En Fase 1 la campana no genera eventos automaticamente; se activara cuando
-                se implemente Fase 2.
+                Aún no hay notificaciones administrativas.
               </p>
             )}
 

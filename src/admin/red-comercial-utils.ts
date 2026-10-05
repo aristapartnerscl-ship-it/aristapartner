@@ -10,6 +10,10 @@ export function isRedComercialAdmin(profile: AdminProfile | null) {
   return redComercialRole(profile) === 'admin'
 }
 
+export function isRedComercialProspectArchived(prospect: { status?: string | null; is_archived?: boolean | null; isArchived?: boolean | null }) {
+  return prospect.status === 'archived' || prospect.is_archived === true || prospect.isArchived === true
+}
+
 export function companyInitials(name: string) {
   return name
     .trim()
