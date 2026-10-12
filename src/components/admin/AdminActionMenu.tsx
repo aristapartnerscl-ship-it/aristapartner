@@ -76,7 +76,7 @@ export function AdminActionMenu({ items, label = 'Acciones' }: { items: AdminAct
     top: position.top,
     left: position.left,
     opacity: position.ready ? 1 : 0,
-    pointerEvents: position.ready ? 'auto' : 'none',
+    pointerEvents: 'auto',
   }
 
   return <div ref={rootRef} className="admin-action-menu">

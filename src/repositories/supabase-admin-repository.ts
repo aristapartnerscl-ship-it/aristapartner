@@ -74,6 +74,8 @@ import type {
   RedComercialHomeData,
   RedComercialDashboardData,
   RedComercialCompanyWorkspace,
+  RepresentedCompanyServiceRecord,
+  RepresentedCompanyAccountRecord,
   RepresentedCompanyMaterialRecord,
   RepresentedCompanyFaqRecord,
   RepresentedCompanyFormValues,
@@ -282,6 +284,11 @@ async function failFunction<T>(data: T, error: Error | null, context: string): P
 }
 
 const rpcErrorMessages: Record<string, string> = {
+  PGRST202: 'La operación de eliminación no está disponible en el backend remoto. Verifica que la migration de Cuentas y cartera esté aplicada.',
+  '42883': 'La operación de eliminación no está disponible en el backend remoto. Verifica que la migration de Cuentas y cartera esté aplicada.',
+  REDCOM_ADMIN_REQUIRED: 'No tienes permisos para eliminar esta cuenta.',
+  REDCOM_ACCOUNT_HAS_HISTORY: 'No puede eliminarse porque tiene un prospecto o historial comercial asociado. Mantén la cuenta registrada o cambia su estado.',
+  REDCOM_ACCOUNT_NOT_FOUND: 'La cuenta ya no existe.',
   AP_AUTH_REQUIRED: 'Tu sesión ya no está activa. Vuelve a iniciar sesión.',
   AP_OWNER_REQUIRED: 'Tu usuario no tiene permisos para realizar esta conversión.',
   AP_INQUIRY_NOT_FOUND: 'No se encontró la consulta solicitada.',
@@ -313,13 +320,14 @@ const rpcErrorMessages: Record<string, string> = {
 
 function rpcErrorCode(error: PostgrestError | Error | null) {
   if (!error) return null
+  if ('code' in error && typeof error.code === 'string' && rpcErrorMessages[error.code]) return error.code
   return Object.keys(rpcErrorMessages).find((code) => error.message.includes(code)) ?? null
 }
 
 function rpcErrorKind(code: string): RepositoryErrorKind {
   if (code.includes('NOT_FOUND')) return 'not_found'
   if (code.includes('AUTH')) return 'auth'
-  if (code.includes('OWNER')) return 'authorization'
+  if (code.includes('OWNER') || code.includes('ADMIN_REQUIRED')) return 'authorization'
   return 'validation'
 }
 
@@ -640,7 +648,60 @@ export class SupabaseAdminRepository implements AdminRepository {
   async getRedComercialCompanyWorkspace(id: string) {
     const { data, error } = await (this.client as SupabaseClient).rpc('get_red_comercial_company_workspace', { p_company_id: id })
     if (error) return fail<RedComercialCompanyWorkspace | null>(null, error, 'red_comercial.company.workspace')
-    return ok((data ?? null) as RedComercialCompanyWorkspace | null)
+    if (!data) return ok(null)
+    const services = await this.listRedComercialCompanyServices(id)
+    if (services.error) return fail<RedComercialCompanyWorkspace | null>(null, new Error(services.error), 'red_comercial.company.services')
+    const accounts = await this.listRedComercialCompanyAccounts(id)
+    if (accounts.error) return fail<RedComercialCompanyWorkspace | null>(null, new Error(accounts.error), 'red_comercial.company.accounts')
+    return ok({ ...(data as RedComercialCompanyWorkspace), services: services.data, accounts: accounts.data })
+  }
+
+  async listRedComercialCompanyServices(companyId: string) {
+    const { data, error } = await (this.client as SupabaseClient).rpc('list_red_comercial_company_services', { p_company_id: companyId })
+    if (error) return fail<RepresentedCompanyServiceRecord[]>([], error, 'red_comercial.company.services.list')
+    return ok((data ?? []) as RepresentedCompanyServiceRecord[])
+  }
+
+  async createRedComercialCompanyService(companyId: string, payload: Record<string, unknown>) {
+    const { data, error } = await (this.client as SupabaseClient).rpc('create_red_comercial_company_service', { p_company_id: companyId, p_payload: payload })
+    if (error) return fail<RepresentedCompanyServiceRecord | null>(null, error, 'red_comercial.company.services.create')
+    return ok((data ?? null) as RepresentedCompanyServiceRecord | null)
+  }
+
+  async updateRedComercialCompanyService(id: string, payload: Record<string, unknown>) {
+    const { data, error } = await (this.client as SupabaseClient).rpc('update_red_comercial_company_service', { p_service_id: id, p_payload: payload })
+    if (error) return fail<RepresentedCompanyServiceRecord | null>(null, error, 'red_comercial.company.services.update')
+    return ok((data ?? null) as RepresentedCompanyServiceRecord | null)
+  }
+
+  async listRedComercialCompanyAccounts(companyId: string) {
+    const { data, error } = await (this.client as SupabaseClient).rpc('list_red_comercial_company_accounts', { p_company_id: companyId })
+    if (error) return fail<RepresentedCompanyAccountRecord[]>([], error, 'red_comercial.company.accounts.list')
+    return ok((data ?? []) as RepresentedCompanyAccountRecord[])
+  }
+
+  async createRedComercialCompanyAccount(companyId: string, payload: Record<string, unknown>) {
+    const { data, error } = await (this.client as SupabaseClient).rpc('create_red_comercial_company_account', { p_company_id: companyId, p_payload: payload })
+    if (error) return fail<RepresentedCompanyAccountRecord | null>(null, error, 'red_comercial.company.accounts.create')
+    return ok((data ?? null) as RepresentedCompanyAccountRecord | null)
+  }
+
+  async updateRedComercialCompanyAccount(id: string, payload: Record<string, unknown>) {
+    const { data, error } = await (this.client as SupabaseClient).rpc('update_red_comercial_company_account', { p_account_id: id, p_payload: payload })
+    if (error) return fail<RepresentedCompanyAccountRecord | null>(null, error, 'red_comercial.company.accounts.update')
+    return ok((data ?? null) as RepresentedCompanyAccountRecord | null)
+  }
+
+  async deleteRedComercialCompanyAccount(id: string) {
+    const { data, error } = await (this.client as SupabaseClient).rpc('delete_red_comercial_account', { p_account_id: id })
+    if (error) return failRpc<{ id: string; deleted: boolean } | null>(null, error, 'red_comercial.company.accounts.delete')
+    return ok((data ?? null) as { id: string; deleted: boolean } | null)
+  }
+
+  async importRedComercialCompanyAccounts(companyId: string, status: string, rows: Array<Record<string, unknown>>) {
+    const { data, error } = await (this.client as SupabaseClient).rpc('import_red_comercial_company_accounts', { p_company_id: companyId, p_status: status, p_rows: rows })
+    if (error) return fail<Array<Record<string, unknown>>>([], error, 'red_comercial.company.accounts.import')
+    return ok((data ?? []) as Array<Record<string, unknown>>)
   }
 
   async updateRedComercialCompanyPlaybook(id: string, section: string, payload: Record<string, unknown>) {

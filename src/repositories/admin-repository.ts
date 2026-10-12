@@ -61,6 +61,8 @@ import type {
   RedComercialHomeData,
   RedComercialDashboardData,
   RedComercialCompanyWorkspace,
+  RepresentedCompanyAccountRecord,
+  RepresentedCompanyServiceRecord,
   RepresentedCompanyFaqRecord,
   RepresentedCompanyMaterialRecord,
   RepresentedCompanyFormValues,
@@ -91,6 +93,14 @@ export type AdminRepository = {
   listMyRepresentedCompanies(): Promise<RepositoryResult<RepresentedCompanyRecord[]>>
   getRepresentedCompanyById(id: string): Promise<RepositoryResult<RepresentedCompanyRecord | null>>
   getRedComercialCompanyWorkspace(id: string): Promise<RepositoryResult<RedComercialCompanyWorkspace | null>>
+  listRedComercialCompanyServices(companyId: string): Promise<RepositoryResult<RepresentedCompanyServiceRecord[]>>
+  createRedComercialCompanyService(companyId: string, payload: Record<string, unknown>): Promise<RepositoryResult<RepresentedCompanyServiceRecord | null>>
+  updateRedComercialCompanyService(id: string, payload: Record<string, unknown>): Promise<RepositoryResult<RepresentedCompanyServiceRecord | null>>
+  listRedComercialCompanyAccounts(companyId: string): Promise<RepositoryResult<RepresentedCompanyAccountRecord[]>>
+  createRedComercialCompanyAccount(companyId: string, payload: Record<string, unknown>): Promise<RepositoryResult<RepresentedCompanyAccountRecord | null>>
+  updateRedComercialCompanyAccount(id: string, payload: Record<string, unknown>): Promise<RepositoryResult<RepresentedCompanyAccountRecord | null>>
+  deleteRedComercialCompanyAccount(id: string): Promise<RepositoryResult<{ id: string; deleted: boolean } | null>>
+  importRedComercialCompanyAccounts(companyId: string, status: string, rows: Array<Record<string, unknown>>): Promise<RepositoryResult<Array<Record<string, unknown>>>>
   updateRedComercialCompanyPlaybook(id: string, section: string, payload: Record<string, unknown>): Promise<RepositoryResult<RedComercialCompanyWorkspace | null>>
   upsertRedComercialCompanyFaq(companyId: string, values: Partial<RepresentedCompanyFaqRecord>): Promise<RepositoryResult<RepresentedCompanyFaqRecord | null>>
   createRepresentedCompanyMaterial(companyId: string, payload: Record<string, unknown>, file?: File): Promise<RepositoryResult<RepresentedCompanyMaterialRecord | null>>

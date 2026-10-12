@@ -6,6 +6,8 @@ import { AdminPageHeader } from '../../components/admin/AdminPageHeader'
 import { AdminKpiCard } from '../../components/admin/AdminVisualSystem'
 import { CompanyLogo } from '../../components/admin/CompanyLogo'
 import { CompanyMaterialsPanel } from '../components/CompanyMaterialsPanel'
+import { CompanyServicesPanel } from '../components/CompanyServicesPanel'
+import { CompanyAccountsPanel } from '../components/CompanyAccountsPanel'
 import { CompanyWorkspaceChips, CompanyWorkspaceFaqList, CompanyWorkspaceList, CompanyWorkspaceMaterialList, CompanyWorkspaceSection as IntelligenceSection } from '../components/CompanyWorkspacePrimitives'
 import { extractCommercialItems, extractFirstQuestion, extractProblemItems, splitCommercialItems } from '../components/CompanyWorkspaceUtils'
 import { EmptyState } from '../../components/admin/EmptyState'
@@ -355,7 +357,7 @@ export function AdminCompaniesPage() {
   )
 }
 
-type CompanyWorkspaceTab = 'summary' | 'offer' | 'ideal' | 'selling' | 'faq' | 'materials' | 'private'
+type CompanyWorkspaceTab = 'summary' | 'offer' | 'ideal' | 'selling' | 'faq' | 'materials' | 'accounts' | 'private'
 
 const workspaceTabs: Array<{ key: CompanyWorkspaceTab; label: string; adminOnly?: boolean }> = [
   { key: 'summary', label: 'Resumen' },
@@ -364,6 +366,7 @@ const workspaceTabs: Array<{ key: CompanyWorkspaceTab; label: string; adminOnly?
   { key: 'selling', label: 'Como vender' },
   { key: 'faq', label: 'FAQ / Objeciones' },
   { key: 'materials', label: 'Materiales' },
+  { key: 'accounts', label: 'Cuentas y cartera' },
   { key: 'private', label: 'Privado Arista', adminOnly: true },
 ]
 
@@ -429,7 +432,8 @@ function FaqEditModal({ initial, onClose, onSave, saving }: { initial: Partial<R
 function CompanySummaryRail({ workspace, company, admin, onTab, onMaterialView, onMaterialDownload }: { workspace: RedComercialCompanyWorkspace; company: RepresentedCompanyRecord; admin: boolean; onTab: (tab: CompanyWorkspaceTab) => void; onMaterialView: (material: RedComercialCompanyWorkspace['materials'][number]) => void; onMaterialDownload: (material: RedComercialCompanyWorkspace['materials'][number]) => void }) {
   const playbook = workspace.playbook as Record<string, unknown>
   const offerText = typeof playbook.sales_offerings === 'string' ? playbook.sales_offerings : company.offer_summary
-  const offerings = extractCommercialItems(offerText)
+  const activeServices = (workspace.services ?? []).filter((service) => service.is_active)
+  const offerings = activeServices.length ? activeServices.map((service) => service.name) : extractCommercialItems(offerText)
   const idealText = company.ideal_customer
   const ideal = extractCommercialItems(idealText)
   const problems = extractProblemItems(company.problem_solved)
@@ -546,8 +550,10 @@ export function CompanyDetailPage() {
     {tab === 'selling' && <div className="grid items-start gap-2.5 lg:grid-cols-2"><div className="grid content-start gap-2.5"><IntelligenceSection title="Pitch corto" icon={Star} tone="info" canEdit={admin} onEdit={() => setEditing('selling')}><p className="line-clamp-5">{workspaceText(playbook.short_pitch)}</p></IntelligenceSection><IntelligenceSection title="Preguntas de descubrimiento" icon={Users} tone="neutral" canEdit={admin} onEdit={() => setEditing('selling')}><PlaybookNumberedList items={playbookItems(playbook.discovery_questions)} /></IntelligenceSection><IntelligenceSection title="Plan comercial" icon={Target} tone="positive" canEdit={admin} onEdit={() => setEditing('selling')}><p className="line-clamp-6">{workspaceText(playbook.sales_plan)}</p></IntelligenceSection></div><div className="grid content-start gap-2.5"><IntelligenceSection title="Presentación inicial" icon={ArrowRight} tone="neutral" canEdit={admin} onEdit={() => setEditing('selling')}><p className="line-clamp-6">{workspaceText(playbook.introduction_guidance)}</p></IntelligenceSection><IntelligenceSection title="Proceso comercial recomendado" icon={Layers} tone="info" canEdit={admin} onEdit={() => setEditing('selling')}><PlaybookNumberedList items={playbookItems(playbook.sales_process)} /></IntelligenceSection><IntelligenceSection title="Siguiente paso" icon={CheckCircle2} tone="positive" canEdit={admin} onEdit={() => setEditing('selling')}><p className="line-clamp-5">{workspaceText(playbook.recommended_next_step)}</p></IntelligenceSection></div></div>}
     {tab === 'faq' && <div className="grid items-start gap-2.5 lg:grid-cols-2">{workspace.faqs.length === 0 ? <EmptyState title={workspace.is_assigned || admin ? 'No hay FAQ u objeciones cargadas.' : 'Contenido operativo restringido'} text={workspace.is_assigned || admin ? 'Agrega respuestas autorizadas para ayudar a la red comercial.' : 'Asigna esta empresa a tu cartera para ver el playbook de venta.'} /> : workspace.faqs.map((faq) => <details key={faq.id} className={'rounded-[10px] border p-3.5 shadow-[0_1px_2px_rgba(23,32,45,0.025)] ' + (faq.type === 'objection' ? 'border-[#f0e3c4] bg-[#fffaf0]' : 'border-[#dbeade] bg-[#f4faf6]')}><summary className="flex cursor-pointer list-none items-center gap-2"><span className="rounded-full bg-white/80 px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wide text-[#235b3e]">{faq.type === 'objection' ? 'Objeción' : 'FAQ'}</span><span className="min-w-0 flex-1 font-semibold text-[#17202d]">{faq.question}</span><span className="text-[11px] text-slate-400">+</span></summary><div className="mt-2 border-t border-black/[0.06] pt-2"><p className="line-clamp-3 text-[12px] text-slate-700">{faq.answer}</p>{faq.requires_escalation && <span className="mt-2 inline-flex rounded-full bg-amber-100 px-2 py-0.5 text-[10px] font-semibold text-amber-800">Consultar con representado</span>}{admin && <div className="mt-2"><button type="button" onClick={() => setFaqEditing(faq)} className="text-[10px] font-semibold text-[#235b3e]">Editar</button></div>}</div></details>)}{admin && <button type="button" onClick={() => setFaqEditing({ type: 'faq' })} className="w-fit rounded-md border border-[#c9c1b4] px-2.5 py-1.5 text-[11px] font-semibold text-[#235b3e]">+ Agregar FAQ / objeción</button>}</div>}
     {tab === 'materials' && <CompanyMaterialsPanel companyId={company.id} materials={workspace.materials} admin={admin} onReload={() => load(true)} />}
+    {tab === 'accounts' && <CompanyAccountsPanel companyId={company.id} accounts={workspace.accounts ?? []} admin={admin} onReload={() => void load(true)} />}
     {tab === 'private' && admin && <div className="grid items-start gap-2.5 lg:grid-cols-2"><IntelligenceSection title="Modelo de comisión" icon={LockKeyhole} tone="private"><p className="line-clamp-5">{workspaceText(workspace.private_details?.agreed_commission)}</p></IntelligenceSection><IntelligenceSection title="Condiciones contractuales" icon={LockKeyhole} tone="private"><p className="line-clamp-5">{workspaceText(workspace.private_details?.contract_notes)}</p></IntelligenceSection><IntelligenceSection title="Términos económicos" icon={LockKeyhole} tone="private"><p className="line-clamp-5">{workspaceText(workspace.private_details?.economic_terms)}</p></IntelligenceSection><IntelligenceSection title="Notas privadas Arista" icon={LockKeyhole} tone="private"><p className="line-clamp-6">{workspaceText(workspace.private_details?.sensitive_notes)}</p></IntelligenceSection></div>}
     {tab === 'summary' && <CompanySummaryRail workspace={workspace} company={company} admin={admin} onTab={setTab} onMaterialView={() => setTab('materials')} onMaterialDownload={(material) => void downloadSummaryMaterial(material)} />}
+    {tab === 'offer' && <CompanyServicesPanel companyId={company.id} services={workspace.services ?? []} admin={admin} onReload={() => void load(true)} />}
     <p className="text-right text-[10px] text-slate-400">Ultima actualizacion: {workspace.updated_at ? companyDate(workspace.updated_at) : 'Sin fecha'}</p>
     {editing && <WorkspaceEditModal title={`Editar ${editing}`} fields={editFields} initial={playbook} onClose={() => setEditing(null)} onSave={(payload) => void saveSection(editing === 'signals' ? 'signals' : editing, payload)} saving={saving} />}
     {faqEditing && <FaqEditModal initial={faqEditing} onClose={() => setFaqEditing(null)} onSave={(values) => void saveFaq(values)} saving={saving} />}

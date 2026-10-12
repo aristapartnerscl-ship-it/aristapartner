@@ -10,6 +10,7 @@ const repositoryMocks = vi.hoisted(() => ({
   listRepresentedCompanies: vi.fn(),
   listMyRepresentedCompanies: vi.fn(),
   listCollaborators: vi.fn(),
+  listRedComercialCompanyServices: vi.fn(),
   listRedComercialOpportunities: vi.fn(),
   getRedComercialOpportunityMetrics: vi.fn(),
   getRedComercialProspectDetail: vi.fn(),
@@ -105,6 +106,7 @@ describe('RedComercialOpportunitiesPage', () => {
     repositoryMocks.listRepresentedCompanies.mockResolvedValue({ data: [], error: null })
     repositoryMocks.listMyRepresentedCompanies.mockResolvedValue({ data: [], error: null })
     repositoryMocks.listCollaborators.mockResolvedValue({ data: [{ id: 'collab-1', full_name: 'Alonso Gonzalez' }], error: null })
+    repositoryMocks.listRedComercialCompanyServices.mockResolvedValue({ data: [], error: null })
     repositoryMocks.listRedComercialOpportunities.mockResolvedValue({ data: { rows: [row], total: 1 }, error: null })
     repositoryMocks.getRedComercialOpportunityMetrics.mockResolvedValue({ data: { total: 1, in_process: 1, arista: 0, collaborator: 1, contract_pending: 1, payment_pending: 0, commission_pending: 1, won: 0, lost: 0 }, error: null })
     repositoryMocks.getRedComercialProspectDetail.mockResolvedValue({ data: prospect, error: null })

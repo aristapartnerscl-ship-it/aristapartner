@@ -361,6 +361,29 @@ export type RedComercialProspectDuplicate = {
 export type RedComercialOpportunity = {
   id: string
   prospect_id: string
+  represented_company_id?: string
+  represented_company_service_id?: string | null
+  service_name?: string | null
+  service_category?: string | null
+  service_is_active?: boolean | null
+  pain_point?: string | null
+  identified_need?: string | null
+  qualification_notes?: string | null
+  client_expectation?: string | null
+  missing_information?: string | null
+  requires_specialist?: boolean
+  service_short_description?: string | null
+  service_problem_statement?: string | null
+  service_ideal_customer?: string | null
+  service_decision_makers?: string | null
+  service_opportunity_signals?: string | null
+  service_discovery_questions?: string | null
+  service_required_information?: string | null
+  service_suggested_pitch?: string | null
+  service_handoff_guidance?: string | null
+  service_restrictions?: string | null
+  service_reference_price?: string | null
+  service_price_notes?: string | null
   status: 'in_process' | 'won' | 'lost' | 'cancelled'
   control_mode: 'collaborator' | 'arista' | 'shared'
   contract_status: string

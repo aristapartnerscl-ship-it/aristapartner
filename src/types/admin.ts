@@ -187,12 +187,59 @@ export type RepresentedCompanyMaterialRecord = RepresentedCompanyMaterialRow
 export type RedComercialCompanyWorkspace = {
   company: RepresentedCompanyRecord
   playbook: Partial<RepresentedCompanySalesPlaybookRecord>
+  services?: RepresentedCompanyServiceRecord[]
+  accounts?: RepresentedCompanyAccountRecord[]
   faqs: RepresentedCompanyFaqRecord[]
   materials: RepresentedCompanyMaterialRecord[]
   private_details: RepresentedCompanyPrivateDetailsRecord | null
   can_edit: boolean
   is_assigned: boolean
   updated_at: string | null
+}
+
+export type RepresentedCompanyServicePriority = 'A' | 'B' | 'C' | 'complementary'
+
+export type RepresentedCompanyAccountStatus = 'available' | 'represented_client' | 'represented_active_opportunity' | 'represented_lead' | 'arista_prospect' | 'blocked'
+
+export type RepresentedCompanyAccountRecord = {
+  id: string
+  represented_company_id: string
+  account_name: string
+  normalized_account_name?: string
+  status: RepresentedCompanyAccountStatus
+  source: string | null
+  public_note: string | null
+  internal_note?: string | null
+  linked_prospect_id: string | null
+  has_linked_prospect?: boolean
+  prospect_status?: string | null
+  created_at: string
+  updated_at: string
+}
+
+export type RepresentedCompanyServiceRecord = {
+  id: string
+  represented_company_id: string
+  name: string
+  category: string | null
+  priority: RepresentedCompanyServicePriority
+  is_active: boolean
+  short_description: string | null
+  problem_statement: string | null
+  ideal_customer: string | null
+  decision_makers: string | null
+  opportunity_signals: string | null
+  discovery_questions: string | null
+  required_information: string | null
+  suggested_pitch: string | null
+  reference_price: string | null
+  price_notes: string | null
+  handoff_guidance: string | null
+  restrictions: string | null
+  display_order: number
+  created_by: string | null
+  created_at: string
+  updated_at: string
 }
 export type CollaboratorRecord = Pick<AdminProfileRow, 'id' | 'full_name' | 'email' | 'role' | 'is_active' | 'created_at' | 'updated_at' | 'last_activity_at' | 'invitation_status' | 'invited_at' | 'invitation_sent_at' | 'invitation_revoked_at' | 'onboarding_completed_at'>
 

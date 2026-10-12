@@ -39,6 +39,20 @@ export const emptyAdminRepository: AdminRepository = {
   async getRedComercialCompanyWorkspace() {
     return { data: null, error: null }
   },
+  async listRedComercialCompanyServices() {
+    return { data: [], error: null }
+  },
+  async createRedComercialCompanyService() {
+    return { data: null, error: 'La conexion del panel administrativo aun no esta disponible.', errorKind: 'auth' as const }
+  },
+  async updateRedComercialCompanyService() {
+    return { data: null, error: 'La conexion del panel administrativo aun no esta disponible.', errorKind: 'auth' as const }
+  },
+  async listRedComercialCompanyAccounts() { return { data: [], error: null } },
+  async createRedComercialCompanyAccount() { return { data: null, error: 'La conexion del panel administrativo aun no esta disponible.', errorKind: 'auth' as const } },
+  async updateRedComercialCompanyAccount() { return { data: null, error: 'La conexion del panel administrativo aun no esta disponible.', errorKind: 'auth' as const } },
+  async deleteRedComercialCompanyAccount() { return { data: null, error: 'La conexion del panel administrativo aun no esta disponible.', errorKind: 'auth' as const } },
+  async importRedComercialCompanyAccounts() { return { data: [], error: 'La conexion del panel administrativo aun no esta disponible.', errorKind: 'auth' as const } },
   async updateRedComercialCompanyPlaybook() {
     return { data: null, error: 'La conexion del panel administrativo aun no esta disponible.', errorKind: 'auth' as const }
   },
