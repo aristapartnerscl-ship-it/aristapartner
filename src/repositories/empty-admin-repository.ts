@@ -27,6 +27,7 @@ export const emptyAdminRepository: AdminRepository = {
     return { data: { representedCompanies: 0, activeCollaborators: 0, activeMemberships: 0, myMemberships: [], myCompanies: [] }, error: null }
   },
   async getRedComercialDashboard() { return { data: { summary: { followups_today: 0, followups_overdue: 0, active_prospects: 0, opportunities_in_process: 0, opportunities_arista: 0, payments_pending: 0, won_this_month: 0, commission_pending: 0 }, attention_today: [], upcoming_followups: [], opportunities: [], cross_opportunities: [], recent_results: [], portfolios: [], recent_activity: [] }, error: null } },
+  async getRedComercialSpecialistRequestDashboard() { return { data: { pending_count: 0, requests: [] }, error: null } },
   async listRepresentedCompanies() {
     return { data: [], error: null }
   },
@@ -139,6 +140,11 @@ export const emptyAdminRepository: AdminRepository = {
   async getRedComercialOpportunityPanel() { return { data: null, error: null } },
   async createRedComercialOpportunity() { return { data: null, error: 'La conexión del panel administrativo aún no está disponible.', errorKind: 'auth' as const } },
   async updateRedComercialOpportunity() { return { data: null, error: 'La conexión del panel administrativo aún no está disponible.', errorKind: 'auth' as const } },
+  async getRedComercialSpecialistRequest() { return { data: null, error: null } },
+  async createRedComercialSpecialistRequest() { return { data: null, error: 'La conexión del panel administrativo aún no está disponible.', errorKind: 'auth' as const } },
+  async reviewRedComercialSpecialistRequest() { return { data: null, error: 'La conexión del panel administrativo aún no está disponible.', errorKind: 'auth' as const } },
+  async recordRedComercialSpecialistOutcome() { return { data: null, error: 'La conexión del panel administrativo aún no está disponible.', errorKind: 'auth' as const } },
+  async updateRedComercialCompanyCalendarUrl() { return { data: null, error: 'La conexión del panel administrativo aún no está disponible.', errorKind: 'auth' as const } },
   async createRedComercialCrossOpportunity() { return { data: null, error: 'La conexión del panel administrativo aún no está disponible.', errorKind: 'auth' as const } },
   async listRedComercialOpportunities() { return { data: { rows: [], total: 0 }, error: null } },
   async getRedComercialOpportunityMetrics() { return { data: { total: 0, in_process: 0, arista: 0, collaborator: 0, contract_pending: 0, payment_pending: 0, commission_pending: 0, won: 0, lost: 0 }, error: null } },

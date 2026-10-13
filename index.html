@@ -7,6 +7,16 @@
     <link rel="apple-touch-icon" sizes="180x180" href="/brand/arista-app-icon-v2-180.png" />
     <link rel="icon" type="image/png" sizes="192x192" href="/brand/arista-app-icon-v2-192.png" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <script>
+      (() => {
+        if (!window.location.pathname.startsWith('/admin')) return
+        const saved = window.localStorage.getItem('arista-admin-theme')
+        const theme = saved === 'dark' || saved === 'light'
+          ? saved
+          : (window.matchMedia?.('(prefers-color-scheme: dark)').matches ? 'dark' : 'light')
+        document.documentElement.dataset.adminTheme = theme
+      })()
+    </script>
     <title>Arista Partners | Representación & Desarrollo Comercial</title>
   </head>
   <body>

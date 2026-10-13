@@ -24,6 +24,497 @@
   --color-dark-text-muted: rgba(255, 255, 255, 0.76);
 }
 
+/* Admin-only dark theme. The scope keeps the public site on its existing palette. */
+.admin-shell.admin-theme-dark {
+  --admin-dark-background: #141918;
+  --admin-dark-surface: #1c2422;
+  --admin-dark-surface-raised: #252e2b;
+  --admin-dark-input: #171f1d;
+  --admin-dark-border: #3a4742;
+  --admin-dark-border-soft: #303b37;
+  --admin-dark-text: #e8efeb;
+  --admin-dark-muted: #b7c3bd;
+  --admin-dark-subtle: #9baaa2;
+  --admin-dark-chip-bg: rgba(78, 139, 98, 0.2);
+  --admin-dark-chip-border: rgba(135, 185, 149, 0.34);
+  --admin-dark-chip-text: #b9dfc3;
+  --admin-dark-table-footer: #181f1d;
+  background: var(--admin-dark-background) !important;
+  color: var(--admin-dark-text);
+  color-scheme: dark;
+}
+
+.admin-shell.admin-theme-dark .admin-red-comercial {
+  --admin-border: var(--admin-dark-border);
+  --admin-border-soft: var(--admin-dark-border-soft);
+  --admin-muted-text: var(--admin-dark-muted);
+  --admin-surface: var(--admin-dark-surface);
+  --admin-background: var(--admin-dark-background);
+  --admin-shadow-subtle: 0 1px 2px rgba(0, 0, 0, 0.2);
+}
+
+.admin-shell.admin-theme-dark .admin-content,
+.admin-shell.admin-theme-dark .admin-content-inner {
+  background: var(--admin-dark-background);
+}
+
+.admin-shell.admin-theme-dark .admin-topbar {
+  border-color: var(--admin-dark-border) !important;
+  background: rgba(22, 28, 26, 0.96) !important;
+}
+
+.admin-shell.admin-theme-dark .admin-theme-toggle {
+  border-color: var(--admin-dark-border) !important;
+  background: var(--admin-dark-surface-raised) !important;
+  color: var(--admin-dark-text) !important;
+}
+
+.admin-shell.admin-theme-dark .admin-theme-toggle:hover {
+  border-color: #82b494 !important;
+  color: #b8e0c5 !important;
+}
+
+.admin-shell.admin-theme-dark .admin-sidebar {
+  border-color: rgba(255, 255, 255, 0.12) !important;
+}
+
+.admin-shell.admin-theme-dark .admin-sidebar [class*='bg-[#244534]'] {
+  background: #315543 !important;
+  box-shadow: inset 0 0 0 1px rgba(178, 218, 190, 0.16) !important;
+}
+
+.admin-shell.admin-theme-dark .admin-sidebar [class*='hover:bg-white']:hover {
+  background: rgba(202, 224, 211, 0.1) !important;
+}
+
+.admin-shell.admin-theme-dark .admin-sidebar [class*='text-[#b8d2c4]'],
+.admin-shell.admin-theme-dark .admin-sidebar [class*='text-[#cbdacf]'] {
+  color: #c2d1c8 !important;
+}
+
+.admin-shell.admin-theme-dark .admin-red-comercial .admin-select,
+.admin-shell.admin-theme-dark .admin-red-comercial input:not([type='checkbox']):not([type='radio']),
+.admin-shell.admin-theme-dark .admin-red-comercial select,
+.admin-shell.admin-theme-dark .admin-red-comercial textarea,
+.admin-shell.admin-theme-dark input:not([type='checkbox']):not([type='radio']),
+.admin-shell.admin-theme-dark select,
+.admin-shell.admin-theme-dark textarea {
+  border-color: var(--admin-dark-border) !important;
+  background: var(--admin-dark-input) !important;
+  color: var(--admin-dark-text) !important;
+  color-scheme: dark;
+}
+
+.admin-shell.admin-theme-dark input::placeholder,
+.admin-shell.admin-theme-dark textarea::placeholder {
+  color: var(--admin-dark-subtle) !important;
+}
+
+.admin-shell.admin-theme-dark .admin-red-comercial .admin-select:focus,
+.admin-shell.admin-theme-dark input:focus,
+.admin-shell.admin-theme-dark select:focus,
+.admin-shell.admin-theme-dark textarea:focus {
+  border-color: #82b494 !important;
+  box-shadow: 0 0 0 2px rgba(130, 180, 148, 0.18) !important;
+}
+
+.admin-shell.admin-theme-dark .admin-red-comercial .admin-section-surface,
+.admin-shell.admin-theme-dark .admin-red-comercial .admin-filter-bar,
+.admin-shell.admin-theme-dark .admin-red-comercial .admin-kpi-card,
+.admin-shell.admin-theme-dark .admin-red-comercial .admin-metric-strip,
+.admin-shell.admin-theme-dark .admin-red-comercial .admin-company-card {
+  border-color: var(--admin-dark-border) !important;
+  background: var(--admin-dark-surface) !important;
+  color: var(--admin-dark-text);
+}
+
+.admin-shell.admin-theme-dark .admin-red-comercial .admin-info-section,
+.admin-shell.admin-theme-dark .admin-red-comercial .admin-list-row,
+.admin-shell.admin-theme-dark .admin-red-comercial .dashboard-order-portfolios a {
+  border-color: var(--admin-dark-border-soft) !important;
+}
+
+.admin-shell.admin-theme-dark .admin-red-comercial .admin-kpi-card strong,
+.admin-shell.admin-theme-dark .admin-red-comercial .admin-page-header h1,
+.admin-shell.admin-theme-dark .admin-red-comercial h1,
+.admin-shell.admin-theme-dark .admin-red-comercial h2,
+.admin-shell.admin-theme-dark .admin-red-comercial h3,
+.admin-shell.admin-theme-dark .admin-red-comercial h4 {
+  color: var(--admin-dark-text) !important;
+}
+
+.admin-shell.admin-theme-dark .admin-red-comercial .admin-field-label,
+.admin-shell.admin-theme-dark .admin-red-comercial .admin-tabs button,
+.admin-shell.admin-theme-dark .admin-red-comercial table thead th {
+  color: var(--admin-dark-muted) !important;
+}
+
+.admin-shell.admin-theme-dark .admin-red-comercial .admin-tabs {
+  border-color: var(--admin-dark-border) !important;
+}
+
+.admin-shell.admin-theme-dark .admin-red-comercial table thead th {
+  border-bottom-color: var(--admin-dark-border-soft) !important;
+  background: #1a2220 !important;
+}
+
+.admin-shell.admin-theme-dark .admin-red-comercial table tbody td {
+  border-bottom-color: rgba(91, 108, 100, 0.5) !important;
+}
+
+.admin-shell.admin-theme-dark .admin-red-comercial table tbody tr:hover {
+  background: rgba(155, 190, 169, 0.1) !important;
+}
+
+.admin-shell.admin-theme-dark .admin-red-comercial table tbody tr[aria-selected='true'],
+.admin-shell.admin-theme-dark .admin-red-comercial table tbody tr[data-state='selected'],
+.admin-shell.admin-theme-dark .admin-red-comercial [aria-selected='true'],
+.admin-shell.admin-theme-dark .admin-red-comercial [data-selected='true'] {
+  background: rgba(67, 126, 88, 0.24) !important;
+  box-shadow: inset 3px 0 0 #6da77d;
+}
+
+.admin-shell.admin-theme-dark .admin-red-comercial table tbody tr:focus-within {
+  background: rgba(155, 190, 169, 0.12) !important;
+}
+
+/* Table shells and their footer stay on the same dark surface; no light bands. */
+.admin-shell.admin-theme-dark .admin-red-comercial table {
+  border-color: var(--admin-dark-border-soft) !important;
+}
+
+.admin-shell.admin-theme-dark .admin-red-comercial div:has(> div > table) > div:last-child {
+  border-top-color: var(--admin-dark-border-soft) !important;
+  background: var(--admin-dark-table-footer) !important;
+  color: var(--admin-dark-muted) !important;
+}
+
+.admin-shell.admin-theme-dark .admin-red-comercial div:has(> table) {
+  scrollbar-color: #3c4a44 #171e1c;
+}
+
+.admin-shell.admin-theme-dark .admin-red-comercial div:has(> table)::-webkit-scrollbar-track {
+  background: #171e1c;
+}
+
+.admin-shell.admin-theme-dark .admin-red-comercial div:has(> table)::-webkit-scrollbar-thumb {
+  border-color: #171e1c;
+  background: #3c4a44;
+}
+
+.admin-shell.admin-theme-dark .admin-red-comercial div:has(> table)::-webkit-scrollbar-thumb:hover {
+  background: #51645a;
+}
+
+.admin-shell.admin-theme-dark .admin-red-comercial div:has(> div > table) > div:last-child select,
+.admin-shell.admin-theme-dark .admin-red-comercial div:has(> div > table) > div:last-child button {
+  border-color: #3a4742 !important;
+  background: #202925 !important;
+  color: var(--admin-dark-text) !important;
+}
+
+.admin-shell.admin-theme-dark .admin-red-comercial div:has(> div > table) > div:last-child button:hover:not(:disabled) {
+  border-color: #587361 !important;
+  background: #29362f !important;
+}
+
+.admin-shell.admin-theme-dark .admin-red-comercial .admin-action-menu__trigger,
+.admin-shell.admin-theme-dark .admin-action-menu__trigger {
+  border-color: var(--admin-dark-border) !important;
+  background: var(--admin-dark-surface-raised) !important;
+  color: var(--admin-dark-muted) !important;
+}
+
+.admin-shell.admin-theme-dark .admin-red-comercial .admin-action-menu__trigger:hover,
+.admin-shell.admin-theme-dark .admin-red-comercial .admin-action-menu__trigger[aria-expanded='true'] {
+  border-color: #82b494 !important;
+  background: rgba(130, 180, 148, 0.12) !important;
+  color: #b8e0c5 !important;
+}
+
+.admin-shell.admin-theme-dark .admin-action-menu__popover {
+  border-color: var(--admin-dark-border) !important;
+  background: var(--admin-dark-surface-raised) !important;
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.35);
+}
+
+.admin-shell.admin-theme-dark .admin-action-menu__item {
+  color: var(--admin-dark-text);
+}
+
+.admin-shell.admin-theme-dark .admin-action-menu__item:hover,
+.admin-shell.admin-theme-dark .admin-action-menu__item:focus-visible {
+  background: rgba(130, 180, 148, 0.12);
+  color: #b8e0c5;
+}
+
+.admin-shell.admin-theme-dark .admin-action-menu__separator {
+  border-color: var(--admin-dark-border-soft);
+}
+
+/* Existing page-level Tailwind surfaces are normalized only inside the admin. */
+.admin-shell.admin-theme-dark [class~='bg-white'],
+.admin-shell.admin-theme-dark [class~='bg-white/70'],
+.admin-shell.admin-theme-dark [class~='bg-white/75'],
+.admin-shell.admin-theme-dark [class~='bg-white/80'],
+.admin-shell.admin-theme-dark [class~='bg-white/85'],
+.admin-shell.admin-theme-dark [class~='bg-white/95'],
+.admin-shell.admin-theme-dark [class~='bg-white/90'] {
+  background-color: var(--admin-dark-surface-raised) !important;
+}
+
+.admin-shell.admin-theme-dark [class~='bg-slate-50'],
+.admin-shell.admin-theme-dark [class~='bg-stone-50'],
+.admin-shell.admin-theme-dark [class~='bg-[#fbfaf7]'],
+.admin-shell.admin-theme-dark [class~='bg-[#fbfaf6]'] {
+  background-color: #1a2220 !important;
+}
+
+.admin-shell.admin-theme-dark [class~='bg-[#f4f0e8]'],
+.admin-shell.admin-theme-dark [class~='bg-[#f7faf7]'],
+.admin-shell.admin-theme-dark [class~='bg-[#f6f7f5]'],
+.admin-shell.admin-theme-dark [class*='bg-[#f4faf6]'],
+.admin-shell.admin-theme-dark [class*='bg-[#f4f8fb]'],
+.admin-shell.admin-theme-dark [class*='bg-[#fffaf0]'],
+.admin-shell.admin-theme-dark [class*='bg-[#fff8f7]'],
+.admin-shell.admin-theme-dark [class*='bg-[#f4f5f3]'],
+.admin-shell.admin-theme-dark [class*='bg-[#f7fbf8]'] {
+  background-color: var(--admin-dark-background) !important;
+}
+
+.admin-shell.admin-theme-dark .company-workspace-section {
+  border-color: var(--admin-dark-border) !important;
+  background: var(--admin-dark-surface) !important;
+  color: var(--admin-dark-text);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.14) !important;
+}
+
+.admin-shell.admin-theme-dark .company-workspace-section[class*='bg-[#f4faf6]'],
+.admin-shell.admin-theme-dark .company-workspace-section[class*='bg-[#f4f8fb]'],
+.admin-shell.admin-theme-dark .company-workspace-section[class*='bg-[#fffaf0]'],
+.admin-shell.admin-theme-dark .company-workspace-section[class*='bg-[#fff8f7]'],
+.admin-shell.admin-theme-dark .company-workspace-section[class*='bg-[#f4f5f3]'] {
+  background: var(--admin-dark-surface) !important;
+}
+
+.admin-shell.admin-theme-dark .company-workspace-section [class*='border-black'] {
+  border-color: rgba(132, 151, 140, 0.22) !important;
+}
+
+.admin-shell.admin-theme-dark .company-workspace-section [class*='text-[#235b3e]'],
+.admin-shell.admin-theme-dark .admin-red-comercial [class*='text-[#235b3e]'] {
+  color: var(--admin-dark-chip-text) !important;
+}
+
+.admin-shell.admin-theme-dark .company-workspace-section [class*='bg-white/80'],
+.admin-shell.admin-theme-dark .company-workspace-section [class*='bg-white/75'],
+.admin-shell.admin-theme-dark .company-workspace-section [class*='bg-white/70'] {
+  border-color: var(--admin-dark-chip-border) !important;
+  background: var(--admin-dark-chip-bg) !important;
+  color: var(--admin-dark-chip-text) !important;
+}
+
+.admin-shell.admin-theme-dark .company-workspace-section [class*='text-slate-500'],
+.admin-shell.admin-theme-dark .company-workspace-section [class*='text-slate-600'],
+.admin-shell.admin-theme-dark .company-workspace-section [class*='text-slate-700'] {
+  color: var(--admin-dark-muted) !important;
+}
+
+.admin-shell.admin-theme-dark .company-workspace-section [class*='text-amber-800'],
+.admin-shell.admin-theme-dark .company-workspace-section [class*='text-amber-600'],
+.admin-shell.admin-theme-dark .company-workspace-section [class*='text-rose-600'] {
+  color: #e7c77f !important;
+}
+
+.admin-shell.admin-theme-dark [class*='border-[#dbeade]'],
+.admin-shell.admin-theme-dark [class*='border-[#dce7f0]'],
+.admin-shell.admin-theme-dark [class*='border-[#f0e3c4]'],
+.admin-shell.admin-theme-dark [class*='border-[#f0dedd]'],
+.admin-shell.admin-theme-dark [class*='border-[#d9ded9]'],
+.admin-shell.admin-theme-dark [class*='border-[#dfe7e1]'] {
+  border-color: var(--admin-dark-border-soft) !important;
+}
+
+.admin-shell.admin-theme-dark [class~='text-slate-800'],
+.admin-shell.admin-theme-dark [class~='text-slate-700'],
+.admin-shell.admin-theme-dark [class~='text-slate-900'],
+.admin-shell.admin-theme-dark [class~='text-[#17202d]'],
+.admin-shell.admin-theme-dark [class~='text-[#1A1F23]'] {
+  color: var(--admin-dark-text) !important;
+}
+
+.admin-shell.admin-theme-dark [class~='text-slate-500'],
+.admin-shell.admin-theme-dark [class~='text-slate-600'],
+.admin-shell.admin-theme-dark [class~='text-[#64748b]'],
+.admin-shell.admin-theme-dark [class~='text-[#6D7571]'] {
+  color: var(--admin-dark-muted) !important;
+}
+
+.admin-shell.admin-theme-dark [class~='border-[#ddd6ca]'],
+.admin-shell.admin-theme-dark [class~='border-[#c9c1b4]'],
+.admin-shell.admin-theme-dark [class~='border-[#e7eae6]'],
+.admin-shell.admin-theme-dark [class~='border-slate-200'],
+.admin-shell.admin-theme-dark [class~='border-stone-200'] {
+  border-color: var(--admin-dark-border) !important;
+}
+
+.admin-shell.admin-theme-dark [class~='hover:bg-slate-50']:hover,
+.admin-shell.admin-theme-dark [class~='hover:bg-stone-50']:hover,
+.admin-shell.admin-theme-dark [class~='hover:bg-[#fbfaf7]']:hover {
+  background-color: rgba(130, 180, 148, 0.08) !important;
+}
+
+.admin-shell.admin-theme-dark [class*='animate-pulse'] {
+  background-color: #2b3732 !important;
+}
+
+.admin-shell.admin-theme-dark :disabled {
+  color: #74857c !important;
+  border-color: #34433c !important;
+  background-color: #1a211f !important;
+}
+
+.admin-shell.admin-theme-dark button:not(:disabled):not([class*='bg-[#0f241b']):hover,
+.admin-shell.admin-theme-dark a[class*='border']:hover {
+  border-color: #5c8067;
+}
+
+.admin-shell.admin-theme-dark [class*='bg-emerald-50'],
+.admin-shell.admin-theme-dark [class*='bg-green-50'] {
+  background-color: rgba(54, 126, 78, 0.2) !important;
+  color: #b8e0c5 !important;
+}
+
+.admin-shell.admin-theme-dark [class*='bg-amber-50'],
+.admin-shell.admin-theme-dark [class*='bg-yellow-50'] {
+  background-color: rgba(154, 108, 31, 0.2) !important;
+  color: #f1d59a !important;
+}
+
+.admin-shell.admin-theme-dark [class*='bg-rose-50'],
+.admin-shell.admin-theme-dark [class*='bg-red-50'] {
+  background-color: rgba(157, 54, 62, 0.2) !important;
+  color: #f1b4b8 !important;
+}
+
+.admin-shell.admin-theme-dark [class*='bg-sky-50'],
+.admin-shell.admin-theme-dark [class*='bg-blue-50'] {
+  background-color: rgba(47, 105, 153, 0.2) !important;
+  color: #b9d8f2 !important;
+}
+
+.admin-shell.admin-theme-dark [class*='bg-stone-100'],
+.admin-shell.admin-theme-dark [class*='bg-gray-100'],
+.admin-shell.admin-theme-dark [class*='bg-slate-100'] {
+  background-color: #2a3430 !important;
+  color: var(--admin-dark-muted) !important;
+}
+
+.admin-shell.admin-theme-dark [class*='text-emerald-700'],
+.admin-shell.admin-theme-dark [class*='text-green-700'] { color: #a9d5b5 !important; }
+.admin-shell.admin-theme-dark [class*='text-emerald-900'],
+.admin-shell.admin-theme-dark [class*='text-green-900'] { color: #c2e6ca !important; }
+.admin-shell.admin-theme-dark [class*='text-amber-700'],
+.admin-shell.admin-theme-dark [class*='text-yellow-700'] { color: #efd08b !important; }
+.admin-shell.admin-theme-dark [class*='text-amber-800'],
+.admin-shell.admin-theme-dark [class*='text-amber-900'],
+.admin-shell.admin-theme-dark [class*='text-yellow-900'] { color: #f1d59a !important; }
+.admin-shell.admin-theme-dark [class*='text-rose-700'],
+.admin-shell.admin-theme-dark [class*='text-red-700'] { color: #efabb1 !important; }
+.admin-shell.admin-theme-dark [class*='text-rose-800'],
+.admin-shell.admin-theme-dark [class*='text-rose-900'],
+.admin-shell.admin-theme-dark [class*='text-red-900'] { color: #f1b4b8 !important; }
+.admin-shell.admin-theme-dark [class*='text-sky-700'],
+.admin-shell.admin-theme-dark [class*='text-blue-700'] { color: #b3d5ef !important; }
+.admin-shell.admin-theme-dark [class*='text-[#235b3e]'] { color: var(--admin-dark-chip-text) !important; }
+
+.admin-shell.admin-theme-dark [class*='border-emerald-200'],
+.admin-shell.admin-theme-dark [class*='border-green-200'],
+.admin-shell.admin-theme-dark [class*='border-amber-200'],
+.admin-shell.admin-theme-dark [class*='border-yellow-200'],
+.admin-shell.admin-theme-dark [class*='border-rose-200'],
+.admin-shell.admin-theme-dark [class*='border-red-200'],
+.admin-shell.admin-theme-dark [class*='border-sky-200'],
+.admin-shell.admin-theme-dark [class*='border-blue-200'] {
+  border-color: var(--admin-dark-border-soft) !important;
+}
+
+.admin-shell.admin-theme-dark nav[aria-label*='pagin'],
+.admin-shell.admin-theme-dark [class*='pagination'] {
+  border-color: var(--admin-dark-border) !important;
+  background: var(--admin-dark-table-footer) !important;
+  color: var(--admin-dark-muted) !important;
+}
+
+.admin-shell.admin-theme-dark nav[aria-label*='pagin'] button,
+.admin-shell.admin-theme-dark [class*='pagination'] button {
+  border-color: var(--admin-dark-border) !important;
+  background: var(--admin-dark-surface-raised) !important;
+  color: var(--admin-dark-text) !important;
+}
+
+.admin-shell.admin-theme-dark nav[aria-label*='pagin'] button:hover:not(:disabled),
+.admin-shell.admin-theme-dark [class*='pagination'] button:hover:not(:disabled) {
+  background: rgba(130, 180, 148, 0.14) !important;
+  border-color: #628f70 !important;
+}
+
+.admin-shell.admin-theme-dark nav[aria-label*='pagin'] select,
+.admin-shell.admin-theme-dark [class*='pagination'] select {
+  min-height: 32px;
+  border-color: var(--admin-dark-border) !important;
+  background: var(--admin-dark-input) !important;
+  color: var(--admin-dark-text) !important;
+}
+
+.admin-shell.admin-theme-dark ::-webkit-scrollbar {
+  width: 9px;
+  height: 9px;
+}
+
+.admin-shell.admin-theme-dark ::-webkit-scrollbar-track {
+  background: #171e1c;
+}
+
+.admin-shell.admin-theme-dark ::-webkit-scrollbar-thumb {
+  border: 2px solid #171e1c;
+  border-radius: 999px;
+  background: #46564e;
+}
+
+.admin-shell.admin-theme-dark ::-webkit-scrollbar-thumb:hover {
+  background: #5e7668;
+}
+
+.admin-shell.admin-theme-dark * {
+  scrollbar-color: #46564e #171e1c;
+  scrollbar-width: thin;
+}
+
+.admin-shell.admin-theme-dark .admin-red-comercial .admin-page-header h1,
+.admin-shell.admin-theme-dark .admin-red-comercial .admin-company-card strong,
+.admin-shell.admin-theme-dark .admin-red-comercial table tbody td:first-child {
+  font-weight: 650;
+}
+
+.admin-shell.admin-theme-dark .admin-red-comercial .admin-page-header p,
+.admin-shell.admin-theme-dark .admin-red-comercial .admin-company-card dd,
+.admin-shell.admin-theme-dark .admin-red-comercial table tbody td:not(:first-child) {
+  color: var(--admin-dark-muted) !important;
+}
+
+.admin-shell.admin-theme-dark .admin-red-comercial .admin-empty-state,
+.admin-shell.admin-theme-dark .admin-red-comercial [class*='shadow-'] {
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.16) !important;
+}
+
+@media (max-width: 767px) {
+  .admin-shell.admin-theme-dark .admin-theme-toggle {
+    min-height: 32px;
+    min-width: 32px;
+  }
+}
+
 /* Shared visual language for the current Red Comercial application. */
 .admin-red-comercial {
   --admin-card-radius: 0.45rem;

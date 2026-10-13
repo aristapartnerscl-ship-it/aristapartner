@@ -75,6 +75,7 @@ import type {
   RedComercialDashboardData,
   RedComercialCompanyWorkspace,
   RepresentedCompanyServiceRecord,
+  RedComercialSpecialistRequestRecord,
   RepresentedCompanyAccountRecord,
   RepresentedCompanyMaterialRecord,
   RepresentedCompanyFaqRecord,
@@ -462,6 +463,12 @@ function prospectRpcErrorMessage(error: PostgrestError | Error | null) {
   if (message.includes('AP_PROSPECT_HAS_HISTORY')) return 'No puede eliminarse porque tiene historial comercial asociado. Mantén este prospecto archivado.'
   if (message.includes('AP_INVALID_STATUS')) return 'Estado de oportunidad cruzada no valido.'
   if (message.includes('AP_INVALID_DISCARD_REASON')) return 'Selecciona un motivo de descarte valido.'
+  if (message.includes('AP_INVALID_PERCENTAGE_COMPENSATION')) return 'La participacion debe ser un porcentaje entre 0 y 100.'
+  if (message.includes('AP_INVALID_FIXED_COMPENSATION')) return 'Ingresa un monto fijo valido.'
+  if (message.includes('AP_COMPENSATION_REQUIRES_ATTRIBUTION')) return 'La participacion requiere un colaborador atribuido.'
+  if (message.includes('AP_ATTRIBUTED_COLLABORATOR_REQUIRED')) return 'Selecciona un colaborador atribuido para registrar participacion.'
+  if (message.includes('REDCOM_OPPORTUNITY_SERVICE_COMPANY_MISMATCH')) return 'El servicio seleccionado no pertenece a esta Empresa Arista.'
+  if (message.includes('AP_INVALID_ATTRIBUTED_COLLABORATOR')) return 'El colaborador atribuido no pertenece a esta Empresa Arista.'
   if (message.includes('AP_COMPANY_NAME_REQUIRED')) return 'Ingresa la empresa prospecto.'
   return null
 }
@@ -609,6 +616,13 @@ export class SupabaseAdminRepository implements AdminRepository {
     const empty = { summary: { followups_today: 0, followups_overdue: 0, active_prospects: 0, opportunities_in_process: 0, opportunities_arista: 0, payments_pending: 0, won_this_month: 0, commission_pending: 0 }, attention_today: [], upcoming_followups: [], opportunities: [], cross_opportunities: [], recent_results: [], portfolios: [], recent_activity: [] } as RedComercialDashboardData
     if (error) return fail<RedComercialDashboardData>(empty, error, 'red_comercial.dashboard')
     return ok((data ?? empty) as RedComercialDashboardData)
+  }
+
+  async getRedComercialSpecialistRequestDashboard() {
+    const { data, error } = await (this.client as SupabaseClient).rpc('get_red_comercial_specialist_request_dashboard')
+    const empty = { pending_count: 0, requests: [] }
+    if (error) return fail<typeof empty>(empty, error, 'red_comercial.specialist_request.dashboard')
+    return ok((data ?? empty) as typeof empty)
   }
 
   async listRepresentedCompanies() {
@@ -1086,6 +1100,37 @@ export class SupabaseAdminRepository implements AdminRepository {
     if (error) return failProspectRpc<RedComercialProspectPanelRecord | null>(null, error, 'red_comercial.opportunity.update')
     return ok((data ?? null) as RedComercialProspectPanelRecord | null)
   }
+
+  async getRedComercialSpecialistRequest(opportunityId: string) {
+    const { data, error } = await (this.client as SupabaseClient).rpc('get_red_comercial_specialist_request', { p_opportunity_id: opportunityId })
+    if (error) return failProspectRpc<RedComercialSpecialistRequestRecord | null>(null, error, 'red_comercial.specialist_request.get')
+    return ok((data ?? null) as RedComercialSpecialistRequestRecord | null)
+  }
+
+  async createRedComercialSpecialistRequest(opportunityId: string, payload: Record<string, unknown>) {
+    const { data, error } = await (this.client as SupabaseClient).rpc('create_red_comercial_specialist_request', { p_opportunity_id: opportunityId, p_payload: payload })
+    if (error) return failProspectRpc<RedComercialSpecialistRequestRecord | null>(null, error, 'red_comercial.specialist_request.create')
+    return ok((data ?? null) as RedComercialSpecialistRequestRecord | null)
+  }
+
+  async reviewRedComercialSpecialistRequest(requestId: string, action: 'approve' | 'schedule' | 'complete' | 'cancel', scheduledAt?: string, notes?: string) {
+    const { data, error } = await (this.client as SupabaseClient).rpc('review_red_comercial_specialist_request', { p_request_id: requestId, p_action: action, p_scheduled_at: scheduledAt || null, p_notes: notes || null })
+    if (error) return failProspectRpc<RedComercialSpecialistRequestRecord | null>(null, error, 'red_comercial.specialist_request.review')
+    return ok((data ?? null) as RedComercialSpecialistRequestRecord | null)
+  }
+
+  async recordRedComercialSpecialistOutcome(requestId: string, payload: Record<string, unknown>) {
+    const { data, error } = await (this.client as SupabaseClient).rpc('record_red_comercial_specialist_outcome', { p_request_id: requestId, p_payload: payload })
+    if (error) return failProspectRpc<RedComercialSpecialistRequestRecord | null>(null, error, 'red_comercial.specialist_request.outcome')
+    return ok((data ?? null) as RedComercialSpecialistRequestRecord | null)
+  }
+
+  async updateRedComercialCompanyCalendarUrl(companyId: string, url: string) {
+    const { data, error } = await (this.client as SupabaseClient).rpc('update_red_comercial_company_calendar_url', { p_company_id: companyId, p_url: url })
+    if (error) return failProspectRpc<string | null>(null, error, 'red_comercial.company.calendar')
+    return ok((data ?? null) as string | null)
+  }
+
 
   async createRedComercialCrossOpportunity(prospectId: string, targetCompanyId: string, reason: string) {
     const { data, error } = await (this.client as SupabaseClient).rpc('create_red_comercial_cross_opportunity', { p_prospect_id: prospectId, p_target_company_id: targetCompanyId, p_reason: reason })

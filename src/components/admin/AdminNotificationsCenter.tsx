@@ -196,7 +196,7 @@ export function AdminNotificationsCenter() {
                       <div className="mt-3 flex items-center justify-between gap-3">
                         <span className="text-xs font-semibold text-slate-500">{notification.read_at ? 'Leida' : 'No leida'}</span>
                         {safePath && (
-                          <Link className="text-sm font-semibold text-[#235b3e]" to={safePath} onClick={() => setOpen(false)}>
+                          <Link className="text-sm font-semibold text-[#235b3e]" to={safePath} onClick={() => { void markRead(notification); setOpen(false) }}>
                             Ver detalle
                           </Link>
                         )}

@@ -74,6 +74,13 @@ export function RedComercialOpportunitiesPage() {
 
   useEffect(() => { void load() }, [load])
 
+  useEffect(() => {
+    const requestedOpportunityId = searchParams.get('opportunityId')
+    if (!requestedOpportunityId || selected?.row.id === requestedOpportunityId) return
+    const row = rows.find((item) => item.id === requestedOpportunityId)
+    if (row) void openRow(row)
+  }, [rows, searchParams, selected])
+
   function updateFilters(next: Partial<RedComercialOpportunityFilters>) {
     const updated = { ...filters, ...next, page: 1 }
     setFilters(updated)

@@ -1,0 +1,388 @@
+/* Portal-safe dark tokens: detail modals render outside .admin-shell. */
+html[data-admin-theme='dark'] {
+  --admin-dark-background: #141918;
+  --admin-dark-surface: #1c2422;
+  --admin-dark-surface-raised: #252e2b;
+  --admin-dark-input: #171f1d;
+  --admin-dark-border: #3a4742;
+  --admin-dark-border-soft: #303b37;
+  --admin-dark-text: #e8efeb;
+  --admin-dark-muted: #b7c3bd;
+  --admin-dark-subtle: #9baaa2;
+}
+
+/* Final dark-mode refinements shared by all admin screens. */
+.admin-sidebar-header > div:first-child {
+  display: none;
+}
+
+.admin-sidebar nav {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(167, 197, 178, 0.38) transparent;
+}
+
+.admin-sidebar nav::-webkit-scrollbar {
+  width: 6px;
+}
+
+.admin-sidebar nav::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.admin-sidebar nav::-webkit-scrollbar-thumb {
+  border-radius: 999px;
+  background: rgba(167, 197, 178, 0.32);
+}
+
+.admin-sidebar nav::-webkit-scrollbar-thumb:hover {
+  background: rgba(167, 197, 178, 0.52);
+}
+
+.admin-sidebar-flyout {
+  max-height: calc(100vh - 7rem);
+  overflow-y: auto;
+}
+
+.admin-shell.admin-theme-dark .admin-sidebar-flyout {
+  border-color: var(--admin-dark-border) !important;
+  background: #1b2a24 !important;
+}
+
+.admin-shell.admin-theme-dark .admin-sidebar-footer,
+.admin-shell.admin-theme-dark .admin-sidebar-header {
+  border-color: rgba(167, 197, 178, 0.18) !important;
+}
+.admin-shell.admin-theme-dark {
+  --admin-dark-badge-bg: rgba(55, 126, 78, 0.24);
+  --admin-dark-badge-border: rgba(137, 190, 151, 0.38);
+  --admin-dark-badge-text: #c2e6ca;
+  --admin-dark-footer: #171e1c;
+  --admin-dark-footer-control: #202925;
+}
+
+.admin-shell.admin-theme-dark [class*='bg-[#e7f0ea]'],
+.admin-shell.admin-theme-dark [class*='bg-[#eef4ef]'],
+.admin-shell.admin-theme-dark [class*='bg-[#eef7f1]'],
+.admin-shell.admin-theme-dark [class*='bg-[#eef5f1]'] {
+  background: var(--admin-dark-badge-bg) !important;
+  border-color: var(--admin-dark-badge-border) !important;
+}
+
+.admin-shell.admin-theme-dark [class*='text-[#235b3e]'] {
+  color: var(--admin-dark-badge-text) !important;
+}
+
+.admin-shell.admin-theme-dark .company-logo--initials {
+  border-color: rgba(137, 190, 151, 0.38) !important;
+  background: rgba(55, 126, 78, 0.24) !important;
+  color: #c2e6ca !important;
+}
+
+.admin-shell.admin-theme-dark .company-logo--image {
+  border-color: var(--admin-dark-border) !important;
+  background: #202925 !important;
+}
+
+.admin-shell.admin-theme-dark .admin-red-comercial table {
+  background: var(--admin-dark-surface) !important;
+}
+
+.admin-shell.admin-theme-dark .admin-red-comercial [class*='bg-[#fdfcf9]'] {
+  background: var(--admin-dark-footer) !important;
+  color: var(--admin-dark-muted) !important;
+}
+
+.admin-shell.admin-theme-dark .admin-red-comercial [class*='border-[#eee8dd]'],
+.admin-shell.admin-theme-dark .admin-red-comercial [class*='border-[#f1ece3]'] {
+  border-color: var(--admin-dark-border-soft) !important;
+}
+
+.admin-shell.admin-theme-dark .admin-red-comercial table thead,
+.admin-shell.admin-theme-dark .admin-red-comercial table thead tr {
+  background: #1a2220 !important;
+}
+
+.admin-shell.admin-theme-dark .admin-red-comercial table tbody tr {
+  background: transparent !important;
+  border-color: var(--admin-dark-border-soft) !important;
+}
+
+.admin-shell.admin-theme-dark .admin-red-comercial table tbody tr:hover {
+  background: rgba(122, 169, 137, 0.1) !important;
+}
+
+/* Row cells can carry their own light-mode bg/group-hover classes. */
+.admin-shell.admin-theme-dark table tbody tr:hover > td,
+.admin-shell.admin-theme-dark table tbody tr:focus-within > td {
+  background-color: var(--admin-dark-surface-raised) !important;
+}
+
+.admin-shell.admin-theme-dark table tbody tr[aria-selected='true'] > td,
+.admin-shell.admin-theme-dark table tbody tr[data-state='selected'] > td,
+.admin-shell.admin-theme-dark table tbody tr[data-selected='true'] > td {
+  background-color: #294236 !important;
+}
+
+.admin-shell.admin-theme-dark table tbody tr[class*='bg-[#edf6ef]'] > td,
+.admin-shell.admin-theme-dark table tbody tr > td[class*='bg-[#edf6ef]'] {
+  background-color: #294236 !important;
+}
+
+.admin-shell.admin-theme-dark table tbody tr[aria-selected='true']:hover > td,
+.admin-shell.admin-theme-dark table tbody tr[data-state='selected']:hover > td,
+.admin-shell.admin-theme-dark table tbody tr[data-selected='true']:hover > td {
+  background-color: #315543 !important;
+}
+
+.admin-shell.admin-theme-dark .admin-red-comercial table tbody td,
+.admin-shell.admin-theme-dark .admin-red-comercial table thead th {
+  border-color: rgba(79, 98, 88, 0.56) !important;
+}
+
+/* The table footer is the sibling after the horizontal-scroll wrapper. */
+.admin-shell.admin-theme-dark .admin-red-comercial div:has(> div > table) > div:last-child {
+  border-top: 1px solid var(--admin-dark-border-soft) !important;
+  background: var(--admin-dark-footer) !important;
+  color: var(--admin-dark-muted) !important;
+}
+
+.admin-shell.admin-theme-dark .admin-red-comercial div:has(> div > table) > div:last-child select,
+.admin-shell.admin-theme-dark .admin-red-comercial div:has(> div > table) > div:last-child button {
+  border: 1px solid var(--admin-dark-border) !important;
+  background: var(--admin-dark-footer-control) !important;
+  color: var(--admin-dark-text) !important;
+}
+
+.admin-shell.admin-theme-dark .admin-red-comercial div:has(> div > table) > div:last-child button:hover:not(:disabled),
+.admin-shell.admin-theme-dark .admin-red-comercial div:has(> div > table) > div:last-child select:focus {
+  border-color: #5c8067 !important;
+  background: #29362f !important;
+}
+
+.admin-shell.admin-theme-dark .admin-red-comercial div:has(> div > table) > div:last-child span {
+  color: var(--admin-dark-muted) !important;
+}
+
+.admin-shell.admin-theme-dark .admin-red-comercial [class*='bg-emerald-50'],
+.admin-shell.admin-theme-dark .admin-red-comercial [class*='bg-green-50'] {
+  border-color: rgba(137, 190, 151, 0.32) !important;
+  background: var(--admin-dark-badge-bg) !important;
+  color: var(--admin-dark-badge-text) !important;
+}
+
+.admin-shell.admin-theme-dark .admin-red-comercial [class*='bg-amber-50'],
+.admin-shell.admin-theme-dark .admin-red-comercial [class*='bg-yellow-50'] {
+  border-color: rgba(219, 177, 91, 0.34) !important;
+  background: rgba(154, 108, 31, 0.22) !important;
+  color: #f1d59a !important;
+}
+
+.admin-shell.admin-theme-dark .admin-red-comercial [class*='bg-rose-50'],
+.admin-shell.admin-theme-dark .admin-red-comercial [class*='bg-red-50'] {
+  border-color: rgba(220, 122, 130, 0.32) !important;
+  background: rgba(157, 54, 62, 0.22) !important;
+  color: #f1b4b8 !important;
+}
+
+.admin-shell.admin-theme-dark .admin-red-comercial [class*='bg-sky-50'],
+.admin-shell.admin-theme-dark .admin-red-comercial [class*='bg-blue-50'] {
+  border-color: rgba(132, 183, 222, 0.32) !important;
+  background: rgba(47, 105, 153, 0.22) !important;
+  color: #b9d8f2 !important;
+}
+
+.admin-shell.admin-theme-dark .admin-red-comercial [class*='hover:bg-[#eef7f1]']:hover,
+.admin-shell.admin-theme-dark .admin-red-comercial [class*='hover:bg-slate-50']:hover {
+  background: rgba(122, 169, 137, 0.14) !important;
+}
+
+.admin-shell.admin-theme-dark .admin-red-comercial .admin-action-menu__trigger {
+  border-color: var(--admin-dark-border) !important;
+  background: var(--admin-dark-surface-raised) !important;
+  color: var(--admin-dark-muted) !important;
+}
+
+.admin-shell.admin-theme-dark ::-webkit-scrollbar-track {
+  background: #151b19 !important;
+}
+
+.admin-shell.admin-theme-dark ::-webkit-scrollbar-thumb {
+  border-color: #151b19 !important;
+  background: #3a4942 !important;
+}
+
+.admin-shell.admin-theme-dark ::-webkit-scrollbar-thumb:hover {
+  background: #50665a !important;
+}
+
+html[data-admin-theme='dark'] .admin-detail-modal {
+  border-color: var(--admin-dark-border) !important;
+  background-color: var(--admin-dark-surface, #1c2422) !important;
+  color: var(--admin-dark-text);
+  opacity: 1 !important;
+  isolation: isolate;
+  box-shadow: 0 14px 36px rgba(0, 0, 0, 0.38) !important;
+}
+
+html[data-admin-theme='dark'] .admin-detail-modal .admin-modal-header {
+  border-color: var(--admin-dark-border-soft) !important;
+  background-color: var(--admin-dark-surface-raised, #252e2b) !important;
+  opacity: 1 !important;
+}
+
+html[data-admin-theme='dark'] .admin-detail-modal [class~='bg-white'],
+html[data-admin-theme='dark'] .admin-detail-modal [class*='bg-[#fbfaf7]'],
+html[data-admin-theme='dark'] .admin-detail-modal [class*='bg-[#fdfcf9]'] {
+  background: var(--admin-dark-surface-raised) !important;
+}
+
+html[data-admin-theme='dark'] .admin-detail-modal .admin-specialist-context {
+  border-color: var(--admin-dark-border-soft) !important;
+  background: var(--admin-dark-surface-raised) !important;
+  color: var(--admin-dark-muted) !important;
+}
+
+html[data-admin-theme='dark'] .admin-detail-modal .admin-specialist-context strong {
+  color: var(--admin-dark-text) !important;
+}
+
+html[data-admin-theme='dark'] .admin-detail-modal .admin-specialist-context p {
+  color: var(--admin-dark-subtle) !important;
+}
+
+html[data-admin-theme='dark'] .admin-detail-modal [class*='border-slate-200'],
+html[data-admin-theme='dark'] .admin-detail-modal [class*='border-[#eee8dd]'],
+html[data-admin-theme='dark'] .admin-detail-modal [class*='border-[#c9c1b4]'] {
+  border-color: var(--admin-dark-border) !important;
+}
+
+html[data-admin-theme='dark'] .admin-detail-modal input:not([type='checkbox']):not([type='radio']),
+html[data-admin-theme='dark'] .admin-detail-modal select,
+html[data-admin-theme='dark'] .admin-detail-modal textarea {
+  border-color: var(--admin-dark-border) !important;
+  background: var(--admin-dark-input) !important;
+  color: var(--admin-dark-text) !important;
+  color-scheme: dark;
+}
+
+html[data-admin-theme='dark'] .admin-detail-modal input::placeholder,
+html[data-admin-theme='dark'] .admin-detail-modal textarea::placeholder {
+  color: var(--admin-dark-subtle) !important;
+}
+
+html[data-admin-theme='dark'] .admin-detail-modal [class~='text-[#17202d]'],
+html[data-admin-theme='dark'] .admin-detail-modal [class~='text-slate-700'] {
+  color: var(--admin-dark-text) !important;
+}
+
+html[data-admin-theme='dark'] .admin-detail-modal [class~='text-slate-600'],
+html[data-admin-theme='dark'] .admin-detail-modal [class~='text-slate-500'],
+html[data-admin-theme='dark'] .admin-detail-modal [class~='text-slate-400'] {
+  color: var(--admin-dark-muted) !important;
+}
+
+html[data-admin-theme='dark'] .admin-detail-modal button[class*='border'] {
+  border-color: var(--admin-dark-border) !important;
+  color: var(--admin-dark-text) !important;
+}
+
+html[data-admin-theme='dark'] .admin-detail-modal button[class*='border']:hover {
+  background: rgba(122, 169, 137, 0.12) !important;
+  border-color: #5c8067 !important;
+}
+
+html[data-admin-theme='dark'] .admin-detail-modal,
+html[data-admin-theme='dark'] .admin-detail-modal * {
+  scrollbar-color: #3a4942 #151b19;
+  scrollbar-width: thin;
+}
+
+html[data-admin-theme='dark'] .admin-detail-modal::-webkit-scrollbar-track,
+html[data-admin-theme='dark'] .admin-detail-modal *::-webkit-scrollbar-track {
+  background: #151b19 !important;
+}
+
+html[data-admin-theme='dark'] .admin-detail-modal::-webkit-scrollbar-thumb,
+html[data-admin-theme='dark'] .admin-detail-modal *::-webkit-scrollbar-thumb {
+  border: 2px solid #151b19;
+  background: #3a4942 !important;
+}
+
+/* Shared interactive and circular primitives for the dark admin theme. */
+.admin-shell.admin-theme-dark {
+  --admin-dark-row-bg: #1c2422;
+  --admin-dark-row-hover: #26332e;
+  --admin-dark-row-selected: #294236;
+  --admin-dark-row-selected-hover: #315543;
+  --admin-dark-avatar-bg: rgba(55, 126, 78, 0.24);
+  --admin-dark-avatar-border: rgba(137, 190, 151, 0.38);
+  --admin-dark-avatar-text: #c2e6ca;
+  --admin-dark-counter-bg: #2a3430;
+  --admin-dark-counter-border: #43534b;
+  --admin-dark-counter-text: #d5e1da;
+  --admin-dark-counter-active-bg: #315543;
+  --admin-dark-counter-active-text: #e0f0e4;
+}
+
+.admin-shell.admin-theme-dark table tbody tr:hover > td,
+.admin-shell.admin-theme-dark table tbody tr:focus-within > td,
+.admin-shell.admin-theme-dark [class*='hover:bg-[#f7faf7]']:hover,
+.admin-shell.admin-theme-dark [class*='hover:bg-[#faf8f2]']:hover,
+.admin-shell.admin-theme-dark [class*='hover:bg-[#eef7f1]']:hover,
+.admin-shell.admin-theme-dark [class~='hover:bg-white']:hover,
+.admin-shell.admin-theme-dark [class~='hover:bg-slate-50']:hover,
+.admin-shell.admin-theme-dark [class~='hover:bg-stone-50']:hover {
+  background-color: var(--admin-dark-row-hover) !important;
+}
+
+.admin-shell.admin-theme-dark table tbody tr:focus-within {
+  outline: 2px solid rgba(130, 180, 148, 0.45);
+  outline-offset: -2px;
+}
+
+.admin-shell.admin-theme-dark .admin-sidebar [class*='hover:bg-white']:hover {
+  background-color: rgba(202, 224, 211, 0.1) !important;
+}
+
+.admin-shell.admin-theme-dark table tbody tr[aria-selected='true'] > td,
+.admin-shell.admin-theme-dark table tbody tr[data-state='selected'] > td,
+.admin-shell.admin-theme-dark table tbody tr[data-selected='true'] > td,
+.admin-shell.admin-theme-dark table tbody tr[class*='bg-[#edf6ef]'] > td,
+.admin-shell.admin-theme-dark table tbody tr > td[class*='bg-[#edf6ef]'] {
+  background-color: var(--admin-dark-row-selected) !important;
+}
+
+.admin-shell.admin-theme-dark table tbody tr[aria-selected='true']:hover > td,
+.admin-shell.admin-theme-dark table tbody tr[data-state='selected']:hover > td,
+.admin-shell.admin-theme-dark table tbody tr[data-selected='true']:hover > td,
+.admin-shell.admin-theme-dark table tbody tr[class*='bg-[#edf6ef]']:hover > td,
+.admin-shell.admin-theme-dark table tbody tr:hover > td[class*='bg-[#edf6ef]'] {
+  background-color: var(--admin-dark-row-selected-hover) !important;
+}
+
+.admin-shell.admin-theme-dark .admin-user-avatar,
+.admin-shell.admin-theme-dark .company-logo--initials,
+.admin-shell.admin-theme-dark [class~='rounded-full'][class*='bg-[#eef4ef]'] {
+  border-color: var(--admin-dark-avatar-border) !important;
+  background-color: var(--admin-dark-avatar-bg) !important;
+  color: var(--admin-dark-avatar-text) !important;
+}
+
+.admin-shell.admin-theme-dark [class~='rounded-full'] > [class~='rounded-full'] {
+  border: 1px solid var(--admin-dark-counter-border);
+  background-color: var(--admin-dark-counter-bg) !important;
+  color: var(--admin-dark-counter-text) !important;
+}
+
+.admin-shell.admin-theme-dark [class~='rounded-full'][class*='bg-[#e7f0ea]'] > [class~='rounded-full'],
+.admin-shell.admin-theme-dark [class~='rounded-full'][class*='bg-[#c9dfd0]'] > [class~='rounded-full'] {
+  border-color: rgba(173, 218, 185, 0.45);
+  background-color: var(--admin-dark-counter-active-bg) !important;
+  color: var(--admin-dark-counter-active-text) !important;
+}
+
+.admin-shell.admin-theme-dark [class~='rounded-full'][class*='bg-[#c9dfd0]'] {
+  border-color: var(--admin-dark-avatar-border) !important;
+  background-color: var(--admin-dark-counter-active-bg) !important;
+  color: var(--admin-dark-counter-active-text) !important;
+}

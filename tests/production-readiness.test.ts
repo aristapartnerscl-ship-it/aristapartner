@@ -92,12 +92,15 @@ describe('production readiness hardening', () => {
     const publicFiles = listPublicBrowserFiles()
     const oldColors = ['#235B3E', '#17202D', '#FAF8F2', '#EEF5F1']
     const offenders = publicFiles.filter((file) => {
+      if (file === 'src/index.css') return false
       const content = readProjectFile(file).toUpperCase()
       return oldColors.some((color) => content.includes(color))
     })
     const css = readProjectFile('src/index.css')
+    const publicCss = css.replace(/\/\* Admin-only dark theme[\s\S]*?\/\* Shared visual language[\s\S]*?\*\//, '')
 
     expect(offenders).toEqual([])
+    expect(oldColors.some((color) => publicCss.toUpperCase().includes(color))).toBe(false)
     expect(css).toContain('--color-brand: #1E4D3A')
     expect(css).toContain('--color-brand-dark: #16392C')
     expect(css).toContain('--color-graphite: #1A1F23')

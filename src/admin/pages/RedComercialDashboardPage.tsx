@@ -1,16 +1,17 @@
-import { AlertCircle, Building2, CalendarCheck, CheckCircle2, CircleDollarSign, Clock3 } from 'lucide-react'
+import { AlertCircle, Building2, CalendarCheck, CheckCircle2, CircleDollarSign, Clock3, UserRound } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { AdminKpiCard, AdminMetricStrip } from '../../components/admin/AdminVisualSystem'
 import { AdminPageHeader } from '../../components/admin/AdminPageHeader'
 import { CompanyLogo } from '../../components/admin/CompanyLogo'
 import { adminRepository } from '../../repositories'
-import type { RedComercialDashboardData } from '../../types/admin'
+import type { RedComercialDashboardData, RedComercialSpecialistRequestDashboard } from '../../types/admin'
 import { getOpportunityFinancialCue, getOpportunityPresentation } from '../opportunity-status'
 import { isRedComercialAdmin } from '../red-comercial-utils'
 import { useAdminAuth } from '../useAdminAuth'
 
 const emptyData: RedComercialDashboardData = { summary: { followups_today: 0, followups_overdue: 0, active_prospects: 0, opportunities_in_process: 0, opportunities_arista: 0, payments_pending: 0, won_this_month: 0, commission_pending: 0 }, attention_today: [], upcoming_followups: [], opportunities: [], cross_opportunities: [], recent_results: [], portfolios: [], recent_activity: [] }
+const emptySpecialistData: RedComercialSpecialistRequestDashboard = { pending_count: 0, requests: [] }
 const labels: Record<string, string> = { won: 'Ganada', lost: 'Perdida', in_process: 'En proceso', pending: 'Pendiente', signed: 'Firmado', detected: 'Detectada', under_review: 'En revisión', assigned: 'Asignada', collaborator: 'Colaborador', arista: 'Arista', shared: 'Compartida' }
 function label(value: string) { return labels[value] ?? 'Sin definir' }
 function date(value: string | null | undefined) { return value ? new Intl.DateTimeFormat('es-CL', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' }).format(new Date(value)) : 'Sin fecha' }
@@ -36,13 +37,39 @@ export function RedComercialDashboardPage() {
   const admin = isRedComercialAdmin(useAdminAuth().profile)
   const [data, setData] = useState<RedComercialDashboardData>(emptyData)
   const [loading, setLoading] = useState(true)
-  const [error, setError] = useState('')
-  useEffect(() => { let active = true; void adminRepository.getRedComercialDashboard('today').then((result) => { if (!active) return; setData(result.data ?? emptyData); setError(result.error ?? '') }).finally(() => { if (active) setLoading(false) }); return () => { active = false } }, [])
+  const [dashboardError, setDashboardError] = useState('')
+  const [specialistError, setSpecialistError] = useState('')
+  const [specialistData, setSpecialistData] = useState(emptySpecialistData)
+  useEffect(() => {
+    let active = true
+    async function loadDashboard() {
+      const [dashboardResult, specialistResult] = await Promise.allSettled([
+        adminRepository.getRedComercialDashboard('today'),
+        admin ? adminRepository.getRedComercialSpecialistRequestDashboard() : Promise.resolve({ data: emptySpecialistData, error: null }),
+      ])
+      if (!active) return
+      if (dashboardResult.status === 'fulfilled') {
+        setData(dashboardResult.value.data ?? emptyData)
+        setDashboardError(dashboardResult.value.error ?? '')
+      } else {
+        setDashboardError('No fue posible cargar el resumen operativo.')
+      }
+      if (specialistResult.status === 'fulfilled') {
+        setSpecialistData(specialistResult.value.data ?? emptySpecialistData)
+        setSpecialistError(specialistResult.value.error ?? '')
+      } else {
+        setSpecialistError('No fue posible cargar las solicitudes de especialista.')
+      }
+      setLoading(false)
+    }
+    void loadDashboard()
+    return () => { active = false }
+  }, [admin])
   const summary = data.summary
   const activities = groupedActivity(data.recent_activity).slice(0, 8)
   return <div className="grid gap-3">
     <AdminPageHeader eyebrow="RED COMERCIAL / INICIO" title="Red Comercial Arista" text="Resumen operativo de tu actividad comercial." />
-    {error && <div className="rounded-md border border-red-200 bg-red-50 px-3 py-2 text-[12px] text-red-800">No fue posible cargar el dashboard.</div>}
+    {dashboardError && <div className="rounded-md border border-red-200 bg-red-50 px-3 py-2 text-[12px] text-red-800">No fue posible cargar el dashboard.</div>}
     {loading ? <div className="rounded-lg border border-[#ddd6ca] bg-white px-3 py-4 text-[12px] text-slate-500">Cargando resumen operativo...</div> : <>
       <section className="grid grid-cols-2 gap-2 lg:grid-cols-6">
         <AdminKpiCard label={admin ? 'Seguimientos hoy' : 'Mis seguimientos hoy'} value={summary.followups_today} icon={CalendarCheck} tone="process" />
@@ -61,6 +88,7 @@ export function RedComercialDashboardPage() {
           <section className="dashboard-panel dashboard-order-portfolios rounded-lg border border-[#ddd6ca] bg-white p-2.5"><div className="flex items-center justify-between"><h2 className="text-sm font-semibold text-[#17202d]">Carteras</h2><Link to="/admin/prospectos" className="text-[11px] font-semibold text-[#235b3e]">Ver prospectos →</Link></div><div className="mt-2 grid gap-2 sm:grid-cols-2">{data.portfolios.slice(0, 6).map((item) => <Link key={item.id} to={item.href} className="flex min-w-0 items-center gap-2 rounded-md border border-[#eee8dd] p-2 transition hover:border-[#235b3e] hover:bg-[#fbfaf7]"><CompanyLogo company={{ name: item.name, logo_storage_path: item.logo_storage_path }} size="sm" /><span className="min-w-0 flex-1"><strong className="block truncate text-[12px] text-[#17202d]">{item.name}</strong><span className="block text-[11px] text-slate-500">{item.active_prospects} prospectos · {item.overdue} vencidos · {item.opportunities_in_process} oportunidades</span></span></Link>)}</div>{data.portfolios.length === 0 && <Empty text="No hay carteras disponibles." />}</section>
         </div>
         <div className="dashboard-column">
+          {admin && <DashboardSection className="dashboard-order-specialists" title="Solicitudes de especialista" href="/admin/oportunidades" link={specialistError ? 'No disponible' : `${specialistData.pending_count} pendientes`}><div className="grid gap-1.5">{specialistError ? <p className="py-2 text-[12px] text-rose-700">No fue posible cargar las solicitudes pendientes.</p> : specialistData.requests.length === 0 ? <Empty text="No hay solicitudes pendientes." /> : specialistData.requests.slice(0, 5).map((item) => <div key={item.id} className="flex items-center gap-2 border-b border-[#f1ece3] py-1.5 last:border-0"><span className="inline-flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-[#e7f0ea] text-[#235b3e]"><UserRound size={13} /></span><div className="min-w-0 flex-1"><p className="truncate text-[12px] font-semibold text-[#17202d]">{item.prospect_name}</p><p className="truncate text-[11px] text-slate-500">{item.company_name}{item.service_name ? ` · ${item.service_name}` : ''} · {item.requested_by_name || 'Colaborador'}</p></div><Link to={item.href} className="shrink-0 text-[11px] font-semibold text-[#235b3e]">Revisar</Link></div>)}</div></DashboardSection>}
           <DashboardPanel title="Actividad reciente" className="dashboard-order-activity"><div className="max-h-[370px] overflow-y-auto pr-1">{activities.length === 0 ? <Empty text="Sin actividad reciente." /> : <div className="grid gap-1">{activities.map((item) => <div key={item.id} className="flex gap-2 border-b border-[#f1ece3] py-1.5 last:border-0"><span className="mt-0.5 inline-flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-[#e7f0ea] text-[#235b3e]"><Clock3 size={13} /></span><div className="min-w-0"><p className="truncate text-[12px] font-semibold text-[#17202d]">{item.title}</p><p className="text-[11px] text-slate-500">{item.prospect_name} · {item.created_by_name || 'Red Comercial'} · {item.change_count && item.change_count > 1 ? `${item.change_count} cambios · ` : ''}{date(item.created_at)}</p></div></div>)}</div>}</div></DashboardPanel>
           <DashboardSection className="dashboard-order-opportunities" title="Oportunidades en curso" href="/admin/oportunidades" link="Ver oportunidades →">{data.opportunities.length === 0 ? <Empty text="Sin oportunidades recientes." /> : <Rows>{data.opportunities.map((item) => { const cue = getOpportunityFinancialCue(item.payment_status, item.commission_status ?? ''); return <tr key={item.id} className={`border-b border-[#f1ece3] last:border-0 ${cue.rowClassName}`}><td className="px-2 py-1.5 font-semibold"><Link to={item.href}>{item.prospect_name}</Link><div className="text-[11px] font-normal text-slate-500">{item.company_name}</div></td>{admin ? <><td className="px-2 py-1.5">{label(item.control_mode)}</td><td className="px-2 py-1.5"><Badge kind="payment" value={item.payment_status} /></td><td className="px-2 py-1.5"><span className="text-[10px] font-semibold uppercase tracking-wide text-slate-500">Contrato</span><div className="mt-0.5">{getOpportunityPresentation('contract', item.contract_status).label}</div></td></> : <><td className="px-2 py-1.5"><span className="text-[10px] font-semibold uppercase tracking-wide text-slate-500">Pago cliente</span><div className="mt-0.5"><Badge kind="payment" value={item.payment_status} /></div></td><td className="px-2 py-1.5"><span className="text-[10px] font-semibold uppercase tracking-wide text-slate-500">Mi participación</span><div className="mt-0.5">{item.commission_status ? <><Badge kind="commission" value={item.commission_status} />{item.collaborator_compensation_type && <div className="mt-1 text-[10px] font-semibold text-slate-600">{participation(item)}</div>}</> : <span className="text-[10px] font-semibold text-slate-500">Sin información</span>}</div></td><td className="px-2 py-1.5"><span className="text-[10px] font-semibold uppercase tracking-wide text-slate-500">Control</span><div className="mt-0.5">{getOpportunityPresentation('control', item.control_mode).label}</div></td><td className="px-2 py-1.5"><span className="text-[10px] font-semibold uppercase tracking-wide text-slate-500">Contrato</span><div className="mt-0.5">{getOpportunityPresentation('contract', item.contract_status).label}</div></td></>}</tr>})}</Rows>}</DashboardSection>
           <DashboardSection className="dashboard-order-results" title="Resultados recientes" href="/admin/resultados" link="Ver resultados →">{data.recent_results.length === 0 ? <Empty text="Sin cierres recientes." /> : <Rows>{data.recent_results.map((item) => <tr key={item.id} className="border-b border-[#f1ece3] last:border-0"><td className="px-2 py-1.5 font-semibold">{item.prospect_name}<div className="text-[11px] font-normal text-slate-500">{item.company_name}</div></td><td className={`px-2 py-1.5 font-semibold ${item.result_status === 'won' ? 'text-emerald-700' : 'text-rose-700'}`}>{label(item.result_status)}</td><td className="px-2 py-1.5 text-slate-500">{date(item.closed_at)}</td><td className="px-2 py-1.5 text-slate-500">{item.collaborator_name || 'Sin atribución'}</td></tr>)}</Rows>}</DashboardSection>

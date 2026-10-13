@@ -60,9 +60,11 @@ import type {
   RedComercialFollowupMetricsRecord,
   RedComercialHomeData,
   RedComercialDashboardData,
+  RedComercialSpecialistRequestDashboard,
   RedComercialCompanyWorkspace,
   RepresentedCompanyAccountRecord,
   RepresentedCompanyServiceRecord,
+  RedComercialSpecialistRequestRecord,
   RepresentedCompanyFaqRecord,
   RepresentedCompanyMaterialRecord,
   RepresentedCompanyFormValues,
@@ -89,6 +91,7 @@ export type AdminRepository = {
   getCurrentAdminProfile(userId: string): Promise<RepositoryResult<AdminProfile | null>>
   getRedComercialHomeData(): Promise<RepositoryResult<RedComercialHomeData>>
   getRedComercialDashboard(period?: 'today' | 'week'): Promise<RepositoryResult<RedComercialDashboardData>>
+  getRedComercialSpecialistRequestDashboard(): Promise<RepositoryResult<RedComercialSpecialistRequestDashboard>>
   listRepresentedCompanies(): Promise<RepositoryResult<RepresentedCompanyRecord[]>>
   listMyRepresentedCompanies(): Promise<RepositoryResult<RepresentedCompanyRecord[]>>
   getRepresentedCompanyById(id: string): Promise<RepositoryResult<RepresentedCompanyRecord | null>>
@@ -137,6 +140,11 @@ export type AdminRepository = {
   getRedComercialOpportunityPanel(opportunityId: string): Promise<RepositoryResult<RedComercialProspectPanelRecord | null>>
   createRedComercialOpportunity(prospectId: string, payload: Record<string, unknown>): Promise<RepositoryResult<RedComercialProspectPanelRecord | null>>
   updateRedComercialOpportunity(opportunityId: string, payload: Record<string, unknown>): Promise<RepositoryResult<RedComercialProspectPanelRecord | null>>
+  getRedComercialSpecialistRequest(opportunityId: string): Promise<RepositoryResult<RedComercialSpecialistRequestRecord | null>>
+  createRedComercialSpecialistRequest(opportunityId: string, payload: Record<string, unknown>): Promise<RepositoryResult<RedComercialSpecialistRequestRecord | null>>
+  reviewRedComercialSpecialistRequest(requestId: string, action: 'approve' | 'schedule' | 'complete' | 'cancel', scheduledAt?: string, notes?: string): Promise<RepositoryResult<RedComercialSpecialistRequestRecord | null>>
+  recordRedComercialSpecialistOutcome(requestId: string, payload: Record<string, unknown>): Promise<RepositoryResult<RedComercialSpecialistRequestRecord | null>>
+  updateRedComercialCompanyCalendarUrl(companyId: string, url: string): Promise<RepositoryResult<string | null>>
   createRedComercialCrossOpportunity(prospectId: string, targetCompanyId: string, reason: string): Promise<RepositoryResult<RedComercialProspectPanelRecord | null>>
   createRedComercialProspectNote(prospectId: string, body: string): Promise<RepositoryResult<RedComercialProspectPanelRecord | null>>
   updateRedComercialProspectNote(noteId: string, body: string, archived?: boolean): Promise<RepositoryResult<RedComercialProspectPanelRecord | null>>

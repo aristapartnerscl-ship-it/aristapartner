@@ -5,7 +5,7 @@ import { AdminAuthContext, type AdminAuthContextValue } from '../admin-auth-cont
 import type { RedComercialDashboardData } from '../../types/admin'
 import { RedComercialDashboardPage } from './RedComercialDashboardPage'
 
-const mocks = vi.hoisted(() => ({ getRedComercialDashboard: vi.fn() }))
+const mocks = vi.hoisted(() => ({ getRedComercialDashboard: vi.fn(), getRedComercialSpecialistRequestDashboard: vi.fn() }))
 vi.mock('../../repositories', () => ({ adminRepository: mocks }))
 
 const adminAuth: AdminAuthContextValue = {
@@ -58,6 +58,7 @@ describe('RedComercialDashboardPage', () => {
   beforeEach(() => {
     vi.clearAllMocks()
     mocks.getRedComercialDashboard.mockResolvedValue({ data: dashboardData, error: null })
+    mocks.getRedComercialSpecialistRequestDashboard.mockResolvedValue({ data: { pending_count: 0, requests: [] }, error: null })
   })
   afterEach(() => cleanup())
 
@@ -85,6 +86,35 @@ describe('RedComercialDashboardPage', () => {
     renderPage()
     expect(await screen.findByText(/Todo al d/)).toBeInTheDocument()
     expect(screen.getByText('No hay carteras disponibles.')).toBeInTheDocument()
+  })
+
+  test('muestra solicitudes de especialista pendientes sólo en el dashboard admin', async () => {
+    mocks.getRedComercialSpecialistRequestDashboard.mockResolvedValue({
+      data: {
+        pending_count: 1,
+        requests: [{
+          id: 'request-1', opportunity_id: 'opportunity-1', represented_company_id: 'company-1',
+          company_name: 'Centro Psicovinculo', prospect_name: 'Empresa ABC', service_name: 'Capacitaciones',
+          requested_by_name: 'Alonso Gonzalez', status: 'requested', created_at: '2026-10-13T12:00:00Z',
+          scheduled_at: null, href: '/admin/oportunidades?opportunityId=opportunity-1',
+        }],
+      },
+      error: null,
+    })
+    renderPage()
+    expect(await screen.findByText('Solicitudes de especialista')).toBeInTheDocument()
+    expect(screen.getByText('1 pendientes')).toBeInTheDocument()
+    expect(screen.getAllByText('Empresa ABC').length).toBeGreaterThanOrEqual(2)
+    expect(screen.getByRole('link', { name: 'Revisar' })).toHaveAttribute('href', '/admin/oportunidades?opportunityId=opportunity-1')
+  })
+
+  test('un fallo del bloque de especialistas no convierte todo el dashboard en error ni en cero pendientes', async () => {
+    mocks.getRedComercialSpecialistRequestDashboard.mockResolvedValue({ data: { pending_count: 0, requests: [] }, error: 'RPC no disponible' })
+    renderPage()
+    expect(await screen.findByText('Red Comercial Arista')).toBeInTheDocument()
+    expect(screen.queryByText('No fue posible cargar el dashboard.')).not.toBeInTheDocument()
+    expect(screen.getByText('No fue posible cargar las solicitudes pendientes.')).toBeInTheDocument()
+    expect(screen.queryByText('0 pendientes')).not.toBeInTheDocument()
   })
 
   test('muestra pago cliente y participacion propia en oportunidades del collaborator', async () => {

@@ -217,6 +217,48 @@ export type RepresentedCompanyAccountRecord = {
   updated_at: string
 }
 
+export type RedComercialSpecialistRequestStatus = 'requested' | 'approved' | 'scheduled' | 'completed' | 'cancelled'
+
+export type RedComercialSpecialistRequestRecord = {
+  id: string
+  opportunity_id: string
+  represented_company_id: string
+  represented_company_service_id: string | null
+  requested_by: string
+  status: RedComercialSpecialistRequestStatus
+  need_summary: string | null
+  conversation_summary: string | null
+  client_expectation: string | null
+  missing_information: string | null
+  proposed_date: string | null
+  notes: string | null
+  reviewed_by: string | null
+  reviewed_at: string | null
+  scheduled_at: string | null
+  completed_at: string | null
+  cancelled_at: string | null
+  meeting_summary: string | null
+  meeting_outcome: RedComercialSpecialistMeetingOutcome | null
+  next_action: string | null
+  next_followup_at: string | null
+  outcome_recorded_at: string | null
+  outcome_recorded_by: string | null
+  followup_activity_id: string | null
+  created_at: string
+  updated_at: string
+  technical_calendar_url?: string | null
+  can_review?: boolean
+}
+
+export type RedComercialSpecialistMeetingOutcome =
+  | 'continue_process'
+  | 'send_proposal'
+  | 'pending_information'
+  | 'follow_up'
+  | 'waiting_client'
+  | 'no_immediate_fit'
+  | 'other'
+
 export type RepresentedCompanyServiceRecord = {
   id: string
   represented_company_id: string
@@ -291,6 +333,22 @@ export type RedComercialDashboardData = {
   recent_results: Array<{ id: string; prospect_id: string; prospect_name: string; company_id: string; company_name: string; result_status: string; payment_status: string; collaborator_name: string | null; closed_at: string; href: string }>
   portfolios: Array<{ id: string; name: string; logo_storage_path: string | null; active_prospects: number; overdue: number; opportunities_in_process: number; href: string }>
   recent_activity: Array<{ id: string; title: string; activity_type: string; created_by_name: string | null; created_at: string; prospect_name: string }>
+}
+export type RedComercialSpecialistRequestDashboard = {
+  pending_count: number
+  requests: Array<{
+    id: string
+    opportunity_id: string
+    represented_company_id: string
+    company_name: string
+    prospect_name: string
+    service_name: string | null
+    requested_by_name: string | null
+    status: 'requested'
+    created_at: string
+    scheduled_at: string | null
+    href: string
+  }>
 }
 
 export type RedComercialProspectListItem = RedComercialProspectListRow
