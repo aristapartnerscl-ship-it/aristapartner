@@ -5,13 +5,14 @@ import { AdminKpiCard, AdminMetricStrip } from '../../components/admin/AdminVisu
 import { AdminPageHeader } from '../../components/admin/AdminPageHeader'
 import { CompanyLogo } from '../../components/admin/CompanyLogo'
 import { adminRepository } from '../../repositories'
-import type { RedComercialDashboardData, RedComercialSpecialistRequestDashboard } from '../../types/admin'
+import type { RedComercialControlSummary, RedComercialDashboardData, RedComercialSpecialistRequestDashboard } from '../../types/admin'
 import { getOpportunityFinancialCue, getOpportunityPresentation } from '../opportunity-status'
 import { isRedComercialAdmin } from '../red-comercial-utils'
 import { useAdminAuth } from '../useAdminAuth'
 
 const emptyData: RedComercialDashboardData = { summary: { followups_today: 0, followups_overdue: 0, active_prospects: 0, opportunities_in_process: 0, opportunities_arista: 0, payments_pending: 0, won_this_month: 0, commission_pending: 0 }, attention_today: [], upcoming_followups: [], opportunities: [], cross_opportunities: [], recent_results: [], portfolios: [], recent_activity: [] }
 const emptySpecialistData: RedComercialSpecialistRequestDashboard = { pending_count: 0, requests: [] }
+const emptyControlSummary: RedComercialControlSummary = { followups_today: 0, followups_overdue: 0, followups_no_movement: 0, active_prospects: 0, open_opportunities: 0, specialist_requested: 0, economic_pending: 0, won_by_currency: {}, arista_commission_pending_by_currency: {}, arista_commission_pending_count: 0 }
 const labels: Record<string, string> = { won: 'Ganada', lost: 'Perdida', in_process: 'En proceso', pending: 'Pendiente', signed: 'Firmado', detected: 'Detectada', under_review: 'En revisión', assigned: 'Asignada', collaborator: 'Colaborador', arista: 'Arista', shared: 'Compartida' }
 function label(value: string) { return labels[value] ?? 'Sin definir' }
 function date(value: string | null | undefined) { return value ? new Intl.DateTimeFormat('es-CL', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' }).format(new Date(value)) : 'Sin fecha' }
@@ -40,12 +41,15 @@ export function RedComercialDashboardPage() {
   const [dashboardError, setDashboardError] = useState('')
   const [specialistError, setSpecialistError] = useState('')
   const [specialistData, setSpecialistData] = useState(emptySpecialistData)
+  const [controlSummary, setControlSummary] = useState(emptyControlSummary)
+  const [controlError, setControlError] = useState('')
   useEffect(() => {
     let active = true
     async function loadDashboard() {
-      const [dashboardResult, specialistResult] = await Promise.allSettled([
+      const [dashboardResult, specialistResult, controlResult] = await Promise.allSettled([
         adminRepository.getRedComercialDashboard('today'),
         admin ? adminRepository.getRedComercialSpecialistRequestDashboard() : Promise.resolve({ data: emptySpecialistData, error: null }),
+        typeof adminRepository.getRedComercialControlSummary === 'function' ? adminRepository.getRedComercialControlSummary('month') : Promise.resolve({ data: emptyControlSummary, error: null }),
       ])
       if (!active) return
       if (dashboardResult.status === 'fulfilled') {
@@ -59,6 +63,12 @@ export function RedComercialDashboardPage() {
         setSpecialistError(specialistResult.value.error ?? '')
       } else {
         setSpecialistError('No fue posible cargar las solicitudes de especialista.')
+      }
+      if (controlResult.status === 'fulfilled') {
+        setControlSummary(controlResult.value.data ?? emptyControlSummary)
+        setControlError(controlResult.value.error ?? '')
+      } else {
+        setControlError('No fue posible cargar las prioridades operativas.')
       }
       setLoading(false)
     }
@@ -76,9 +86,17 @@ export function RedComercialDashboardPage() {
         <AdminKpiCard label={admin ? 'Seguimientos vencidos' : 'Mis vencidos'} value={summary.followups_overdue} icon={AlertCircle} tone="negative" />
         <AdminKpiCard label={admin ? 'Oportunidades en proceso' : 'Mis oportunidades en proceso'} value={summary.opportunities_in_process} icon={Clock3} tone="process" />
         <AdminKpiCard label={admin ? 'Gestión entregada a Arista' : 'Entregadas a Arista'} value={summary.opportunities_arista} icon={Building2} tone="neutral" />
-        <AdminKpiCard label={admin ? 'Pagos pendientes' : 'Participaciones pendientes'} value={admin ? summary.payments_pending : summary.commission_pending} icon={CircleDollarSign} tone="pending" />
+        <AdminKpiCard label={admin ? 'Pago cliente pendiente' : 'Participaciones pendientes'} value={admin ? summary.payments_pending : summary.commission_pending} icon={CircleDollarSign} tone="pending" />
         <AdminKpiCard label={admin ? 'Ganadas este mes' : 'Prospectos activos'} value={admin ? summary.won_this_month : summary.active_prospects} icon={CheckCircle2} tone="positive" />
       </section>
+      <DashboardSection title="Prioridades" href="/admin/seguimientos" link="Ver operación →"><div className="grid gap-1.5 sm:grid-cols-2 lg:grid-cols-5">
+        <PriorityLink label="Seguimientos vencidos" value={controlSummary.followups_overdue} href="/admin/seguimientos?view=overdue" />
+        <PriorityLink label="Seguimientos hoy" value={controlSummary.followups_today} href="/admin/seguimientos?view=today" />
+        {admin && <PriorityLink label="Solicitudes especialista" value={controlSummary.specialist_requested} href="/admin/oportunidades" />}
+        <PriorityLink label="Sin movimiento" value={controlSummary.followups_no_movement} href="/admin/seguimientos?view=no_movement" />
+        {admin && <PriorityLink label="Economía pendiente" value={controlSummary.economic_pending} href="/admin/resultados?result=won&economy=pending" />}
+        {admin && <PriorityLink label="Comisiones por cobrar" value={controlSummary.arista_commission_pending_count} href="/admin/resultados?commission=arista_pending" />}
+      </div>{controlError && <p className="mt-2 text-[11px] text-rose-700">No fue posible cargar algunas prioridades.</p>}</DashboardSection>
       <AdminMetricStrip><span>Atención prioritaria <strong className="text-slate-900">{data.attention_today.length}</strong></span><span>Próximos seguimientos <strong className="text-slate-900">{data.upcoming_followups.length}</strong></span><span>Oportunidades cruzadas <strong className="text-slate-900">{data.cross_opportunities.length}</strong></span><span>Actividad reciente <strong className="text-slate-900">{activities.length}</strong></span></AdminMetricStrip>
       <div className="dashboard-columns">
         <div className="dashboard-column">
@@ -100,3 +118,4 @@ export function RedComercialDashboardPage() {
 
 function DashboardPanel({ title, className = '', children }: { title: string; className?: string; children: React.ReactNode }) { return <section className={`dashboard-panel admin-section-surface ${className}`}><h2 className="text-[13px] font-semibold text-[#17202d]">{title}</h2>{children}</section> }
 function DashboardSection({ title, href, link, className = '', children }: { title: string; href: string; link: string; className?: string; children: React.ReactNode }) { return <section className={`dashboard-panel admin-section-surface ${className}`}><div className="flex items-center justify-between gap-2"><h2 className="text-[13px] font-semibold text-[#17202d]">{title}</h2><Link to={href} className="text-[10px] font-semibold text-[#235b3e]">{link}</Link></div>{children}</section> }
+function PriorityLink({ label, value, href }: { label: string; value: number; href: string }) { return <Link to={href} className="flex items-center justify-between rounded-md border border-[#eee8dd] px-2 py-1.5 text-[11px] transition hover:border-[#235b3e]"><span className="text-slate-600">{label}</span><strong className="text-[#17202d]">{value}</strong></Link> }

@@ -59,6 +59,7 @@ import type {
   RedComercialProspectMetricsRecord,
   RedComercialProspectPanelRecord,
   RedComercialOpportunityFilters,
+  RedComercialOpportunityEconomics,
   RedComercialOpportunityListItem,
   RedComercialOpportunityMetricsRecord,
   RedComercialCrossOpportunityFilters,
@@ -73,6 +74,7 @@ import type {
   RepositoryResult,
   RedComercialHomeData,
   RedComercialDashboardData,
+  RedComercialControlSummary,
   RedComercialCompanyWorkspace,
   RepresentedCompanyServiceRecord,
   RedComercialSpecialistRequestRecord,
@@ -618,6 +620,13 @@ export class SupabaseAdminRepository implements AdminRepository {
     return ok((data ?? empty) as RedComercialDashboardData)
   }
 
+  async getRedComercialControlSummary(period: 'month' | 'quarter' | 'year' = 'month') {
+    const { data, error } = await (this.client as SupabaseClient).rpc('get_red_comercial_control_summary', { p_period: period })
+    const empty: RedComercialControlSummary = { followups_today: 0, followups_overdue: 0, followups_no_movement: 0, active_prospects: 0, open_opportunities: 0, specialist_requested: 0, economic_pending: 0, won_by_currency: {}, arista_commission_pending_by_currency: {}, arista_commission_pending_count: 0 }
+    if (error) return fail<RedComercialControlSummary>(empty, error, 'red_comercial.control.summary')
+    return ok((data ?? empty) as RedComercialControlSummary)
+  }
+
   async getRedComercialSpecialistRequestDashboard() {
     const { data, error } = await (this.client as SupabaseClient).rpc('get_red_comercial_specialist_request_dashboard')
     const empty = { pending_count: 0, requests: [] }
@@ -1038,6 +1047,18 @@ export class SupabaseAdminRepository implements AdminRepository {
     return ok((data ?? null) as RedComercialProspectPanelRecord | null)
   }
 
+  async getRedComercialOpportunityEconomics(opportunityId: string) {
+    const { data, error } = await (this.client as SupabaseClient).rpc('get_red_comercial_opportunity_economics', { p_opportunity_id: opportunityId })
+    if (error) return fail<RedComercialOpportunityEconomics | null>(null, error, 'red_comercial.opportunity.economics.get')
+    return ok((data ?? null) as RedComercialOpportunityEconomics | null)
+  }
+
+  async updateRedComercialOpportunityEconomics(opportunityId: string, payload: Record<string, unknown>) {
+    const { data, error } = await (this.client as SupabaseClient).rpc('update_red_comercial_opportunity_economics', { p_opportunity_id: opportunityId, p_payload: payload })
+    if (error) return fail<RedComercialOpportunityEconomics | null>(null, error, 'red_comercial.opportunity.economics.update')
+    return ok((data ?? null) as RedComercialOpportunityEconomics | null)
+  }
+
   async createRedComercialOpportunity(prospectId: string, payload: Record<string, unknown>) {
     const { data, error } = await (this.client as SupabaseClient).rpc('create_red_comercial_opportunity', { p_prospect_id: prospectId, p_payload: payload })
     if (error) return failProspectRpc<RedComercialProspectPanelRecord | null>(null, error, 'red_comercial.opportunity.create')
@@ -1079,7 +1100,7 @@ export class SupabaseAdminRepository implements AdminRepository {
   }
 
   async getRedComercialResults(filters: RedComercialResultsFilters = {}) {
-    const { data, error } = await (this.client as SupabaseClient).rpc('get_red_comercial_results', {
+    const { data, error } = await (this.client as SupabaseClient).rpc('get_red_comercial_results_breakdown', {
       p_from: filters.from || null,
       p_to: filters.to || null,
       p_company_id: filters.companyId || null,
@@ -1088,8 +1109,6 @@ export class SupabaseAdminRepository implements AdminRepository {
       p_payment_status: filters.paymentStatus || null,
       p_control_mode: filters.controlMode || null,
       p_search: filters.search || null,
-      p_limit: filters.pageSize ?? 25,
-      p_offset: Math.max(0, (filters.page ?? 1) - 1) * (filters.pageSize ?? 25),
     })
     if (error) return failProspectRpc<RedComercialResultsData>({ summary: { closures: 0, won: 0, lost: 0, cancelled: 0, in_process: 0, paid: 0, payment_pending: 0, commission_pending: 0, close_rate: null, avg_close_days: null }, volume_by_currency: {}, companies: [], collaborators: [], closures: [], total_closures: 0 }, error, 'red_comercial.results')
     return ok((data ?? { summary: {}, volume_by_currency: {}, companies: [], collaborators: [], closures: [], total_closures: 0 }) as RedComercialResultsData)

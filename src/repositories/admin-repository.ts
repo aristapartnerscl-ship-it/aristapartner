@@ -48,6 +48,7 @@ import type {
   RedComercialProspectMetricsRecord,
   RedComercialProspectPanelRecord,
   RedComercialOpportunityFilters,
+  RedComercialOpportunityEconomics,
   RedComercialOpportunityListItem,
   RedComercialOpportunityMetricsRecord,
   RedComercialCrossOpportunityFilters,
@@ -91,6 +92,7 @@ export type AdminRepository = {
   getCurrentAdminProfile(userId: string): Promise<RepositoryResult<AdminProfile | null>>
   getRedComercialHomeData(): Promise<RepositoryResult<RedComercialHomeData>>
   getRedComercialDashboard(period?: 'today' | 'week'): Promise<RepositoryResult<RedComercialDashboardData>>
+  getRedComercialControlSummary(period?: 'month' | 'quarter' | 'year'): Promise<RepositoryResult<import('../types/admin').RedComercialControlSummary>>
   getRedComercialSpecialistRequestDashboard(): Promise<RepositoryResult<RedComercialSpecialistRequestDashboard>>
   listRepresentedCompanies(): Promise<RepositoryResult<RepresentedCompanyRecord[]>>
   listMyRepresentedCompanies(): Promise<RepositoryResult<RepresentedCompanyRecord[]>>
@@ -138,6 +140,8 @@ export type AdminRepository = {
   getRedComercialProspectDetail(id: string): Promise<RepositoryResult<RedComercialProspectDetailRecord | null>>
   getRedComercialProspectPanel(id: string): Promise<RepositoryResult<RedComercialProspectPanelRecord | null>>
   getRedComercialOpportunityPanel(opportunityId: string): Promise<RepositoryResult<RedComercialProspectPanelRecord | null>>
+  getRedComercialOpportunityEconomics(opportunityId: string): Promise<RepositoryResult<RedComercialOpportunityEconomics | null>>
+  updateRedComercialOpportunityEconomics(opportunityId: string, payload: Record<string, unknown>): Promise<RepositoryResult<RedComercialOpportunityEconomics | null>>
   createRedComercialOpportunity(prospectId: string, payload: Record<string, unknown>): Promise<RepositoryResult<RedComercialProspectPanelRecord | null>>
   updateRedComercialOpportunity(opportunityId: string, payload: Record<string, unknown>): Promise<RepositoryResult<RedComercialProspectPanelRecord | null>>
   closeRedComercialOpportunity(opportunityId: string, payload: Record<string, unknown>): Promise<RepositoryResult<RedComercialProspectPanelRecord | null>>

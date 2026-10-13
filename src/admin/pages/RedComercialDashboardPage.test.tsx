@@ -65,7 +65,7 @@ describe('RedComercialDashboardPage', () => {
   test('admin carga KPIs, atencion, carteras y deep links desde una consulta consolidada', async () => {
     renderPage()
     expect(await screen.findByText('Red Comercial Arista')).toBeInTheDocument()
-    expect(screen.getByText('Seguimientos hoy')).toBeInTheDocument()
+    expect(screen.getAllByText('Seguimientos hoy').length).toBeGreaterThanOrEqual(1)
     expect(screen.getAllByText(/Atenci/).length).toBeGreaterThan(0)
     expect(screen.getByText('Empresa ABC')).toBeInTheDocument()
     expect(screen.getByRole('link', { name: /Centro Psicovinculo/i })).toHaveAttribute('href', '/admin/prospectos?company=company-1')

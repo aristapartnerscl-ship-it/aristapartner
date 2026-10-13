@@ -334,6 +334,18 @@ export type RedComercialDashboardData = {
   portfolios: Array<{ id: string; name: string; logo_storage_path: string | null; active_prospects: number; overdue: number; opportunities_in_process: number; href: string }>
   recent_activity: Array<{ id: string; title: string; activity_type: string; created_by_name: string | null; created_at: string; prospect_name: string }>
 }
+export type RedComercialControlSummary = {
+  followups_today: number
+  followups_overdue: number
+  followups_no_movement: number
+  active_prospects: number
+  open_opportunities: number
+  specialist_requested: number
+  economic_pending: number
+  won_by_currency: Record<string, number>
+  arista_commission_pending_by_currency: Record<string, number>
+  arista_commission_pending_count: number
+}
 export type RedComercialSpecialistRequestDashboard = {
   pending_count: number
   requests: Array<{
@@ -356,6 +368,30 @@ export type RedComercialProspectDetailRecord = RedComercialProspectDetail
 export type RedComercialProspectMetricsRecord = RedComercialProspectMetrics
 export type RedComercialProspectPanelRecord = RedComercialProspectPanel
 export type RedComercialOpportunityRecord = RedComercialOpportunity
+export type RedComercialOpportunityEconomics = {
+  opportunity_id: string
+  sale_net_amount?: number | null
+  currency: string
+  arista_commission_type?: 'percentage' | 'fixed_amount' | null
+  arista_commission_rate?: number | null
+  arista_commission_fixed_amount?: number | null
+  arista_commission_net_amount?: number | null
+  commission_tax_mode?: 'taxable' | 'exempt' | 'not_applicable' | null
+  commission_tax_rate?: number | null
+  commission_tax_amount?: number | null
+  commission_total_amount?: number | null
+  arista_commission_status?: 'pending' | 'invoiced' | 'paid' | 'cancelled' | null
+  collaborator_compensation_type?: 'percentage' | 'fixed_amount' | null
+  collaborator_compensation_rate?: number | null
+  collaborator_compensation_base?: 'arista_commission' | 'sale_net_amount' | null
+  collaborator_commission_amount?: number | null
+  economic_source?: 'agreement' | 'manual' | null
+  economic_override_note?: string | null
+  economic_updated_by?: string | null
+  economic_updated_at?: string | null
+  commission_status?: string | null
+  collaborator_commission_paid_at?: string | null
+}
 export type RedComercialOpportunityListItem = RedComercialOpportunityListRow
 export type RedComercialOpportunityMetricsRecord = RedComercialOpportunityMetrics
 export type RedComercialCrossOpportunityRecord = RedComercialCrossOpportunity
@@ -434,6 +470,24 @@ export type RedComercialResultsData = {
   collaborators: RedComercialResultsCollaborator[]
   closures: RedComercialClosure[]
   total_closures: number
+  economic_summary?: {
+    arista_commission_net_by_currency: Record<string, number>
+    arista_commission_pending_by_currency: Record<string, number>
+    collaborator_amount_by_currency: Record<string, number>
+    arista_result_by_currency: Record<string, number>
+  }
+  economic_closures?: Array<{
+    opportunity_id: string
+    arista_commission_net_amount: number | null
+    commission_total_amount: number | null
+    arista_commission_status: string | null
+    collaborator_compensation_base: string | null
+    collaborator_commission_amount: number | null
+    currency: string
+  }>
+  loss_reasons?: Array<{ reason: string; count: number }>
+  services?: Array<{ service_id: string | null; service_name: string | null; won: number; value_by_currency: Record<string, number> }>
+  economic_pending_by_currency?: Array<{ currency: string; count: number }>
 }
 export type RedComercialProspectNoteRecord = RedComercialProspectNote
 export type RedComercialProspectFileRecord = RedComercialProspectFile

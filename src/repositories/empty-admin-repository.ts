@@ -27,6 +27,7 @@ export const emptyAdminRepository: AdminRepository = {
     return { data: { representedCompanies: 0, activeCollaborators: 0, activeMemberships: 0, myMemberships: [], myCompanies: [] }, error: null }
   },
   async getRedComercialDashboard() { return { data: { summary: { followups_today: 0, followups_overdue: 0, active_prospects: 0, opportunities_in_process: 0, opportunities_arista: 0, payments_pending: 0, won_this_month: 0, commission_pending: 0 }, attention_today: [], upcoming_followups: [], opportunities: [], cross_opportunities: [], recent_results: [], portfolios: [], recent_activity: [] }, error: null } },
+  async getRedComercialControlSummary() { return { data: { followups_today: 0, followups_overdue: 0, followups_no_movement: 0, active_prospects: 0, open_opportunities: 0, specialist_requested: 0, economic_pending: 0, won_by_currency: {}, arista_commission_pending_by_currency: {}, arista_commission_pending_count: 0 }, error: null } },
   async getRedComercialSpecialistRequestDashboard() { return { data: { pending_count: 0, requests: [] }, error: null } },
   async listRepresentedCompanies() {
     return { data: [], error: null }
@@ -138,6 +139,8 @@ export const emptyAdminRepository: AdminRepository = {
   },
   async getRedComercialProspectPanel() { return { data: null, error: null } },
   async getRedComercialOpportunityPanel() { return { data: null, error: null } },
+  async getRedComercialOpportunityEconomics() { return { data: null, error: null } },
+  async updateRedComercialOpportunityEconomics() { return { data: null, error: 'La conexión del panel administrativo aún no está disponible.', errorKind: 'auth' as const } },
   async createRedComercialOpportunity() { return { data: null, error: 'La conexión del panel administrativo aún no está disponible.', errorKind: 'auth' as const } },
   async updateRedComercialOpportunity() { return { data: null, error: 'La conexión del panel administrativo aún no está disponible.', errorKind: 'auth' as const } },
   async closeRedComercialOpportunity() { return { data: null, error: 'La conexión del panel administrativo aún no está disponible.', errorKind: 'auth' as const } },
