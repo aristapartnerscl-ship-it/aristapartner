@@ -390,6 +390,8 @@ export type RedComercialOpportunity = {
   payment_status: string
   commission_status: string
   result_status: 'in_process' | 'won' | 'lost' | 'cancelled'
+  loss_reason?: string | null
+  closing_notes?: string | null
   attributed_collaborator_id: string | null
   attributed_collaborator_name?: string | null
   collaborator_compensation_type: 'percentage' | 'fixed_amount' | null

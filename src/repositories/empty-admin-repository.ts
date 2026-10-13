@@ -140,6 +140,7 @@ export const emptyAdminRepository: AdminRepository = {
   async getRedComercialOpportunityPanel() { return { data: null, error: null } },
   async createRedComercialOpportunity() { return { data: null, error: 'La conexión del panel administrativo aún no está disponible.', errorKind: 'auth' as const } },
   async updateRedComercialOpportunity() { return { data: null, error: 'La conexión del panel administrativo aún no está disponible.', errorKind: 'auth' as const } },
+  async closeRedComercialOpportunity() { return { data: null, error: 'La conexión del panel administrativo aún no está disponible.', errorKind: 'auth' as const } },
   async getRedComercialSpecialistRequest() { return { data: null, error: null } },
   async createRedComercialSpecialistRequest() { return { data: null, error: 'La conexión del panel administrativo aún no está disponible.', errorKind: 'auth' as const } },
   async reviewRedComercialSpecialistRequest() { return { data: null, error: 'La conexión del panel administrativo aún no está disponible.', errorKind: 'auth' as const } },

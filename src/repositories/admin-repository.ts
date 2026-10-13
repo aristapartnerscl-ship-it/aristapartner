@@ -140,6 +140,7 @@ export type AdminRepository = {
   getRedComercialOpportunityPanel(opportunityId: string): Promise<RepositoryResult<RedComercialProspectPanelRecord | null>>
   createRedComercialOpportunity(prospectId: string, payload: Record<string, unknown>): Promise<RepositoryResult<RedComercialProspectPanelRecord | null>>
   updateRedComercialOpportunity(opportunityId: string, payload: Record<string, unknown>): Promise<RepositoryResult<RedComercialProspectPanelRecord | null>>
+  closeRedComercialOpportunity(opportunityId: string, payload: Record<string, unknown>): Promise<RepositoryResult<RedComercialProspectPanelRecord | null>>
   getRedComercialSpecialistRequest(opportunityId: string): Promise<RepositoryResult<RedComercialSpecialistRequestRecord | null>>
   createRedComercialSpecialistRequest(opportunityId: string, payload: Record<string, unknown>): Promise<RepositoryResult<RedComercialSpecialistRequestRecord | null>>
   reviewRedComercialSpecialistRequest(requestId: string, action: 'approve' | 'schedule' | 'complete' | 'cancel', scheduledAt?: string, notes?: string): Promise<RepositoryResult<RedComercialSpecialistRequestRecord | null>>

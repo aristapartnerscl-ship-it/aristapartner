@@ -1101,6 +1101,12 @@ export class SupabaseAdminRepository implements AdminRepository {
     return ok((data ?? null) as RedComercialProspectPanelRecord | null)
   }
 
+  async closeRedComercialOpportunity(opportunityId: string, payload: Record<string, unknown>) {
+    const { data, error } = await (this.client as SupabaseClient).rpc('close_red_comercial_opportunity', { p_opportunity_id: opportunityId, p_payload: payload })
+    if (error) return failProspectRpc<RedComercialProspectPanelRecord | null>(null, error, 'red_comercial.opportunity.close')
+    return ok((data ?? null) as RedComercialProspectPanelRecord | null)
+  }
+
   async getRedComercialSpecialistRequest(opportunityId: string) {
     const { data, error } = await (this.client as SupabaseClient).rpc('get_red_comercial_specialist_request', { p_opportunity_id: opportunityId })
     if (error) return failProspectRpc<RedComercialSpecialistRequestRecord | null>(null, error, 'red_comercial.specialist_request.get')
