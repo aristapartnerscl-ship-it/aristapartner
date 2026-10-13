@@ -24,6 +24,119 @@
   --color-dark-text-muted: rgba(255, 255, 255, 0.76);
 }
 
+/* Admin-only auth surfaces reuse the saved theme without affecting the public site. */
+.admin-auth-screen.admin-auth-theme-dark {
+  background: #141918 !important;
+  color: #e8efeb;
+  color-scheme: dark;
+}
+
+.admin-auth-screen.admin-auth-theme-dark .admin-auth-card {
+  border-color: #3a4742 !important;
+  background: #1c2422 !important;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.22) !important;
+}
+
+.admin-auth-screen.admin-auth-theme-dark .admin-auth-eyebrow,
+.admin-auth-screen.admin-auth-theme-dark .admin-auth-link {
+  color: #b9dfc3 !important;
+}
+
+.admin-auth-screen.admin-auth-theme-dark .admin-auth-title,
+.admin-auth-screen.admin-auth-theme-dark .admin-auth-label {
+  color: #e8efeb !important;
+}
+
+.admin-auth-screen.admin-auth-theme-dark .admin-auth-description {
+  color: #b7c3bd !important;
+}
+
+.admin-auth-screen.admin-auth-theme-dark .admin-auth-card h1,
+.admin-auth-screen.admin-auth-theme-dark .admin-auth-title {
+  color: #e8efeb !important;
+}
+
+.admin-auth-screen.admin-auth-theme-dark .admin-auth-card [class~='text-slate-600'],
+.admin-auth-screen.admin-auth-theme-dark .admin-auth-card [class~='text-slate-700'] {
+  color: #b7c3bd !important;
+}
+
+.admin-auth-screen.admin-auth-theme-dark .admin-auth-notice,
+.admin-auth-screen.admin-auth-theme-dark .admin-auth-feedback {
+  border-color: rgba(135, 185, 149, 0.34) !important;
+  background: rgba(78, 139, 98, 0.16) !important;
+  color: #c9ded0 !important;
+}
+
+.admin-auth-screen.admin-auth-theme-dark .admin-auth-input,
+.admin-auth-screen.admin-auth-theme-dark .admin-auth-password {
+  border-color: #3a4742 !important;
+  background: #171f1d !important;
+  color: #e8efeb !important;
+  caret-color: #b9dfc3;
+}
+
+.admin-auth-screen.admin-auth-theme-dark .admin-auth-input::placeholder {
+  color: #899991 !important;
+}
+
+.admin-auth-screen.admin-auth-theme-dark .admin-auth-input:focus,
+.admin-auth-screen.admin-auth-theme-dark .admin-auth-password:focus-within {
+  border-color: #6da77d !important;
+  box-shadow: 0 0 0 3px rgba(109, 167, 125, 0.2);
+}
+
+.admin-auth-screen.admin-auth-theme-dark .admin-auth-eye {
+  color: #b7c3bd !important;
+}
+
+.admin-auth-screen.admin-auth-theme-dark .admin-auth-eye:hover,
+.admin-auth-screen.admin-auth-theme-dark .admin-auth-eye:focus-visible {
+  color: #d7ebdd !important;
+  outline: 2px solid #6da77d;
+  outline-offset: -2px;
+}
+
+.admin-auth-screen.admin-auth-theme-dark .admin-auth-submit {
+  background: #2d6d4a !important;
+  color: #f4fbf6 !important;
+}
+
+.admin-auth-screen.admin-auth-theme-dark .admin-auth-submit:hover:not(:disabled) {
+  background: #2d6d4a !important;
+}
+
+.admin-auth-screen.admin-auth-theme-dark .admin-auth-card button.admin-auth-submit {
+  background: #2d6d4a !important;
+  color: #f4fbf6 !important;
+}
+
+.admin-auth-screen.admin-auth-theme-dark .admin-auth-card input:not([type='checkbox']):not([type='radio']) {
+  border-color: #3a4742 !important;
+  background: #171f1d !important;
+  color: #e8efeb !important;
+}
+
+.admin-auth-screen.admin-auth-theme-dark .admin-auth-card input:not([type='checkbox']):not([type='radio']):focus {
+  border-color: #6da77d !important;
+  box-shadow: 0 0 0 3px rgba(109, 167, 125, 0.2);
+}
+
+.admin-auth-screen.admin-auth-theme-dark .admin-auth-submit:focus-visible,
+.admin-auth-screen.admin-auth-theme-dark .admin-auth-link:focus-visible {
+  outline: 2px solid #82b494;
+  outline-offset: 3px;
+}
+
+.admin-auth-screen.admin-auth-theme-dark .admin-auth-input:-webkit-autofill,
+.admin-auth-screen.admin-auth-theme-dark .admin-auth-input:-webkit-autofill:hover,
+.admin-auth-screen.admin-auth-theme-dark .admin-auth-input:-webkit-autofill:focus {
+  -webkit-text-fill-color: #e8efeb;
+  -webkit-box-shadow: 0 0 0 1000px #171f1d inset;
+  box-shadow: 0 0 0 1000px #171f1d inset;
+  caret-color: #b9dfc3;
+}
+
 /* Admin-only dark theme. The scope keeps the public site on its existing palette. */
 .admin-shell.admin-theme-dark {
   --admin-dark-background: #141918;

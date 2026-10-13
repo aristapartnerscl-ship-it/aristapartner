@@ -1,9 +1,10 @@
 import { Eye, EyeOff } from 'lucide-react'
-import { useState, type FormEvent } from 'react'
+import { useEffect, useState, type FormEvent } from 'react'
 import { Link, Navigate, useLocation } from 'react-router-dom'
 import { BrandLockup } from '../../components/BrandLockup'
 import { isSupabaseConfigured } from '../../lib/supabase-config'
 import { useAdminAuth } from '../useAdminAuth'
+import { applyAdminTheme, getInitialAdminTheme, type AdminTheme } from '../../components/admin/admin-theme'
 
 export function AdminLogin() {
   const auth = useAdminAuth()
@@ -11,8 +12,13 @@ export function AdminLogin() {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [showPassword, setShowPassword] = useState(false)
+  const [theme] = useState<AdminTheme>(() => getInitialAdminTheme())
   const [message, setMessage] = useState(location.state === 'password-updated' ? 'Contraseña actualizada. Ya puedes iniciar sesión.' : '')
   const [loading, setLoading] = useState(false)
+
+  useEffect(() => {
+    applyAdminTheme(theme)
+  }, [theme])
 
   if (auth.status === 'ready') {
     return <Navigate to="/admin" replace />
@@ -32,46 +38,46 @@ export function AdminLogin() {
   }
 
   return (
-    <main className="min-h-screen bg-[#faf8f2] px-5 py-10">
+    <main className={`admin-auth-screen min-h-screen bg-[#faf8f2] px-5 py-10 ${theme === 'dark' ? 'admin-auth-theme-dark' : ''}`}>
       <div className="mx-auto max-w-md">
-        <div className="rounded-lg border border-slate-200 bg-white p-6 shadow-sm">
-          <BrandLockup />
-          <p className="mt-8 text-sm font-semibold uppercase tracking-[0.2em] text-[#235b3e]">Panel privado</p>
-          <h1 className="mt-2 text-3xl font-semibold text-[#17202d]">Acceso administrativo</h1>
-          <p className="mt-3 text-sm leading-6 text-slate-600">
+        <div className="admin-auth-card rounded-lg border border-slate-200 bg-white p-6 shadow-sm">
+          <BrandLockup theme={theme} />
+          <p className="admin-auth-eyebrow mt-8 text-sm font-semibold uppercase tracking-[0.2em] text-[#235b3e]">Panel privado</p>
+          <h1 className="admin-auth-title mt-2 text-3xl font-semibold text-[#17202d]">Acceso administrativo</h1>
+          <p className="admin-auth-description mt-3 text-sm leading-6 text-slate-600">
             Ingresa con una cuenta autorizada. No existe registro público de administradores.
           </p>
 
           {!isSupabaseConfigured && (
-            <div className="mt-5 rounded-md border border-[#235b3e]/25 bg-[#eef5f1] p-4 text-sm leading-6 text-slate-700">
+            <div className="admin-auth-notice mt-5 rounded-md border border-[#235b3e]/25 bg-[#eef5f1] p-4 text-sm leading-6 text-slate-700">
               La conexión del panel administrativo aún no está configurada.
             </div>
           )}
 
           <form className="mt-6 grid gap-5" onSubmit={handleSubmit} noValidate>
-            <label className="grid gap-2 text-sm font-medium text-slate-700">
+            <label className="admin-auth-label grid gap-2 text-sm font-medium text-slate-700">
               Correo electrónico
               <input
                 type="email"
                 value={email}
                 onChange={(event) => setEmail(event.target.value)}
-                className="rounded-md border border-slate-300 px-3 py-3 text-base outline-none focus:border-[#235b3e]"
+                className="admin-auth-input rounded-md border border-slate-300 px-3 py-3 text-base outline-none focus:border-[#235b3e]"
                 autoComplete="email"
               />
             </label>
-            <label className="grid gap-2 text-sm font-medium text-slate-700">
+            <label className="admin-auth-label grid gap-2 text-sm font-medium text-slate-700">
               Contraseña
-              <span className="flex rounded-md border border-slate-300 bg-white focus-within:border-[#235b3e]">
+              <span className="admin-auth-password flex rounded-md border border-slate-300 bg-white focus-within:border-[#235b3e]">
                 <input
                   type={showPassword ? 'text' : 'password'}
                   value={password}
                   onChange={(event) => setPassword(event.target.value)}
-                  className="min-w-0 flex-1 px-3 py-3 text-base outline-none"
+                  className="admin-auth-input min-w-0 flex-1 px-3 py-3 text-base outline-none"
                   autoComplete="current-password"
                 />
                 <button
                   type="button"
-                  className="px-3 text-slate-600"
+                  className="admin-auth-eye px-3 text-slate-600"
                   onClick={() => setShowPassword((value) => !value)}
                   aria-label={showPassword ? 'Ocultar contraseña' : 'Mostrar contraseña'}
                 >
@@ -81,7 +87,7 @@ export function AdminLogin() {
             </label>
 
             {message && (
-              <div className="rounded-md border border-slate-200 bg-[#faf8f2] p-3 text-sm text-slate-700" role="status">
+              <div className="admin-auth-feedback rounded-md border border-slate-200 bg-[#faf8f2] p-3 text-sm text-slate-700" role="status">
                 {message}
               </div>
             )}
@@ -89,11 +95,11 @@ export function AdminLogin() {
             <button
               type="submit"
               disabled={loading || !isSupabaseConfigured}
-              className="rounded-md bg-[#17202d] px-5 py-3 text-sm font-semibold text-white shadow-sm disabled:cursor-not-allowed disabled:opacity-60"
+              className="admin-auth-submit rounded-md bg-[#17202d] px-5 py-3 text-sm font-semibold text-white shadow-sm disabled:cursor-not-allowed disabled:opacity-60"
             >
               {loading ? 'Iniciando sesión...' : 'Iniciar sesión'}
             </button>
-            <Link to="/admin/recuperar-contrasena" className="text-center text-sm font-semibold text-[#235b3e]">
+            <Link to="/admin/recuperar-contrasena" className="admin-auth-link text-center text-sm font-semibold text-[#235b3e]">
               Recuperación de contraseña
             </Link>
           </form>

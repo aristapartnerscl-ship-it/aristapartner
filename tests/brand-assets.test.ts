@@ -65,7 +65,8 @@ describe('brand logo and app icons', () => {
 
     expect(published.width).toBe(incoming.width)
     expect(published.height).toBe(incoming.height)
-    expect(lockup).toContain('src="/brand/arista-symbol-v2.png"')
+    expect(lockup).toContain("'/brand/arista-symbol-v2.png'")
+    expect(lockup).toContain("'/brand/arista-symbol-v2-dark.png'")
     expect(lockup).toContain('w-auto')
     expect(lockup).toContain('object-contain')
     expect(layout).toContain('src="/brand/arista-symbol-v2.png"')

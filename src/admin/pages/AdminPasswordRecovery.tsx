@@ -5,6 +5,7 @@ import { Link, useNavigate } from 'react-router-dom'
 import { BrandLockup } from '../../components/BrandLockup'
 import { supabase } from '../../lib/supabase'
 import { isSupabaseConfigured } from '../../lib/supabase-config'
+import { applyAdminTheme, getInitialAdminTheme, type AdminTheme } from '../../components/admin/admin-theme'
 
 const neutralRecoveryMessage =
   'Si existe una cuenta autorizada asociada a ese correo, recibirás instrucciones para restablecer la contraseña.'
@@ -52,11 +53,16 @@ function passwordMeetsRequirements(value: string) {
 }
 
 function AdminAccessFrame({ children }: { children: ReactNode }) {
+  const [theme] = useState<AdminTheme>(() => getInitialAdminTheme())
+  useEffect(() => {
+    applyAdminTheme(theme)
+  }, [theme])
+
   return (
-    <main className="min-h-screen bg-[#faf8f2] px-5 py-10">
+    <main className={`admin-auth-screen min-h-screen bg-[#faf8f2] px-5 py-10 ${theme === 'dark' ? 'admin-auth-theme-dark' : ''}`}>
       <div className="mx-auto max-w-md">
-        <div className="rounded-lg border border-slate-200 bg-white p-6 shadow-sm">
-          <BrandLockup />
+        <div className="admin-auth-card rounded-lg border border-slate-200 bg-white p-6 shadow-sm">
+          <BrandLockup theme={theme} />
           {children}
         </div>
       </div>
@@ -99,20 +105,20 @@ export function AdminPasswordRecoveryRequest() {
 
   return (
     <AdminAccessFrame>
-      <p className="mt-8 text-sm font-semibold uppercase tracking-[0.2em] text-[#235b3e]">Panel privado</p>
+      <p className="admin-auth-eyebrow mt-8 text-sm font-semibold uppercase tracking-[0.2em] text-[#235b3e]">Panel privado</p>
       <h1 className="mt-2 text-3xl font-semibold text-[#17202d]">Recuperar contraseña</h1>
-      <p className="mt-3 text-sm leading-6 text-slate-600">
+      <p className="admin-auth-description mt-3 text-sm leading-6 text-slate-600">
         Ingresa el correo asociado a una cuenta autorizada del panel administrativo.
       </p>
 
       <form className="mt-6 grid gap-5" onSubmit={handleSubmit} noValidate>
-        <label className="grid gap-2 text-sm font-medium text-slate-700">
+        <label className="admin-auth-label grid gap-2 text-sm font-medium text-slate-700">
           Correo electrónico
           <input
             type="email"
             value={email}
             onChange={(event) => setEmail(event.target.value)}
-            className="rounded-md border border-slate-300 px-3 py-3 text-base outline-none focus:border-[#235b3e]"
+            className="admin-auth-input rounded-md border border-slate-300 px-3 py-3 text-base outline-none focus:border-[#235b3e]"
             autoComplete="email"
             aria-invalid={Boolean(error)}
           />
@@ -122,7 +128,7 @@ export function AdminPasswordRecoveryRequest() {
           <div
             ref={feedbackRef}
             tabIndex={-1}
-            className="rounded-md border border-slate-200 bg-[#faf8f2] p-3 text-sm text-slate-700"
+            className="admin-auth-feedback rounded-md border border-slate-200 bg-[#faf8f2] p-3 text-sm text-slate-700"
             role={error ? 'alert' : 'status'}
             aria-live={error ? 'assertive' : 'polite'}
           >
@@ -133,11 +139,11 @@ export function AdminPasswordRecoveryRequest() {
         <button
           type="submit"
           disabled={loading || !isSupabaseConfigured}
-          className="rounded-md bg-[#17202d] px-5 py-3 text-sm font-semibold text-white shadow-sm disabled:cursor-not-allowed disabled:opacity-60"
+          className="admin-auth-submit rounded-md bg-[#17202d] px-5 py-3 text-sm font-semibold text-white shadow-sm disabled:cursor-not-allowed disabled:opacity-60"
         >
           {loading ? 'Enviando enlace...' : 'Enviar enlace de recuperación'}
         </button>
-        <Link to="/admin/login" className="text-center text-sm font-semibold text-[#235b3e]">
+        <Link to="/admin/login" className="admin-auth-link text-center text-sm font-semibold text-[#235b3e]">
           Volver al inicio de sesión
         </Link>
       </form>
