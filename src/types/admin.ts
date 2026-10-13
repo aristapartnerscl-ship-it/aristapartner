@@ -246,7 +246,6 @@ export type RedComercialSpecialistRequestRecord = {
   followup_activity_id: string | null
   created_at: string
   updated_at: string
-  technical_calendar_url?: string | null
   can_review?: boolean
 }
 

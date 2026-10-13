@@ -1150,11 +1150,6 @@ export class SupabaseAdminRepository implements AdminRepository {
     return ok((data ?? null) as RedComercialSpecialistRequestRecord | null)
   }
 
-  async updateRedComercialCompanyCalendarUrl(companyId: string, url: string) {
-    const { data, error } = await (this.client as SupabaseClient).rpc('update_red_comercial_company_calendar_url', { p_company_id: companyId, p_url: url })
-    if (error) return failProspectRpc<string | null>(null, error, 'red_comercial.company.calendar')
-    return ok((data ?? null) as string | null)
-  }
 
 
   async createRedComercialCrossOpportunity(prospectId: string, targetCompanyId: string, reason: string) {

@@ -148,7 +148,6 @@ export const emptyAdminRepository: AdminRepository = {
   async createRedComercialSpecialistRequest() { return { data: null, error: 'La conexión del panel administrativo aún no está disponible.', errorKind: 'auth' as const } },
   async reviewRedComercialSpecialistRequest() { return { data: null, error: 'La conexión del panel administrativo aún no está disponible.', errorKind: 'auth' as const } },
   async recordRedComercialSpecialistOutcome() { return { data: null, error: 'La conexión del panel administrativo aún no está disponible.', errorKind: 'auth' as const } },
-  async updateRedComercialCompanyCalendarUrl() { return { data: null, error: 'La conexión del panel administrativo aún no está disponible.', errorKind: 'auth' as const } },
   async createRedComercialCrossOpportunity() { return { data: null, error: 'La conexión del panel administrativo aún no está disponible.', errorKind: 'auth' as const } },
   async listRedComercialOpportunities() { return { data: { rows: [], total: 0 }, error: null } },
   async getRedComercialOpportunityMetrics() { return { data: { total: 0, in_process: 0, arista: 0, collaborator: 0, contract_pending: 0, payment_pending: 0, commission_pending: 0, won: 0, lost: 0 }, error: null } },
